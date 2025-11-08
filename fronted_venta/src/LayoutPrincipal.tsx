@@ -1,0 +1,62 @@
+// src/components/LayoutPrincipal.tsx
+
+import { Outlet, Link } from 'react-router-dom';
+import { useRole } from './contexts/RoleContext';
+
+export function LayoutPrincipal() {
+  const { role, logout } = useRole()
+
+  const adminNav = [
+    { to: '/pagina-cliente', label: 'Cliente' },
+    { to: '/pagina-vendedor', label: 'Vendedor' },
+  ]
+
+  const vendedorNav = [
+    { to: '/', label: 'Venta' },
+    { to: '/pagina-cotizacion', label: 'Cotización' },
+  ]
+
+  const defaultNav = [
+    { to: '/', label: 'Venta' }
+  ]
+
+  const nav = role === 'administrador' ? adminNav : role === 'vendedor' ? vendedorNav : defaultNav
+
+  return (
+    <div className="flex h-screen bg-gray-100">
+
+      {/* 1. BARRA LATERAL (SIEMPRE FIJA)  */}
+  <aside className="w-64 bg-[#3C83F6] text-white p-6 shadow-xl">
+  <h1 className="text-2xl font-bold mb-6 text-center">Venta</h1>
+
+        {/* Navegación */}
+        <nav>
+          <ul className="space-y-3">
+            {nav.map((item) => (
+              <li key={item.to}>
+                <Link to={item.to} className="block py-2 px-3 rounded hover:bg-[#2e6ee0]">
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="mt-6">
+          <button
+            onClick={logout}
+            className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      </aside>
+
+      {/* 2. CONTENIDO PRINCIPAL (AQUÍ VA EL OUTLET) */}
+      <main className="flex-1 p-10 overflow-auto">
+        <Outlet />
+      </main>
+
+    </div>
+  );
+}
