@@ -49,7 +49,7 @@ export function PaginaVendedor() {
         {/* 1. Cabecera */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Vendedores y Sedes</h1>
-          <p className="text-gray-600 mt-1">Administra los vendedores internos/externos y sus sedes de venta asignadas.</p>
+          <p className="text-gray-600 mt-1">Waaaaa</p>
         </div>
 
         {/* 2. Pestañas (Tabs) */}
@@ -86,9 +86,9 @@ export function PaginaVendedor() {
           {/* Contenido de la pestaña SEDES (placeholder) */}
           {activeTab === 'sedes' && (
             <div className="p-4">
-              <h3 className="text-xl font-semibold">Gestionar Sedes de Venta</h3>
+              <h3 className="text-xl font-semibold">Visualizar Sedes de Venta</h3>
               <p className="text-gray-500 mt-2">
-                Aquí irá la interfaz para crear, ver y editar las sedes (Centros de Atención, Módulos, etc.).
+                Waaaaaaa.).
               </p>
             </div>
           )}
