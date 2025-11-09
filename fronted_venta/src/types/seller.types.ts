@@ -31,3 +31,8 @@ export interface TypePillProps {
 export interface StatusPillProps {
   status: SellerStatus;
 }
+
+export interface SellerToolbarProps {
+  onNewSellerClick: () => void; // La función que viene desde PaginaVendedor
+  // para otros filtros podría ser
+}

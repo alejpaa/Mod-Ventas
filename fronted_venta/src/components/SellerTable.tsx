@@ -34,7 +34,7 @@ const SellerTable = ({ sellers }: SellerTableProps) => (
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-4">
               <a href="#" className="text-blue-600 hover:text-blue-800">Editar</a>
-              
+
               {seller.status === SellerStatus.Activo ? (
                 <a href="#" className="text-red-600 hover:text-red-800">Desactivar</a>
               ) : (

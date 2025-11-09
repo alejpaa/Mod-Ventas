@@ -1,6 +1,6 @@
-import { SellerType } from "../types/seller.types";
+import { SellerType, type SellerToolbarProps } from "../types/seller.types";
 
-const SellerToolbar = () => (
+const SellerToolbar = ({onNewSellerClick} : SellerToolbarProps) => (
   <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 mb-6">
     {/* Barra de Búsqueda */}
     <div className="w-full md:w-1/3">
@@ -25,7 +25,10 @@ const SellerToolbar = () => (
         <option value="real-plaza">Módulo Real Plaza - 1er Piso</option>
       </select>
 
-      <button className="w-full md:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
+      {/* Botón Crear Vendedor */}
+      <button 
+        onClick={onNewSellerClick}
+        className="w-full md:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
         Nuevo Vendedor
       </button>
     </div>
