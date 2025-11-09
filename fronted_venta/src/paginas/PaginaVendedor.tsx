@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SellerToolbar from "../components/SellerToolbar";
 import SellerTable from "../components/SellerTable";
 import { type Seller, SellerType, SellerStatus } from "../types/seller.types";
+import { data } from "react-router-dom";
 
 type TabId = 'vendedores' | 'sedes';
 
@@ -33,14 +34,45 @@ const mockSellers: Seller[] = [
   },
 ];
 
+
+
 export function PaginaVendedor() {
-  // Ahora el estado está tipado con 'vendedores' o 'sedes'
+  // Empieza con la pestaña de vendedores                  
   const [activeTab, setActiveTab] = useState<TabId>('vendedores');
+
+  const [seller, setSeller] = useState<Seller[]>([]);
+  const [isLoading, setIsLoading] = useState(true); // Para saber si está cargando
+  const [error, setError] = useState<Error | null>(null); // Para cualquier error
 
   const tabs = [
     { id: 'vendedores', label: 'Vendedores' },
-    { id: 'sedes', label: 'Sede de Venta' },
+    { id: 'sedes', label: 'Sedes de Venta' },
   ];
+
+  useEffect(() => {
+    if (activeTab === 'vendedores') {
+      setIsLoading(true);
+      setError(null);
+
+      fetch('/api/vendedores')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Error al cargar los vendedores');
+          }
+          return response.json();
+        })
+        .then (data => {
+          setSeller(data);
+        })
+        .catch(error => {
+          setError(error);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+    // Para cada vez que se cambie de pestaña, podríamos cargar datos específicos
+  }, [activeTab]);
 
   return (
     <div className="bg-gray-100 min-h-screen">
@@ -48,8 +80,8 @@ export function PaginaVendedor() {
         
         {/* 1. Cabecera */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Gestión de Vendedores y Sedes</h1>
-          <p className="text-gray-600 mt-1">Waaaaa</p>
+          <h1 className="text-3xl font-bold text-gray-900">Gestión de Vendedores</h1>
+          <p className="text-gray-600 mt-1">Crear vendedores y asignarles a una sede para empezar a vender</p>
         </div>
 
         {/* 2. Pestañas (Tabs) */}
@@ -79,14 +111,28 @@ export function PaginaVendedor() {
           {activeTab === 'vendedores' && (
             <div>
               <SellerToolbar />
-              <SellerTable sellers={mockSellers} />
+              {isLoading && <p>Cargando vendedores...</p>}
+
+              {/* Por mientras comentamos esta parte hasta tener el endpoint listo */}
+              {/*error && <p className="text-red-500">Error: {error.message}</p>*/}
+              
+              {/* Colocamos los vendedores de la base de datos */}
+              {!isLoading && !error && (
+                <SellerTable sellers={seller} />
+              )}
+
+              {/* Simulamos vendedores por si no existe endpoint por mientras */}
+              {!isLoading && error && (
+                <SellerTable sellers={mockSellers} />
+              )}        
+
             </div>
           )}
-
-          {/* Contenido de la pestaña SEDES (placeholder) */}
+          
+          {/* Contenido de la pestaña SEDES */}
           {activeTab === 'sedes' && (
             <div className="p-4">
-              <h3 className="text-xl font-semibold">Visualizar Sedes de Venta</h3>
+              <h3 className="text-xl font-semibold">Visualizar Sedes de Venta por TODO</h3>
               <p className="text-gray-500 mt-2">
                 Waaaaaaa.).
               </p>
