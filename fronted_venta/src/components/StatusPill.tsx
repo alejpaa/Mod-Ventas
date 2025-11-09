@@ -1,12 +1,4 @@
-export const SellerStatus = {
-  Activo: 'Activo',
-  Inactivo: 'Inactivo',
-} as const
-export type SellerStatus = typeof SellerStatus[keyof typeof SellerStatus]
-
-interface StatusPillProps {
-  status: SellerStatus;
-}
+import { type StatusPillProps, SellerStatus } from "../types/vendedores.types";
 
 const StatusPill = ({ status }: StatusPillProps) => {
   const isActive = status === SellerStatus.Activo;

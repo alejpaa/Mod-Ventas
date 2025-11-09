@@ -1,29 +1,9 @@
 import { useState } from "react";
 import VendedorTable from "../components/SellerTable";
 import VendedorToolbar from "../components/VendedorToolbar";
+import { type Vendedor, SellerType, SellerStatus } from "../types/vendedores.types";
 
 type TabId = 'vendedores' | 'sedes';
-
-export const SellerType = {
-  Interno: 'Interno',
-  Externo: 'Externo',
-} as const
-export type SellerType = typeof SellerType[keyof typeof SellerType]
-
-export const SellerStatus = {
-  Activo: 'Activo',
-  Inactivo: 'Inactivo',
-} as const
-export type SellerStatus = typeof SellerStatus[keyof typeof SellerStatus]
-
-interface Vendedor {
-  id: string;
-  name: string;
-  dni: string;
-  type: SellerType;
-  sede: string;
-  status: SellerStatus;
-}
 
 const mockSellers: Vendedor[] = [
   {

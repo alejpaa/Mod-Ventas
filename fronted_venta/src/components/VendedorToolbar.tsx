@@ -1,9 +1,4 @@
-// Usamos un tipo literal en lugar de enum para evitar problemas con el compilador/transpiler
-export const SellerType = {
-  Interno: 'Interno',
-  Externo: 'Externo',
-} as const
-export type SellerType = typeof SellerType[keyof typeof SellerType]
+import { SellerType } from "../types/vendedores.types";
 
 const VendedorToolbar = () => (
   <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 mb-6">

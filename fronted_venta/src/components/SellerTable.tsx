@@ -1,30 +1,6 @@
 import StatusPill from "./StatusPill";
 import TypePill from "./TypePill";
-
-export const SellerStatus = {
-  Activo: 'Activo',
-  Inactivo: 'Inactivo',
-} as const
-export type SellerStatus = typeof SellerStatus[keyof typeof SellerStatus]
-
-export const SellerType = {
-  Interno: 'Interno',
-  Externo: 'Externo',
-} as const
-export type SellerType = typeof SellerType[keyof typeof SellerType]
-
-interface Vendedor {
-  id: string;
-  name: string;
-  dni: string;
-  type: SellerType;
-  sede: string;
-  status: SellerStatus;
-}
-
-interface VendedorTableProps {
-  sellers: Vendedor[];
-}
+import { type VendedorTableProps, SellerStatus } from "../types/vendedores.types";
 
 const VendedorTable = ({ sellers }: VendedorTableProps) => (
   <div className="overflow-x-auto">
