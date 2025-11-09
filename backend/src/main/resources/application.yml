@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: backend
+  datasource:
+    url: ${DB_URL:jdbc:mysql://db-erp.mysql.database.azure.com/db_ventas}
+    username: ${DB_USER:ventas_user}
+    password: ${DB_PASS}
+server:
+    port: ${PORT:8080}
