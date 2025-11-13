@@ -1,4 +1,9 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
+
+interface Sede {
+  id: number;
+  name: string;
+}
 
 interface CreateModalProps {
   onClose: () => void;
@@ -28,6 +33,17 @@ const initialState: SellerFormData = {
   idSede: '',
 };
 
+const MOCK_SEDES: Sede[] = [
+    { id: 1, name: 'Módulo Real Plaza - 1er Piso' },
+    { id: 2, name: 'Call Center (Piso 4 - Lima Norte)' },
+    { id: 3, name: 'Distribuidor Autorizado (Lince)' },
+    { id: 4, name: 'Oficina Central - Miraflores' },
+    { id: 5, name: 'Tienda San Isidro - Calle Elías' },
+    { id: 6, name: 'Agencia Arequipa Sur' },
+    { id: 7, name: 'Agencia Cusco Plaza' },
+    { id: 8, name: 'Módulo Tottus - Trujillo' },
+];
+
 export function CreateSellerModal({ onClose, onSaveSuccess }: CreateModalProps) {
 
   const [formData, setFormData] = useState<SellerFormData>(initialState);
@@ -35,12 +51,59 @@ export function CreateSellerModal({ onClose, onSaveSuccess }: CreateModalProps) 
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [sedes, setSedes] = useState<Sede[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSedeDropdownOpen, setIsSedeDropdownOpen] = useState(false);
+  const [selectedSedeName, setSelectedSedeName] = useState('');
+
+  useEffect(() => {
+    const fetchSedes = async () => {
+      // Simulamos fetch con datos mock
+      setSedes(MOCK_SEDES);
+    };
+    fetchSedes();
+  }, []);
+
+  const filteredSedes = sedes.filter( sede =>
+    sede.name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const handleSedeSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+
+    if (query.length > 0) {
+      setIsSedeDropdownOpen(true);
+      setFormData(prev => ({
+        ...prev,
+        idSede: '',
+      }));
+    } else {
+      setIsSedeDropdownOpen(false);
+      setFormData(prev => ({
+        ...prev,
+        idSede: '',
+      }));
+    }
+    setSelectedSedeName(query);
+  }
+
+  const handleSedeSelect = (sede: Sede) => {
+    setFormData(prev => ({
+      ...prev,
+      idSede: sede.id
+    }));
+    setSelectedSedeName(sede.name);
+    setSearchQuery(sede.name);
+    setIsSedeDropdownOpen(false);
+  }
+
   // Para el manejo de cambios en los inputs
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: name === 'idSede' ? (value === '' ? '' : Number(value)) : value,
     }));
   };
 
@@ -57,7 +120,7 @@ export function CreateSellerModal({ onClose, onSaveSuccess }: CreateModalProps) 
     setError(null);
 
     // Voy añadiendo de a poco las validaciones mientra más campos se agregan
-    if (!formData.dni || !formData.firstName || !formData.lastName || !formData.type || !formData.idSede) {
+    if (!formData.dni || !formData.firstName || !formData.lastName || !formData.type || typeof formData.idSede !== 'number') {
       setError("Por favor, complete todos los campos obligatorios.");
       setIsSaving(false);
       return;
@@ -152,18 +215,42 @@ export function CreateSellerModal({ onClose, onSaveSuccess }: CreateModalProps) 
             </div>
 
             {/* Sede de venta */}
-            <div className="col-span-2">
-              <label>Sede de venta asignada</label>
-              <select name="idSede" value={formData.idSede} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md p-2">
-                <option value="">-- Seleccione una sede --</option>
-                {/* Estos 'value' DEBEN ser los IDs (números) de los sedes TODO */}
-                <option value={1}>Módulo Real Plaza - 1er Piso</option>
-                <option value={2}>Call Center (Piso 4)</option>
-                <option value={3}>Distribuidor Autorizado (Lince)</option>
-                {/* Idealmente, estos datos vendrían de otra API call */}
-              </select>
-            </div>
+            <div className="col-span-2 relative">
+              <label className='block text-sm font-medium text-gray-700'>Sede de venta asignada</label>
+              {/* Input de busqueda */}
+              <input
+                type='text'
+                value={selectedSedeName}
+                onChange={handleSedeSearchChange}
+                onFocus={() => setIsSedeDropdownOpen(true)}
+                onBlur={() => setTimeout(() => setIsSedeDropdownOpen(false), 200)}
+                placeholder="Busque por nombre de sede..."
+                className={`mt-1 block w-full border rounded-md p-2 ${formData.idSede === '' && 'border-red-400'}`}
+              />
 
+              {formData.idSede !== '' && (
+                <p className="text-xs text-green-600 mt-1">Sede ID **{formData.idSede}** seleccionada.</p>
+              )}
+
+              {isSedeDropdownOpen && (
+                <ul className="absolute z-10 w-full bg-white border border-gray-300 mt-1 max-h-40 overflow-y-auto rounded-md shadow-lg">
+                  {filteredSedes.length > 0 ? (
+                    filteredSedes.map(sede => (
+                      <li
+                        key={sede.id}
+                        // Usamos onMouseDown para capturar el click antes del onBlur
+                        onMouseDown={() => handleSedeSelect(sede)}
+                        className="p-2 cursor-pointer hover:bg-blue-100 text-gray-700"
+                      >
+                      {sede.name}
+                      </li>
+                    ))
+                  ) : (
+                    <li className="p-2 text-gray-500 italic">No se encontraron sedes.</li>
+                  )}
+                </ul>
+              )}
+            </div>
           </div>
 
           {/* ... (Botones 'Cancelar' y 'Guardar' no cambian) ... */}
