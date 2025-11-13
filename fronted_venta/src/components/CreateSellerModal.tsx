@@ -218,7 +218,7 @@ export function CreateSellerModal({ onClose, onSaveSuccess }: CreateModalProps) 
 
             {/* Sede de venta */}
             <div className="col-span-2 relative">
-              <label className='block text-sm font-medium text-gray-700'>Sede de venta asignada</label>
+              <label>Sede de venta asignada</label>
               {/* Input de busqueda */}
               <input
                 type='text'
