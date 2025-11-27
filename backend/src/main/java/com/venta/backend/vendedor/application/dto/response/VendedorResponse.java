@@ -29,4 +29,11 @@ public class VendedorResponse {
 
     private Long sellerBranchId;
     private String sellerBranchName;
+
+    private Long employeeRrhhId;
+    private String ruc;
+    private String bankAccount;
+    private String bankName;
+    private String documentType;
+    private Long warehouseRefId;
 }
