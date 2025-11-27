@@ -12,4 +12,6 @@ public class EmpleadoRRHHDTO {
     private String email;
     private String phoneNumber;
     private String address;
+
+    private Long employeeId;
 }

@@ -23,6 +23,7 @@ public class ClienteRRHHImpl implements IClienteRRHH {
         // Datos de prueba simulados
         if (dni.equals("12345678")) {
             EmpleadoRRHHDTO empleado = new EmpleadoRRHHDTO();
+            empleado.setEmployeeId(1001L);
             empleado.setDni("12345678");
             empleado.setFirstName("Juan");
             empleado.setLastName("Pérez García");
@@ -34,6 +35,7 @@ public class ClienteRRHHImpl implements IClienteRRHH {
 
         if (dni.equals("87654321")) {
             EmpleadoRRHHDTO empleado = new EmpleadoRRHHDTO();
+            empleado.setEmployeeId(1002L);
             empleado.setDni("87654321");
             empleado.setFirstName("María");
             empleado.setLastName("López Sánchez");

@@ -3,6 +3,7 @@ package com.venta.backend.vendedor.application.impl;
 import com.venta.backend.vendedor.application.dto.request.RegistroVendedorRequest;
 import com.venta.backend.vendedor.application.estrategias.IRegistroVendedorStrategia;
 import com.venta.backend.vendedor.application.exceptions.RegistroVendedorException;
+import com.venta.backend.vendedor.enums.DocumentType;
 import com.venta.backend.vendedor.enums.SellerStatus;
 import com.venta.backend.vendedor.entities.Vendedor;
 
@@ -34,11 +35,17 @@ public class RegistroExternoStrategiaImpl implements IRegistroVendedorStrategia 
         if (vendedorRepositorio.existsByDni(request.getDni())) {
             throw new RegistroVendedorException("El DNI ya se encuentra registrado.");
         }
+
+        if (request.getRuc() != null && !request.getRuc().isBlank()) {
+            // Podrías agregar un método en el repo: existsByRuc
+            // if (vendedorRepositorio.existsByRuc(request.getRuc())) {
+            //     throw new RegistroVendedorException("El RUC ya se encuentra registrado.");
+            // }
+        }
     }
 
     @Override
     public Vendedor createSellerEntity(RegistroVendedorRequest request) {
-        // Builder definido en la entidad vendedor
         return Vendedor.builder()
                 .dni(request.getDni())
                 .firstName(request.getFirstName())
@@ -48,8 +55,11 @@ public class RegistroExternoStrategiaImpl implements IRegistroVendedorStrategia 
                 .address(request.getAddress())
                 .sellerType(request.getSellerType())
                 .sellerStatus(SellerStatus.ACTIVE)
-                .registrationDate(LocalDate.now()) // Fecha de hoy
-                // La Sede (sellerBranch) se asignará en el Servicio principal
+                .registrationDate(LocalDate.now())
+                .ruc(request.getRuc())
+                .bankAccount(request.getBankAccount())
+                .bankName(request.getBankName())
+                .documentType(request.getDocumentType() != null ? request.getDocumentType() : DocumentType.DNI)
                 .build();
     }
 }

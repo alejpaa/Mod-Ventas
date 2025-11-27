@@ -5,6 +5,7 @@ import com.venta.backend.vendedor.application.estrategias.IRegistroVendedorStrat
 import com.venta.backend.vendedor.application.exceptions.RecursoNoEncontradoException;
 import com.venta.backend.vendedor.application.exceptions.RegistroVendedorException;
 import com.venta.backend.vendedor.entities.Vendedor;
+import com.venta.backend.vendedor.enums.DocumentType;
 import com.venta.backend.vendedor.enums.SellerStatus;
 import com.venta.backend.vendedor.infraestructura.clientes.IClienteRRHH;
 import com.venta.backend.vendedor.infraestructura.clientes.dto.EmpleadoRRHHDTO;
@@ -45,10 +46,13 @@ public class RegistroInternoStrategiaImpl implements IRegistroVendedorStrategia 
                 .email(empleadoRRHH.getEmail())
                 .phoneNumber(empleadoRRHH.getPhoneNumber())
                 .address(empleadoRRHH.getAddress())
-                .sellerType(request.getSellerType()) // Será INTERNAL
-                .sellerStatus(SellerStatus.ACTIVE) // Estado por defecto
+                .sellerType(request.getSellerType())
+                .sellerStatus(SellerStatus.ACTIVE)
                 .registrationDate(LocalDate.now())
-                // La Sede (sellerBranch) se asignará en el Servicio principal
+                .employeeRrhhId(empleadoRRHH.getEmployeeId())
+                .documentType(DocumentType.DNI)
+                .bankAccount(request.getBankAccount())
+                .bankName(request.getBankName())
                 .build();
     }
 }
