@@ -153,4 +153,15 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
         return sedeRepositorio.findById(sedeId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Sede no encontrada con ID: " + sedeId));
     }
+
+    private void validateBranchCapacity(Sede sede) {
+        Long currentSellers = vendedorRepositorio.countActiveSellersByBranch(sede.getBranchId());
+
+        if (sede.getMaxCapacity() != null && currentSellers >= sede.getMaxCapacity()) {
+            throw new RegistroVendedorException(
+                    "La sede ha alcanzado su capacidad máxima de vendedores ("
+                            + sede.getMaxCapacity() + ")"
+            );
+        }
+    }
 }

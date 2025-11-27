@@ -3,6 +3,8 @@ package com.venta.backend.vendedor.infraestructura.repository;
 import com.venta.backend.vendedor.entities.Vendedor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -31,5 +33,8 @@ public interface VendedorRepositorio extends JpaRepository<Vendedor, Long>, JpaS
      * @return true si el email ya existe, false de lo contrario.
      */
     boolean existsByEmail(String email);
+
+    @Query("SELECT COUNT(v) FROM Vendedor v WHERE v.sellerBranch.branchId = :branchId AND v.sellerStatus = 'ACTIVE'")
+    Long countActiveSellersByBranch(@Param("branchId") Long branchId);
 
 }

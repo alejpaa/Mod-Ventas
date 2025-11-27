@@ -34,4 +34,7 @@ public class Sede {
 
     @Column(name = "status")
     private boolean active;
+
+    @Column(name = "warehouse_ref_id")
+    private Long warehouseRefId; // ID del almacén en el módulo de Inventario
 }
