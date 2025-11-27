@@ -19,13 +19,18 @@ import com.venta.backend.vendedor.enums.SellerType;
 import com.venta.backend.vendedor.infraestructura.clientes.IClienteCotizacion;
 import com.venta.backend.vendedor.infraestructura.repository.SedeRepositorio;
 import com.venta.backend.vendedor.infraestructura.repository.VendedorRepositorio;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Service
+@RequiredArgsConstructor
 public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorConsultaServicio {
     private final VendedorRepositorio vendedorRepositorio;
     private final SedeRepositorio sedeRepositorio;
