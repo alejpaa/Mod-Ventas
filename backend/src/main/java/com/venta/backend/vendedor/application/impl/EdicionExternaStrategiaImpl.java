@@ -26,6 +26,14 @@ public class EdicionExternaStrategiaImpl implements IEdicionVendedorStrategia {
             sellerToUpdate.setAddress(request.getAddress());
         }
 
+        if (request.getBankAccount() != null) {
+            sellerToUpdate.setBankAccount(request.getBankAccount());
+        }
+
+        if (request.getBankName() != null) {
+            sellerToUpdate.setBankName(request.getBankName());
+        }
+
         if (newBranch != null) {
             sellerToUpdate.assignBranch(newBranch);
         }

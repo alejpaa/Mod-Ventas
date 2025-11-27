@@ -25,4 +25,8 @@ public class ModificacionVendedorRequest {
 
     // El nuevo estado (para activar o reactivar)
     private SellerStatus sellerStatus;
+
+    private String bankAccount;
+
+    private String bankName;
 }
