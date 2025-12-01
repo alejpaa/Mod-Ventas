@@ -7,3 +7,15 @@ spring:
     password: ${DB_PASS}
 server:
     port: ${PORT:8080}
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+    # Usar especificación OpenAPI personalizada
+    url: /openapi.yml
+  show-actuator: false
