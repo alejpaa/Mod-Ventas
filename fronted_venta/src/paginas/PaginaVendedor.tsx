@@ -68,6 +68,36 @@ export function PaginaVendedor() {
     }
   }, []);
 
+  const handleDeactivateSeller = useCallback(async (sellerId: number) => {
+    if (!confirm(`¿Está seguro de desactivar al vendedor con ID ${sellerId}?`)) {
+      return;
+    }
+
+    try {
+      // DELETE /api/vendedores/{id}
+      const response = await fetch(`${API_BASE_URL}/vendedores/${sellerId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.status === 204) {
+        // Éxito: Desactivación completada (baja lógica)
+        alert(`Vendedor ${sellerId} desactivado exitosamente.`);
+        fetchSellers(); // Refrescar la tabla para mostrar el nuevo estado INACTIVE
+      } else if (response.status === 404) {
+        // Error: Recurso no encontrado
+        alert(`Error: Vendedor ${sellerId} no existe.`);
+      } else if (response.status === 400) {
+        // Error de negocio: Cotizaciones pendientes
+        const errorData = await response.json();
+        alert(`ACCIÓN BLOQUEADA: ${errorData.message}`);
+      } else {
+        throw new Error(`Error ${response.status} en el servidor.`);
+      }
+    } catch (error: any) {
+      alert(`Error de conexión: ${error.message}`);
+    }
+  }, [fetchSellers]); // Depende de fetchSellers
+
   useEffect(() => {
     if (activeTab === 'vendedores') {
       fetchSellers();
@@ -136,7 +166,10 @@ export function PaginaVendedor() {
               )}
              
               {/* Solo mostramos la tabla si no está cargando y no hay error */}
-              {!isLoading && !error && <SellerTable sellers={mappedSellers} />}
+              {!isLoading && !error && <SellerTable
+                                          sellers={mappedSellers}
+                                          onDeactivate={(id) => handleDeactivateSeller(id)}
+                                        />}
             </div>
           )}
 

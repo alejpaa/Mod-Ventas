@@ -2,7 +2,7 @@ import StatusPill from "./StatusPill";
 import TypePill from "./TypePill";
 import { type SellerTableProps, SellerStatus } from "../types/seller.types";
 
-const SellerTable = ({ sellers }: SellerTableProps) => (
+const SellerTable = ({ sellers, onDeactivate }: SellerTableProps) => (
   <div className="overflow-x-auto">
     <table className="min-w-full divide-y divide-gray-200">
       {/* Encabezados de la Tabla */}
@@ -36,7 +36,15 @@ const SellerTable = ({ sellers }: SellerTableProps) => (
               <a href="#" className="text-blue-600 hover:text-blue-800">Editar</a>
 
               {seller.status === SellerStatus.Activo ? (
-                <a href="#" className="text-red-600 hover:text-red-800">Desactivar</a>
+                <button
+                  onClick={(e) => {
+                      e.preventDefault();
+                      onDeactivate(Number(seller.id)); // Convertir el ID de vuelta a número
+                  }}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  Desactivar
+                </button>
               ) : (
                 <a href="#" className="text-green-600 hover:text-green-800">Reactivar</a>
               )}
