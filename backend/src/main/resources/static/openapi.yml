@@ -248,6 +248,183 @@ paths:
         '404':
           description: Cotización no encontrada
 
+  # ==================== ENDPOINTS DE CLIENTES ====================
+  /api/clientes/registroClientes:
+    post:
+      tags:
+        - Clientes
+      summary: Registrar nuevo cliente
+      description: Crea un cliente nuevo validando DNI y deudas
+      operationId: registrarCliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistroClienteRequest'
+      responses:
+        '201':
+          description: Cliente registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteResponse'
+        '400':
+          description: Datos inválidos o cliente no apto
+        '409':
+          description: DNI o email ya existe
+
+  /api/clientes/actualizacionClientes/{id}:
+    put:
+      tags:
+        - Clientes
+      summary: Actualizar cliente
+      description: Actualiza datos o cambia estado de un cliente
+      operationId: actualizarCliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID del cliente a actualizar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModificacionClienteRequest'
+      responses:
+        '200':
+          description: Cliente actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteResponse'
+        '404':
+          description: Cliente no encontrado
+        '409':
+          description: Email ya existe para otro cliente
+
+  /api/clientes/filtroClientes:
+    get:
+      tags:
+        - Clientes
+      summary: Filtrar clientes
+      description: Búsqueda paginada por criterios
+      operationId: filtrarClientes
+      parameters:
+        - name: filtro
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Texto para buscar en DNI, nombre o email
+        - name: estado
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/EstadoClienteEnum'
+          description: Estado del cliente (ACTIVO, INACTIVO)
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+          description: Número de página (inicia en 0)
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Cantidad de elementos por página
+      responses:
+        '200':
+          description: Lista de clientes obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageClienteResponse'
+
+  /api/clientes/HistorialCompras/{id}:
+    get:
+      tags:
+        - Clientes
+      summary: Historial de compras
+      description: Obtiene detalle financiero del cliente
+      operationId: obtenerHistorial
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID del cliente
+      responses:
+        '200':
+          description: Historial obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistorialComprasResponse'
+        '404':
+          description: Cliente no encontrado
+
+  /api/clientes/{id}:
+    delete:
+      tags:
+        - Clientes
+      summary: Dar de baja cliente
+      description: Desactiva un cliente validando que no tenga deudas ni equipos pendientes
+      operationId: darBajaCliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID del cliente a dar de baja
+      responses:
+        '204':
+          description: Cliente dado de baja exitosamente
+        '404':
+          description: Cliente no encontrado
+        '400':
+          description: Cliente tiene deudas o equipos pendientes
+
+  # ==================== ENDPOINTS DE DESCUENTOS ====================
+  /api/descuentos/aplicar-mejor-descuento:
+    post:
+      tags:
+        - Descuentos
+      summary: Aplicar mejor descuento disponible
+      description: Evalúa todas las reglas de descuento y aplica el que ofrece mayor beneficio
+      operationId: aplicarMejorDescuento
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplicarDescuentoRequest'
+      responses:
+        '200':
+          description: Descuento aplicado exitosamente o no se aplicó ninguno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DescuentoAplicadoResponse'
+        '400':
+          description: Datos inválidos, venta no encontrada o cliente no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DescuentoAplicadoResponse'
+
+  # ==================== ENDPOINTS DE VENDEDORES ====================
+
   /api/vendedores:
     get:
       tags:
@@ -845,4 +1022,216 @@ components:
         cantidad:
           type: integer
           minimum: 1
+
+    # ==================== SCHEMAS DE CLIENTES ====================
+    EstadoClienteEnum:
+      type: string
+      enum: [ACTIVO, INACTIVO]
+      description: Estado del cliente
+
+    RegistroClienteRequest:
+      type: object
+      required:
+        - dni
+        - firstName
+        - lastName
+      properties:
+        dni:
+          type: string
+          description: DNI del cliente (8 dígitos)
+          example: "12345678"
+        firstName:
+          type: string
+          description: Nombre del cliente
+          example: "Juan"
+        lastName:
+          type: string
+          description: Apellido del cliente
+          example: "Pérez"
+        email:
+          type: string
+          format: email
+          description: Email del cliente
+          example: "juan.perez@email.com"
+        phoneNumber:
+          type: string
+          description: Número de teléfono (9 dígitos)
+          example: "987654321"
+        address:
+          type: string
+          description: Dirección del cliente
+          example: "Av. Principal 123"
+
+    ModificacionClienteRequest:
+      type: object
+      properties:
+        lastName:
+          type: string
+          description: Apellido del cliente
+          example: "García"
+        email:
+          type: string
+          format: email
+          description: Email del cliente
+          example: "nuevo.email@email.com"
+        phoneNumber:
+          type: string
+          description: Número de teléfono (9 dígitos)
+          example: "987654321"
+        address:
+          type: string
+          description: Dirección del cliente
+          example: "Calle Nueva 456"
+        estado:
+          $ref: '#/components/schemas/EstadoClienteEnum'
+
+    ClienteResponse:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+          format: int64
+        dni:
+          type: string
+          example: "12345678"
+        firstName:
+          type: string
+          example: "Juan"
+        lastName:
+          type: string
+          example: "Pérez"
+        fullName:
+          type: string
+          description: Nombre completo del cliente
+          example: "Juan Pérez"
+        email:
+          type: string
+          format: email
+          example: "juan.perez@email.com"
+        phoneNumber:
+          type: string
+          example: "987654321"
+        address:
+          type: string
+          example: "Av. Principal 123"
+        registrationDate:
+          type: string
+          format: date
+          description: Fecha de registro del cliente
+          example: "2025-01-15"
+        estado:
+          type: string
+          description: Estado del cliente
+          example: "ACTIVO"
+        categoria:
+          type: string
+          description: Categoría del cliente
+          example: "Estándar"
+
+    PageClienteResponse:
+      type: object
+      properties:
+        clientes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClienteResponse'
+        currentPage:
+          type: integer
+          description: Página actual (cero basado)
+          example: 0
+        totalPages:
+          type: integer
+          description: Total de páginas
+          example: 5
+        totalElements:
+          type: integer
+          format: int64
+          description: Total de elementos
+          example: 50
+        pageSize:
+          type: integer
+          description: Tamaño de la página
+          example: 10
+
+    HistorialComprasResponse:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+          format: int64
+        clienteNombre:
+          type: string
+          example: "Juan Pérez"
+        categoria:
+          type: string
+          example: "Estándar"
+        totalCompras:
+          type: number
+          format: decimal
+          description: Total acumulado de compras
+          example: 5000.00
+        cantidadCompras:
+          type: integer
+          description: Cantidad de compras realizadas
+          example: 10
+        compras:
+          type: array
+          items:
+            type: object
+            properties:
+              compraId:
+                type: integer
+                format: int64
+              fecha:
+                type: string
+                format: date
+              producto:
+                type: string
+              monto:
+                type: number
+                format: decimal
+              metodoPago:
+                type: string
+
+    # ==================== SCHEMAS DE DESCUENTOS ====================
+    AplicarDescuentoRequest:
+      type: object
+      required:
+        - ventaId
+        - dniCliente
+      properties:
+        ventaId:
+          type: string
+          description: ID de la venta a la que se aplicará el descuento
+          example: "1"
+        dniCliente:
+          type: string
+          description: DNI del cliente para evaluar descuentos por tipo de cliente
+          example: "12345678"
+        codigoCupon:
+          type: string
+          description: Código de cupón promocional (opcional)
+          example: "VERANO2024"
+
+    DescuentoAplicadoResponse:
+      type: object
+      properties:
+        tipoDescuento:
+          type: string
+          description: Tipo de descuento aplicado
+          example: "TIPO_CLIENTE"
+        montoDescontado:
+          type: number
+          format: decimal
+          description: Monto descontado
+          example: 150.00
+        nuevoTotalVenta:
+          type: number
+          format: decimal
+          description: Nuevo total de la venta después del descuento
+          example: 1350.00
+        mensaje:
+          type: string
+          description: Mensaje descriptivo del descuento aplicado
+          example: "15% de descuento por ser cliente Platino"
 

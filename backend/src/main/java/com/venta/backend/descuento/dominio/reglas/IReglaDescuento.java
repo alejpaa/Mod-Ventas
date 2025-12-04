@@ -8,10 +8,10 @@ import com.venta.backend.venta.entities.Venta;
 public interface IReglaDescuento {
     // Evalúa si la regla aplica (ej. el cliente es Platino, el monto es > 500).
     boolean esAplicable(Venta venta, Cliente cliente, String codigoCupon);
-    
+
     // Aplica el descuento, usando la estrategia de cálculo correspondiente.
-    DescuentoAplicadoResponse aplicar(Venta venta, Cliente cliente); 
-    
+    DescuentoAplicadoResponse aplicar(Venta venta, Cliente cliente);
+
     // Prioridad: para elegir el mejor descuento (ej. Cupón 100, Cliente 50, Monto 20).
-    int getPrioridad(); 
+    int getPrioridad();
 }

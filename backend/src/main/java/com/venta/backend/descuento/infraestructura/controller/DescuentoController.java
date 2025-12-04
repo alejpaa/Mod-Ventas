@@ -35,29 +35,29 @@ public class DescuentoController {
      */
     @PostMapping("/aplicar-mejor-descuento")
     public ResponseEntity<DescuentoAplicadoResponse> aplicarMejorDescuento(@RequestBody AplicarDescuentoRequest request) {
-        
+
         // Se recomienda que los DTOs de Request usen los Getters para acceder a los datos.
         if (request.getDniCliente() == null || request.getVentaId() == null) {
             // Manejo básico de datos faltantes
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                new DescuentoAplicadoResponse("ERROR_DATOS", null, null, "VentaId y DNI del cliente son requeridos.")
+                    new DescuentoAplicadoResponse("ERROR_DATOS", null, null, "VentaId y DNI del cliente son requeridos.")
             );
         }
 
         try {
             // Llama al servicio de aplicación (donde se implementa la lógica de las Reglas y la Estrategia)
             DescuentoAplicadoResponse response = discountService.aplicarMejorDescuento(request);
-            
+
             // Retorna una respuesta exitosa con el resultado del descuento
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             // Manejo genérico de excepciones de negocio (Ej. Venta no encontrada, Cupón expirado)
             System.err.println("Error al aplicar el descuento: " + e.getMessage());
-            
+
             // Retorna un código de error 400 (Bad Request) con un mensaje del error
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                new DescuentoAplicadoResponse("ERROR_APLICACION", null, null, e.getMessage())
+                    new DescuentoAplicadoResponse("ERROR_APLICACION", null, null, e.getMessage())
             );
         }
     }

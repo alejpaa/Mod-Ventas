@@ -20,7 +20,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class DiscountService {
-    
+
     private final List<IReglaDescuento> todasLasReglas;
     private final VentaRepositorio ventaRepositorio;
     private final ClienteRepositorio clienteRepositorio;
@@ -28,7 +28,7 @@ public class DiscountService {
     /**
      * Aplica el mejor descuento disponible para una venta.
      * Evalúa todas las reglas registradas y selecciona la que ofrece mayor beneficio.
-     * 
+     *
      * @param request Datos necesarios para evaluar descuentos (ventaId, dniCliente, codigoCupon)
      * @return Respuesta con el descuento aplicado o indicación de que no se aplicó ninguno
      */
@@ -36,24 +36,24 @@ public class DiscountService {
         // 1. Obtener Entidades
         Venta venta = ventaRepositorio.findById(Long.parseLong(request.getVentaId()))
                 .orElseThrow(() -> new RuntimeException("Venta no encontrada con ID: " + request.getVentaId()));
-        
+
         Cliente cliente = clienteRepositorio.findByDni(request.getDniCliente())
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado con DNI: " + request.getDniCliente()));
-        
+
         DescuentoAplicadoResponse mejorDescuento = null;
 
         // 2. Evaluar todas las reglas (incluyendo el cupón)
         for (IReglaDescuento regla : todasLasReglas) {
             if (regla.esAplicable(venta, cliente, request.getCodigoCupon())) {
                 DescuentoAplicadoResponse descuentoActual = regla.aplicar(venta, cliente);
-                
+
                 // Lógica de Priorización: Se elige el de mayor monto o mayor prioridad.
                 if (mejorDescuento == null || descuentoActual.getMontoDescontado().compareTo(mejorDescuento.getMontoDescontado()) > 0) {
                     mejorDescuento = descuentoActual;
                 }
             }
         }
-        
+
         if (mejorDescuento != null) {
             // Actualizar la Venta en la base de datos (persistencia del descuento)
             venta.setDescuentoTotal(mejorDescuento.getMontoDescontado());
@@ -61,7 +61,7 @@ public class DiscountService {
             ventaRepositorio.save(venta);
             return mejorDescuento;
         }
-        
+
         // No se aplicó ningún descuento
         return new DescuentoAplicadoResponse("NINGUNO", BigDecimal.ZERO, venta.getTotal(), "No aplicó ningún descuento.");
     }
