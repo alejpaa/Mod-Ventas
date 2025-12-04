@@ -395,6 +395,136 @@ paths:
         '400':
           description: Cliente tiene deudas o equipos pendientes
 
+  # ==================== ENDPOINTS DE INTEGRACIÓN - ATENCIÓN AL CLIENTE ====================
+  /api/clientes/integracion/atencion-cliente/{idCliente}:
+    get:
+      tags:
+        - Clientes
+      summary: Obtener cliente por ID
+      description: Devuelve la información completa del cliente
+      operationId: obtenerClientePorId
+      parameters:
+        - name: idCliente
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID del cliente
+      responses:
+        '200':
+          description: Cliente encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteResponse'
+        '404':
+          description: Cliente no encontrado
+    patch:
+      tags:
+        - Clientes
+      summary: Actualizar cliente parcialmente
+      description: Actualiza parcialmente los datos del cliente
+      operationId: actualizarClienteParcial
+      parameters:
+        - name: idCliente
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID del cliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModificacionClienteRequest'
+      responses:
+        '200':
+          description: Cliente actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteResponse'
+        '404':
+          description: Cliente no encontrado
+
+  # ==================== ENDPOINTS DE INTEGRACIÓN - MARKETING ====================
+  /api/clientes/integracion/marketing:
+    get:
+      tags:
+        - Clientes
+      summary: Data para Marketing
+      description: Retorna clientes con score y datos analíticos (RFM, demografía)
+      operationId: obtenerDatosMarketing
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Datos de marketing obtenidos exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageMarketingClienteResponse'
+
+  # ==================== ENDPOINTS DE INTEGRACIÓN - VENTAS ====================
+  /api/clientes/integracion/ventas/buscar/{dni}:
+    get:
+      tags:
+        - Clientes
+      summary: Buscar cliente para venta
+      description: Devuelve datos operativos y flag de deuda para realizar una venta
+      operationId: buscarClienteParaVenta
+      parameters:
+        - name: dni
+          in: path
+          required: true
+          schema:
+            type: string
+          description: DNI del cliente
+      responses:
+        '200':
+          description: Cliente encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteVentaDTO'
+        '404':
+          description: Cliente no encontrado
+
+  /api/clientes/integracion/ventas/crear:
+    post:
+      tags:
+        - Clientes
+      summary: Crear cliente simplificado
+      description: Crea un cliente recibiendo datos básicos y devolviendo solo el ID generado
+      operationId: crearClienteSimple
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearClienteSimpleRequest'
+      responses:
+        '201':
+          description: Cliente creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteIdResponse'
+        '400':
+          description: Datos inválidos o cliente no apto
+
   # ==================== ENDPOINTS DE DESCUENTOS ====================
   /api/descuentos/aplicar-mejor-descuento:
     post:
@@ -1234,4 +1364,148 @@ components:
           type: string
           description: Mensaje descriptivo del descuento aplicado
           example: "15% de descuento por ser cliente Platino"
+
+    # ==================== SCHEMAS DE INTEGRACIÓN ====================
+    CrearClienteSimpleRequest:
+      type: object
+      required:
+        - dni
+        - firstName
+        - lastName
+      properties:
+        dni:
+          type: string
+          description: DNI del cliente
+          example: "12345678"
+        firstName:
+          type: string
+          description: Nombre del cliente
+          example: "Juan"
+        lastName:
+          type: string
+          description: Apellido del cliente
+          example: "Pérez"
+        email:
+          type: string
+          format: email
+          description: Email del cliente
+          example: "juan.perez@email.com"
+        phoneNumber:
+          type: string
+          description: Número de teléfono
+          example: "987654321"
+
+    ClienteIdResponse:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+          format: int64
+          description: ID del cliente creado
+          example: 123
+
+    ClienteVentaDTO:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+          format: int64
+          example: 123
+        dni:
+          type: string
+          example: "12345678"
+        fullName:
+          type: string
+          description: Nombre completo del cliente
+          example: "Juan Pérez"
+        email:
+          type: string
+          format: email
+          example: "juan.perez@email.com"
+        phoneNumber:
+          type: string
+          example: "987654321"
+        estado:
+          type: string
+          description: Estado del cliente
+          example: "ACTIVO"
+        tieneDeuda:
+          type: boolean
+          description: Indica si el cliente tiene deudas pendientes
+          example: false
+        puedeComprar:
+          type: boolean
+          description: Flag operativo que indica si el cliente puede realizar compras
+          example: true
+
+    PageMarketingClienteResponse:
+      type: object
+      properties:
+        clientes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClienteMarketingDTO'
+        currentPage:
+          type: integer
+          description: Página actual (cero basado)
+          example: 0
+        totalPages:
+          type: integer
+          description: Total de páginas
+          example: 5
+        totalElements:
+          type: integer
+          format: int64
+          description: Total de elementos
+          example: 100
+        pageSize:
+          type: integer
+          description: Tamaño de la página
+          example: 20
+
+    ClienteMarketingDTO:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+          format: int64
+        dni:
+          type: string
+          example: "12345678"
+        fullName:
+          type: string
+          example: "Juan Pérez"
+        email:
+          type: string
+          format: email
+          example: "juan.perez@email.com"
+        categoria:
+          type: string
+          description: Categoría del cliente
+          example: "Platino"
+        estado:
+          type: string
+          description: Estado del cliente
+          example: "ACTIVO"
+        recencyScore:
+          type: integer
+          description: Días desde última compra (RFM - Recency)
+          example: 15
+        frequencyScore:
+          type: integer
+          description: Frecuencia de compras (RFM - Frequency)
+          example: 8
+        monetaryScore:
+          type: number
+          format: decimal
+          description: Valor total de compras (RFM - Monetary)
+          example: 5000.00
+        ubicacion:
+          type: string
+          description: Ubicación del cliente
+          example: "Lima"
+        edad:
+          type: integer
+          description: Edad del cliente
+          example: 35
 
