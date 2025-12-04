@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ConfirmCancelModal } from '../components/ConfirmCancelModal'; // <--- IMPORTAR MODAL
 
 // --- Iconos SVG ---
 const SearchIcon = () => (
@@ -27,6 +28,11 @@ const CheckIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
   </svg>
 );
+const ArrowLeftIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+  </svg>
+);
 
 // --- Tipos de datos ---
 interface ProductoVenta {
@@ -37,19 +43,84 @@ interface ProductoVenta {
   cantidad: number;
 }
 
+interface LineaCarritoApi {
+  detalleId: number;
+  itemProductoId: number;
+  nombreProducto: string;
+  cantidad: number;
+  precioUnitario: number;
+  subtotal: number;
+}
+
+interface VentaResumenApi {
+  ventaId: number;
+  origen: 'DIRECTA' | 'LEAD' | 'COTIZACION';
+  estado: 'BORRADOR' | 'CONFIRMADA' | 'CANCELADA';
+  subtotal: number;
+  descuentoTotal: number;
+  total: number;
+  items: LineaCarritoApi[];
+}
+
 export function PaginaVentaDirecta() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const ventaId = searchParams.get('ventaId');
 
-  const [productos, setProductos] = useState<ProductoVenta[]>([
-    { id: '1', codigo: 'PROD001', nombre: 'Apple', precioUnitario: 4500.00, cantidad: 1 },
-    { id: '2', codigo: 'PROD002', nombre: 'Samsung', precioUnitario: 300.00, cantidad: 2 },
-    { id: '3', codigo: 'PROD003', nombre: 'Advance', precioUnitario: 250.00, cantidad: 1 },
-  ]);
+  // Estado para controlar el modal de confirmación
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
-  const [descuento] = useState(100.00);
+  const [productos, setProductos] = useState<ProductoVenta[]>([]);
+  const [subtotalApi, setSubtotalApi] = useState(0);
+  const [descuentoApi, setDescuentoApi] = useState(0);
+  const [totalApi, setTotalApi] = useState(0);
+  
+  // Estado para cliente
+  const [clienteSeleccionado, setClienteSeleccionado] = useState<{
+    id: number;
+    nombre: string;
+    dni: string;
+    telefono: string;
+    direccion: string;
+  } | null>(null);
+  const [busquedaCliente, setBusquedaCliente] = useState('');
+  const [metodoPago, setMetodoPago] = useState<'EFECTIVO' | 'TARJETA'>('EFECTIVO');
 
-  const subtotal = productos.reduce((acc, item) => acc + (item.precioUnitario * item.cantidad), 0);
-  const total = subtotal - descuento;
+  useEffect(() => {
+    if (!ventaId) return;
+
+    const fetchResumen = async () => {
+      try {
+        const response = await fetch(`/api/venta/${ventaId}/carrito`);
+        if (!response.ok) {
+          throw new Error('No se pudo cargar el resumen de la venta');
+        }
+        const data: VentaResumenApi = await response.json();
+
+        const mappedProductos: ProductoVenta[] = data.items.map((item) => ({
+          id: String(item.detalleId ?? item.itemProductoId),
+          codigo: String(item.itemProductoId),
+          nombre: item.nombreProducto,
+          precioUnitario: item.precioUnitario,
+          cantidad: item.cantidad,
+        }));
+
+        setProductos(mappedProductos);
+        setSubtotalApi(data.subtotal);
+        setDescuentoApi(data.descuentoTotal);
+        setTotalApi(data.total);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    fetchResumen();
+  }, [ventaId]);
+
+  // Usar valores del backend directamente
+  const subtotal = subtotalApi;
+  const descuento = descuentoApi;
+  const total = totalApi;
 
   const updateCantidad = (id: string, delta: number) => {
     setProductos(prev => prev.map(prod => {
@@ -65,12 +136,39 @@ export function PaginaVentaDirecta() {
     setProductos(prev => prev.filter(p => p.id !== id));
   };
 
+  const handleAsignarCliente = () => {
+    // TODO: Aquí irá la lógica de búsqueda real cuando tengas el endpoint
+    // Por ahora simulamos con datos mock
+    if (busquedaCliente.trim()) {
+      setClienteSeleccionado({
+        id: 1,
+        nombre: 'Juan Pérez',
+        dni: '12345678',
+        telefono: '+51 987 654 321',
+        direccion: 'Av. Principal 123, Lima',
+      });
+      setBusquedaCliente('');
+    }
+  };
+
+  const handleEliminarCliente = () => {
+    setClienteSeleccionado(null);
+    setBusquedaCliente('');
+  };
+
   return (
-    // Reduje el padding top (pt-2) para aprovechar el espacio superior
     <div className="bg-gray-100 min-h-screen p-6 pt-4">
       
-      {/* Encabezado Centrado */}
-      <div className="mb-6 text-center">
+      {/* Encabezado con Botón Regresar y Título Centrado */}
+      <div className="mb-6 flex items-center relative justify-center">
+        <button 
+          onClick={() => navigate(-1)}
+          className="absolute left-0 flex items-center text-gray-600 hover:text-blue-600 font-medium transition-colors"
+        >
+          <ArrowLeftIcon />
+          Regresar
+        </button>
+
         <h1 className="text-2xl font-bold text-gray-800">Registrar Venta Directa</h1>
       </div>
 
@@ -83,9 +181,27 @@ export function PaginaVentaDirecta() {
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-gray-800">Cliente</h2>
-              <button className="bg-[#3C83F6] hover:bg-blue-600 text-white px-4 py-2 rounded text-sm flex items-center font-medium transition-colors">
-                <span className="mr-1 text-lg leading-none">+</span> Registrar cliente
-              </button>
+              <div className="flex gap-2">
+                <button className="bg-[#3C83F6] hover:bg-blue-600 text-white px-4 py-2 rounded text-sm flex items-center font-medium transition-colors">
+                  <span className="mr-1 text-lg leading-none">+</span> Registrar cliente
+                </button>
+                {clienteSeleccionado ? (
+                  <button 
+                    onClick={handleEliminarCliente}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm flex items-center font-medium transition-colors"
+                  >
+                    Eliminar Cliente
+                  </button>
+                ) : (
+                  <button 
+                    onClick={handleAsignarCliente}
+                    disabled={!busquedaCliente.trim()}
+                    className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded text-sm flex items-center font-medium transition-colors"
+                  >
+                    Asignar Cliente
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="relative mb-6">
@@ -96,33 +212,44 @@ export function PaginaVentaDirecta() {
                 type="text" 
                 placeholder="Buscar por Nombre, DNI, RUC..." 
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                value={busquedaCliente}
+                onChange={(e) => setBusquedaCliente(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && busquedaCliente.trim() && !clienteSeleccionado) {
+                    handleAsignarCliente();
+                  }
+                }}
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 text-sm">
-              <div>
-                <span className="block text-gray-500 mb-1">Nombre del Cliente</span>
-                <span className="block font-medium text-gray-900 text-base">Juan Pérez</span>
+            {clienteSeleccionado ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                <div>
+                  <span className="block text-gray-500 mb-1">Nombre del Cliente</span>
+                  <span className="block font-medium text-gray-900 text-base">{clienteSeleccionado.nombre}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 mb-1">DNI/RUC</span>
+                  <span className="block font-medium text-gray-900 text-base">{clienteSeleccionado.dni}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 mb-1">Teléfono</span>
+                  <span className="block font-medium text-gray-900 text-base">{clienteSeleccionado.telefono}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 mb-1">Dirección</span>
+                  <span className="block font-medium text-gray-900 text-base">{clienteSeleccionado.direccion}</span>
+                </div>
               </div>
-              <div>
-                <span className="block text-gray-500 mb-1">DNI/RUC</span>
-                <span className="block font-medium text-gray-900 text-base">12345678A</span>
+            ) : (
+              <div className="text-center py-8 text-gray-400 text-sm italic">
+                No hay cliente asignado. Busque y asigne un cliente para continuar.
               </div>
-              <div>
-                <span className="block text-gray-500 mb-1">Teléfono</span>
-                <span className="block font-medium text-gray-900 text-base">+51 987 654 321</span>
-              </div>
-              <div>
-                <span className="block text-gray-500 mb-1">Dirección</span>
-                <span className="block font-medium text-gray-900 text-base">Av. Principal 123, Lima</span>
-              </div>
-            </div>
+            )}
           </div>
 
-          {/* Tarjeta Productos - ALINEACIÓN CORREGIDA */}
+          {/* Tarjeta Productos */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            
-            {/* Flex container para alinear título y botones en la misma fila */}
             <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
               <h2 className="text-lg font-bold text-gray-800">Selección de Productos</h2>
               
@@ -205,9 +332,20 @@ export function PaginaVentaDirecta() {
                 <span>- S/ {descuento.toFixed(2)}</span>
               </div>
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center mb-4">
               <span className="font-bold text-gray-900 text-lg">Total a Pagar</span>
               <span className="font-bold text-gray-900 text-xl">S/ {total.toFixed(2)}</span>
+            </div>
+            <div className="pt-4 border-t border-gray-200">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Método de Pago</label>
+              <select
+                value={metodoPago}
+                onChange={(e) => setMetodoPago(e.target.value as 'EFECTIVO' | 'TARJETA')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              >
+                <option value="EFECTIVO">Efectivo</option>
+                <option value="TARJETA">Tarjeta</option>
+              </select>
             </div>
           </div>
 
@@ -232,27 +370,28 @@ export function PaginaVentaDirecta() {
               </svg>
               Confirmar Venta
             </button>
+            
+            {/* Botón Cancelar con Fondo Rojo */}
             <button 
-              onClick={() => navigate(-1)}
-              className="w-full py-2 text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors hover:bg-gray-50 rounded"
+              onClick={() => setIsCancelModalOpen(true)} // Abrir modal al hacer clic
+              className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded shadow-sm flex justify-center items-center transition-colors"
             >
-              Cancelar
+              Cancelar Venta
             </button>
           </div>
 
-          {/* Tarjeta Vendedor - Cambio de texto del botón */}
+          {/* Tarjeta Vendedor Actualizada */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex justify-between items-center mb-2">
-              <label className="text-sm font-medium text-gray-700">ID Vendedor</label>
+              <label className="text-sm font-medium text-gray-700">Asignar Vendedor</label>
               <button className="text-xs bg-[#3C83F6] text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors">
                 Buscar vendedor
               </button>
             </div>
             <input 
               type="text" 
-              defaultValue="VEND-001" 
-              className="w-full px-3 py-2 border border-gray-300 rounded text-sm mb-3 bg-gray-50 text-gray-700"
-              readOnly
+              placeholder="Codigo de Vendedor"
+              className="w-full px-3 py-2 border border-gray-300 rounded text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
             <div className="pt-3 border-t border-gray-100">
               <p className="text-xs text-gray-500">Nombre del Vendedor: <span className="font-medium text-gray-800">Fardito Leon Chacon</span></p>
@@ -261,6 +400,14 @@ export function PaginaVentaDirecta() {
 
         </div>
       </div>
+
+      {/* MODAL DE CONFIRMACIÓN */}
+      <ConfirmCancelModal 
+        isOpen={isCancelModalOpen} 
+        onClose={() => setIsCancelModalOpen(false)} 
+        onConfirm={() => navigate(-1)} // Al confirmar, regresa a la página anterior
+      />
+
     </div>
   );
 }

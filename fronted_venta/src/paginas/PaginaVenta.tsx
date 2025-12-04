@@ -1,33 +1,29 @@
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom'; // <--- Importamos useNavigate
+import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { PendingLeadSalesModal } from '../components/PendingLeadSalesModal';
 
-// 1. Tipos
+// --- Tipos para Ventas ---
 type EstadoVenta = 'Aprobada' | 'Cancelada' | 'En Borrador';
 
+interface VentaListadoApi {
+  id: number;
+  numVenta: string | null;
+  origenVenta: 'DIRECTA' | 'LEAD' | 'COTIZACION';
+  estado: 'BORRADOR' | 'CONFIRMADA' | 'CANCELADA';
+  fechaVentaCreada: string | null;
+  nombreCliente: string | null;
+}
+
 interface Venta {
-  id: string;
+  ventaId: number;   // id numérico de la BD
+  id: string;        // código visible (numVenta)
   cliente: string;
   estado: EstadoVenta;
   origen: string;
   fecha: string;
 }
 
-// 2. Datos simulados
-const mockVentas: Venta[] = [
-  { id: 'VENTA-001', cliente: 'Aldana Chavez', estado: 'Cancelada', origen: 'TELEFONICA', fecha: '13/11/2025' },
-  { id: 'VENTA-002', cliente: 'Aldana Chavez', estado: 'Aprobada', origen: 'TELEFONICA', fecha: '13/11/2025' },
-  { id: 'VENTA-003', cliente: 'Aldana Chavez', estado: 'Aprobada', origen: 'TELEFONICA', fecha: '13/11/2025' },
-  { id: 'VENTA-004', cliente: 'Aldana Chavez', estado: 'Aprobada', origen: 'TELEFONICA', fecha: '13/11/2025' },
-  { id: 'VENTA-005', cliente: 'Aldana Chavez', estado: 'Aprobada', origen: 'TELEFONICA', fecha: '13/11/2025' },
-  { id: 'VENTA-006', cliente: 'Aldana Chavez', estado: 'En Borrador', origen: 'TELEFONICA', fecha: '13/11/2025' },
-  { id: 'VENTA-007', cliente: 'Aldana Chavez', estado: 'Aprobada', origen: 'TELEFONICA', fecha: '14/11/2025' },
-  { id: 'VENTA-008', cliente: 'Aldana Chavez', estado: 'En Borrador', origen: 'TELEFONICA', fecha: '14/11/2025' },
-  { id: 'VENTA-009', cliente: 'Aldana Chavez', estado: 'En Borrador', origen: 'TELEFONICA', fecha: '13/11/2025' },
-  { id: 'VENTA-010', cliente: 'Aldana Chavez', estado: 'En Borrador', origen: 'TELEFONICA', fecha: '13/11/2025' },
-  { id: 'VENTA-011', cliente: 'Aldana Chavez', estado: 'Cancelada', origen: 'TELEFONICA', fecha: '13/11/2025' },
-];
-
-// Componentes Auxiliares
+// --- Componentes Auxiliares ---
 const VentaStatusPill = ({ estado }: { estado: EstadoVenta }) => {
   let classes = '';
   switch (estado) {
@@ -35,11 +31,7 @@ const VentaStatusPill = ({ estado }: { estado: EstadoVenta }) => {
     case 'Cancelada': classes = 'bg-red-100 text-red-800'; break;
     default: classes = 'bg-gray-100 text-gray-800';
   }
-  return (
-    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium uppercase ${classes}`}>
-      {estado}
-    </span>
-  );
+  return <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium uppercase ${classes}`}>{estado}</span>;
 };
 
 const EditIcon = () => (
@@ -55,9 +47,11 @@ const ViewIcon = () => (
   </svg>
 );
 
-
+// --- COMPONENTE PRINCIPAL ---
 export function PaginaVenta() {
-  const navigate = useNavigate(); // <--- Hook para navegación
+  const navigate = useNavigate();
+  
+  const [ventas, setVentas] = useState<Venta[]>([]);
   const [filtros, setFiltros] = useState({
     cliente: '',
     estado: '',
@@ -66,13 +60,92 @@ export function PaginaVenta() {
     origen: ''
   });
 
+  const [showLeadsModal, setShowLeadsModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    const fetchVentas = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch('/api/venta');
+        if (!response.ok) {
+          throw new Error('No se pudo obtener la lista de ventas');
+        }
+        const data: VentaListadoApi[] = await response.json();
+
+        const mapped: Venta[] = data.map(v => {
+          let estado: EstadoVenta;
+          switch (v.estado) {
+            case 'CONFIRMADA':
+              estado = 'Aprobada';
+              break;
+            case 'CANCELADA':
+              estado = 'Cancelada';
+              break;
+            default:
+              estado = 'En Borrador';
+          }
+
+          const fecha = v.fechaVentaCreada
+            ? new Date(v.fechaVentaCreada).toLocaleDateString('es-PE')
+            : '';
+
+          return {
+            ventaId: v.id,
+            id: v.numVenta ?? `VENTA-${v.id}`,
+            cliente: v.nombreCliente ?? 'Sin cliente',
+            estado,
+            origen: v.origenVenta,
+            fecha,
+          };
+        });
+
+        setVentas(mapped);
+      } catch (err) {
+        console.error(err);
+        setError('Ocurrió un error al cargar las ventas.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVentas();
+  }, []);
+
+  const handleCrearOrdenVenta = async () => {
+  try {
+    setCreating(true);
+    const response = await fetch('/api/venta/directa/borrador', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ usuarioCreador: 'frontend' }),
+    });
+
+    if (!response.ok) {
+      throw new Error('No se pudo crear la orden de venta');
+    }
+
+    const data: { ventaId: number } = await response.json();
+    navigate(`/registrar-venta?ventaId=${data.ventaId}`);
+  } catch (e) {
+    console.error(e);
+    alert('Ocurrió un error al crear la orden de venta.');
+  } finally {
+    setCreating(false);
+  }
+};
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFiltros({ ...filtros, [e.target.name]: e.target.value });
   };
 
-  // Lógica de filtrado
   const filteredVentas = useMemo(() => {
-    return mockVentas.filter(venta => {
+    return ventas.filter(venta => {
       if (filtros.cliente && !venta.cliente.toLowerCase().includes(filtros.cliente.toLowerCase())) return false;
       if (filtros.estado && venta.estado !== filtros.estado) return false;
       if (filtros.id && !venta.id.toLowerCase().includes(filtros.id.toLowerCase())) return false;
@@ -83,7 +156,12 @@ export function PaginaVenta() {
       }
       return true;
     });
-  }, [filtros]);
+  }, [filtros, ventas]);
+
+  const handleEditarVenta = (venta: Venta) => {
+    if (venta.estado !== 'En Borrador') return;
+    navigate(`/registrar-venta?ventaId=${venta.ventaId}`);
+  };
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -155,11 +233,24 @@ export function PaginaVenta() {
                 />
             </div>
 
-            {/* Botón azul con navegación */}
-            <div className="flex items-end justify-end">
+            {/* BOTONES DE ACCIÓN */}
+            <div className="flex items-end justify-end gap-3">
+              
+              {/* Botón Naranja */}
               <button 
-                onClick={() => navigate('/registrar-venta')} // <--- NAVEGACIÓN AQUÍ
-                className="flex items-center px-4 py-2 bg-[#3C83F6] text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm whitespace-nowrap cursor-pointer"
+                onClick={() => setShowLeadsModal(true)}
+                // Usamos h-10 y px-4 py-2 para igualar dimensiones
+                className="h-10 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors text-sm font-medium shadow-sm whitespace-nowrap cursor-pointer flex items-center justify-center"
+              >
+                Ventas por Leads
+              </button>
+
+              {/* Botón Azul */}
+              <button 
+                onClick={handleCrearOrdenVenta}
+                // Usamos h-10 y px-4 py-2 para igualar dimensiones
+                className="h-10 px-4 py-2 bg-[#3C83F6] text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm whitespace-nowrap cursor-pointer flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={creating}
               >
                 <span className="mr-2 text-lg">+</span> Crear orden de venta
               </button>
@@ -168,11 +259,16 @@ export function PaginaVenta() {
         </div>
       </div>
 
-      {/* --- LÍNEA DIVISORIA --- */}
       <hr className="border-gray-200 mb-6" />
 
-      {/* --- TABLA DE DATOS --- */}
+      {/* --- TABLA DE VENTAS --- */}
       <div className="overflow-x-auto border border-gray-100 rounded-lg">
+        {loading && (
+          <div className="p-4 text-sm text-gray-500">Cargando ventas...</div>
+        )}
+        {error && !loading && (
+          <div className="p-4 text-sm text-red-600">{error}</div>
+        )}
         <table className="min-w-full divide-y divide-gray-100">
           <thead className="bg-gray-50">
             <tr>
@@ -188,29 +284,24 @@ export function PaginaVenta() {
             {filteredVentas.length > 0 ? (
               filteredVentas.map((venta) => (
                 <tr key={venta.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {venta.cliente}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <VentaStatusPill estado={venta.estado} />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 uppercase">
-                    {venta.origen}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {venta.id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {venta.fecha}
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{venta.cliente}</td>
+                  <td className="px-6 py-4 whitespace-nowrap"><VentaStatusPill estado={venta.estado} /></td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 uppercase">{venta.origen}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{venta.id}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{venta.fecha}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                     <div className="flex items-center justify-center space-x-3">
-                      <button className="text-blue-600 hover:text-blue-800 transition-colors p-1" title="Modificar">
+                      <button
+                        onClick={() => handleEditarVenta(venta)}
+                        disabled={venta.estado !== 'En Borrador'}
+                        className={`p-1 transition-colors ${venta.estado === 'En Borrador'
+                          ? 'text-blue-600 hover:text-blue-800 cursor-pointer'
+                          : 'text-gray-300 cursor-not-allowed'}`}
+                        title={venta.estado === 'En Borrador' ? 'Modificar' : 'Solo se pueden modificar borradores'}
+                      >
                         <EditIcon />
                       </button>
-                      <button className="text-gray-600 hover:text-gray-800 transition-colors p-1" title="Visualizar">
-                        <ViewIcon />
-                      </button>
+                      <button className="text-gray-600 hover:text-gray-800 transition-colors p-1" title="Visualizar"><ViewIcon /></button>
                     </div>
                   </td>
                 </tr>
@@ -225,6 +316,8 @@ export function PaginaVenta() {
           </tbody>
         </table>
       </div>
+
+      {showLeadsModal && <PendingLeadSalesModal onClose={() => setShowLeadsModal(false)} />}
 
     </div>
   );
