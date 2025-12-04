@@ -152,6 +152,7 @@ export function PaginaVendedor() {
         <CreateSellerModal
           onClose={() => setIsCreateModalOpen(false)}
           onSaveSuccess={handleSaveSuccess}
+          apiBaseUrl={API_BASE_URL}
         />
       )}
     </div>
