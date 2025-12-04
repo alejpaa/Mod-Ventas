@@ -683,7 +683,7 @@ components:
           example: 1
         numVenta:
           type: string
-          description: Número de venta generado (ej: VTA-DIR-000001)
+          description: Número de venta generado
           example: "VTA-DIR-000001"
         origenVenta:
           $ref: '#/components/schemas/OrigenVentaEnum'
