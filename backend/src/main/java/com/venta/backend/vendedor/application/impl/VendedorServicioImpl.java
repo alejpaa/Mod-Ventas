@@ -18,6 +18,8 @@ import com.venta.backend.vendedor.enums.BranchType;
 import com.venta.backend.vendedor.enums.SellerStatus;
 import com.venta.backend.vendedor.enums.SellerType;
 import com.venta.backend.vendedor.infraestructura.clientes.IClienteCotizacion;
+import com.venta.backend.vendedor.infraestructura.clientes.IClienteRRHH;
+import com.venta.backend.vendedor.infraestructura.clientes.dto.EmpleadoRRHHDTO;
 import com.venta.backend.vendedor.infraestructura.repository.SedeRepositorio;
 import com.venta.backend.vendedor.infraestructura.repository.VendedorRepositorio;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +29,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -39,7 +39,7 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
     private final IFabricaStrategia fabricaStrategia;
     private final IVendedorMapeador vendedorMapeador;
     private final IClienteCotizacion clienteCotizacion;
-
+    private final IClienteRRHH clienteRRHH;
 
     @Override
     @Transactional
@@ -194,5 +194,13 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
 
         // El DTO VendedorResponse ya contiene el sellerId (la llave primaria)
         return vendedorMapeador.toVendedorResponse(vendedor);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public EmpleadoRRHHDTO fetchRrhhEmployee(String dni) {
+        // Llama directamente al cliente (que usa el mock o la llamada real)
+        return clienteRRHH.getEmployeeByDni(dni)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Empleado no encontrado en RRHH con DNI: " + dni));
     }
 }

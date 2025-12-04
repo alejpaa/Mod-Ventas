@@ -3,6 +3,7 @@ package com.venta.backend.vendedor.application.servicios;
 import com.venta.backend.vendedor.application.dto.response.VendedorResponse;
 import com.venta.backend.vendedor.enums.SellerStatus;
 import com.venta.backend.vendedor.enums.SellerType;
+import com.venta.backend.vendedor.infraestructura.clientes.dto.EmpleadoRRHHDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -61,4 +62,14 @@ public interface IVendedorConsultaServicio {
      * @return El VendedorResponse (contiene el sellerId, que es la llave de la tabla Venta).
      */
     VendedorResponse findSellerByEmployeeRrhhId(Long employeeRrhhId);
+
+
+    /**
+     * Busca y devuelve los datos de un empleado de RRHH por DNI.
+     * (Usado por el frontend para autocompletar el formulario de registro interno).
+     *
+     * @param dni DNI del empleado.
+     * @return DTO con los datos del empleado.
+     */
+    EmpleadoRRHHDTO fetchRrhhEmployee(String dni);
 }

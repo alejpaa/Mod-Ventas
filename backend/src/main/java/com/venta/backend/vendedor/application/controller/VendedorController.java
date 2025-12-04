@@ -7,6 +7,7 @@ import com.venta.backend.vendedor.application.servicios.IVendedorAdminServicio;
 import com.venta.backend.vendedor.application.servicios.IVendedorConsultaServicio;
 import com.venta.backend.vendedor.enums.SellerStatus;
 import com.venta.backend.vendedor.enums.SellerType;
+import com.venta.backend.vendedor.infraestructura.clientes.dto.EmpleadoRRHHDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -91,7 +92,6 @@ public class VendedorController {
     /**
      * GET /api/vendedores
      * Busca vendedores con filtros y paginación
-     *
      * Ejemplos:
      * - GET /api/vendedores?page=0&size=10
      * - GET /api/vendedores?sellerType=INTERNAL&page=0&size=20
@@ -122,6 +122,16 @@ public class VendedorController {
     @GetMapping("/activos")
     public ResponseEntity<List<VendedorResponse>> listActiveSellers() {
         List<VendedorResponse> response = consultaServicio.listActiveSellers();
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * GET /api/vendedores/rrhh-employee/{dni}
+     * Busca los datos de un empleado en RRHH para autocompletar el formulario.
+     */
+    @GetMapping("/rrhh-employee/{dni}") // <-- NUEVO ENDPOINT
+    public ResponseEntity<EmpleadoRRHHDTO> getRrhhEmployeeData(@PathVariable String dni) {
+        EmpleadoRRHHDTO response = consultaServicio.fetchRrhhEmployee(dni);
         return ResponseEntity.ok(response);
     }
 }
