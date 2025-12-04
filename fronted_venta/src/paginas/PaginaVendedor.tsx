@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
-import SellerToolbar from "../components/SellerToolbar";
-import SellerTable from "../components/SellerTable";
-import { type Seller, SellerType, SellerStatus } from "../types/seller.types";
-import { CreateSellerModal } from "../components/CreateSellerModal";
+import { useCallback, useEffect, useState } from 'react';
+import SellerToolbar from '../components/SellerToolbar';
+import SellerTable from '../components/SellerTable';
+import { type Seller, SellerType, SellerStatus } from '../types/seller.types';
+import { CreateSellerModal } from '../components/CreateSellerModal';
 
 type TabId = 'vendedores' | 'sedes';
 
@@ -34,8 +34,6 @@ const mockSellers: Seller[] = [
   },
 ];
 
-
-
 export function PaginaVendedor() {
   // Empieza con la pestaña de vendedores
   const [activeTab, setActiveTab] = useState<TabId>('vendedores');
@@ -63,8 +61,8 @@ export function PaginaVendedor() {
       }
       const data = await response.json();
       setSellers(data);
-    } catch (error: any) {
-      setError(error);
+    } catch (error: unknown) {
+      setError(error as Error);
     } finally {
       setIsLoading(false);
     }
@@ -79,16 +77,17 @@ export function PaginaVendedor() {
   const handleSaveSuccess = () => {
     setIsCreateModalOpen(false); // Cerrar el modal
     fetchSellers(); // Refrescar la lista de vendedores
-  }
+  };
 
   return (
     <div className="bg-gray-100 min-h-screen">
       <div className="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow-lg">
-
         {/* 1. Cabecera */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Vendedores</h1>
-          <p className="text-gray-600 mt-1">Crear vendedores y asignarles a una sede para empezar a vender</p>
+          <p className="text-gray-600 mt-1">
+            Crear vendedores y asignarles a una sede para empezar a vender
+          </p>
         </div>
 
         {/* 2. Pestañas (Tabs) */}
@@ -99,9 +98,10 @@ export function PaginaVendedor() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as TabId)} // Aseguramos el tipo al hacer click
                 className={`
-                  ${activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ${
+                    activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }
                   whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm
                 `}
@@ -119,24 +119,18 @@ export function PaginaVendedor() {
             <div>
               <SellerToolbar
                 onNewSellerClick={() => {
-                  console.log("Creando nuevo vendedor")
+                  console.log('Creando nuevo vendedor');
                   setIsCreateModalOpen(true);
-                  }
-                }
+                }}
               />
 
               {isLoading && <p>Cargando vendedores...</p>}
               {/* Por mientras comentamos esta parte hasta tener el endpoint listo */}
               {/*error && <p className="text-red-500">Error: {error.message}</p>*/}
               {/* Colocamos los vendedores de la base de datos */}
-              {!isLoading && !error && (
-                <SellerTable sellers={sellers} />
-              )}
+              {!isLoading && !error && <SellerTable sellers={sellers} />}
               {/* Simulamos vendedores por si no existe endpoint por mientras */}
-              {!isLoading && error && (
-                <SellerTable sellers={mockSellers} />
-              )}
-
+              {!isLoading && error && <SellerTable sellers={mockSellers} />}
             </div>
           )}
 
@@ -144,9 +138,7 @@ export function PaginaVendedor() {
           {activeTab === 'sedes' && (
             <div className="p-4">
               <h3 className="text-xl font-semibold">Visualizar Sedes de Venta por TODO</h3>
-              <p className="text-gray-500 mt-2">
-                Waaaaaaa.).
-              </p>
+              <p className="text-gray-500 mt-2">Waaaaaaa.).</p>
             </div>
           )}
         </div>
@@ -158,7 +150,6 @@ export function PaginaVendedor() {
           onSaveSuccess={handleSaveSuccess}
         />
       )}
-
     </div>
   );
 }
