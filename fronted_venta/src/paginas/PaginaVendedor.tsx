@@ -19,6 +19,14 @@ interface PageResponse {
     // ... otros campos de paginación
 }
 
+interface FilterState {
+    sellerType: string;
+    sellerStatus: string;
+    sellerBranchId: string; // Usaremos string para el input y convertiremos a number/null si es necesario
+    dni: string;
+    page: number;
+}
+
 export function PaginaVendedor() {
   // Empieza con la pestaña de vendedores
   const [activeTab, setActiveTab] = useState<TabId>('vendedores');
@@ -32,6 +40,22 @@ export function PaginaVendedor() {
   const [sedes, setSedes] = useState<SedeResponse[]>([]);
   const [isSedesLoading, setIsSedesLoading] = useState(false);
   const [sedesError, setSedesError] = useState<Error | null>(null);
+
+  const [filters, setFilters] = useState<FilterState>({
+      sellerType: '',
+      sellerStatus: 'ACTIVE', // Podríamos dejar solo activos por defecto
+      sellerBranchId: '',
+      dni: '',
+      page: 0,
+  });
+
+  const handleFilterChange = (name: keyof FilterState, value: string | number) => {
+    setFilters(prev => ({
+        ...prev,
+        [name]: value,
+        page: 0, // Siempre reseteamos la paginación al cambiar un filtro
+    }));
+};
 
   const mappedSellers = sellers.map(vendedor => ({
     id: vendedor.sellerId.toString(),
@@ -55,24 +79,34 @@ export function PaginaVendedor() {
     setIsLoading(true);
     setError(null);
     try {
-        // Usamos la URL base y el endpoint de paginación
-      const response = await fetch(`${API_BASE_URL}/vendedores?page=0&size=20`);
+        // CONSTRUCCIÓN DINÁMICA DE LA URL
+        const params = new URLSearchParams();
+        params.append('page', filters.page.toString());
+        params.append('size', '20'); // Tamaño fijo
 
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: No se pudo cargar la lista de vendedores`);
-      }
-        // 4. Mapear la respuesta de paginación (Page<T>)
-      const data: PageResponse = await response.json();
-      setSellers(data.content); // Solo guardamos la lista de vendedores (el contenido de la página)
+        if (filters.sellerType) params.append('sellerType', filters.sellerType);
+        if (filters.sellerStatus) params.append('sellerStatus', filters.sellerStatus);
+        if (filters.sellerBranchId) params.append('sellerBranchId', filters.sellerBranchId);
+        if (filters.dni) params.append('dni', filters.dni);
+
+        const url = `${API_BASE_URL}/vendedores?${params.toString()}`;
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: No se pudo cargar la lista de vendedores`);
+        }
+
+        const data: PageResponse = await response.json();
+        setSellers(data.content);
 
     } catch (error: unknown) {
-        // Quitamos el mock data y solo mostramos el error si falla
         setError(error as Error);
-        setSellers([]); // Aseguramos que la lista esté vacía en caso de error
+        setSellers([]);
     } finally {
         setIsLoading(false);
     }
-  }, []);
+  }, [filters]);
 
   // para obtener las sedes
   const fetchSedes = useCallback(async () => {
@@ -217,9 +251,8 @@ export function PaginaVendedor() {
           {activeTab === 'vendedores' && (
             <div>
               <SellerToolbar
-                onNewSellerClick={() => {
-                  setIsCreateModalOpen(true);
-                }}
+                onNewSellerClick={() => { setIsCreateModalOpen(true);}}
+                onFilterChange={handleFilterChange}
               />
 
               {isLoading && <p className='py-4 text-center text-gray-600'>Cargando vendedores desde el backend...</p>}
