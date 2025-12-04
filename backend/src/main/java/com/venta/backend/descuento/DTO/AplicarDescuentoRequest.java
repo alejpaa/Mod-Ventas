@@ -7,14 +7,14 @@ public class AplicarDescuentoRequest {
     private String codigoCupon; // Código si el cliente ingresó un cupón
     
     // -----------------------------------------------------
-    // 1. Constructor sin argumentos (Requerido por Spring/JSON Deserialización)
+    // 1. Constructor sin argumentos 
     // -----------------------------------------------------
     public AplicarDescuentoRequest() {
         // Constructor vacío
     }
 
     // -----------------------------------------------------
-    // 2. Constructor con todos los argumentos (Opcional, pero útil)
+    // 2. Constructor con todos los argumentos 
     // -----------------------------------------------------
     public AplicarDescuentoRequest(String ventaId, String dniCliente, String codigoCupon) {
         this.ventaId = ventaId;
@@ -23,7 +23,7 @@ public class AplicarDescuentoRequest {
     }
 
     // -----------------------------------------------------
-    // 3. Getters (Métodos de Acceso para leer los valores)
+    // 3. Getters 
     // -----------------------------------------------------
     public String getVentaId() {
         return ventaId;
@@ -38,7 +38,7 @@ public class AplicarDescuentoRequest {
     }
 
     // -----------------------------------------------------
-    // 4. Setters (Métodos de Modificación para establecer los valores)
+    // 4. Setters 
     // -----------------------------------------------------
     public void setVentaId(String ventaId) {
         this.ventaId = ventaId;
@@ -52,7 +52,6 @@ public class AplicarDescuentoRequest {
         this.codigoCupon = codigoCupon;
     }
 
-    // Opcional: toString() para facilitar la depuración
     @Override
     public String toString() {
         return "AplicarDescuentoRequest{" +

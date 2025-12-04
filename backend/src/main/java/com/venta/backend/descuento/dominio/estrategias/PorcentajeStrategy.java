@@ -16,7 +16,7 @@ public class PorcentajeStrategy implements IDescuentoStrategy {
      * Calcula el monto a descontar aplicando un porcentaje sobre el total de la venta.
      * 
      * @param venta La entidad Venta sobre la cual se aplica el descuento.
-     * @param valorBase El porcentaje a aplicar (ej. 0.10 para 10%, 0.15 para 15%).
+     * @param valorBase El porcentaje a aplicar 
      * @return El monto final descontado (en BigDecimal).
      */
     @Override

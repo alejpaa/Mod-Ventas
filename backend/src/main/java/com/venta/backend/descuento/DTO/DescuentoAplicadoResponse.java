@@ -7,17 +7,17 @@ public class DescuentoAplicadoResponse {
     private String tipoDescuento;
     private BigDecimal montoDescontado;
     private BigDecimal nuevoTotalVenta;
-    private String mensaje; // Mensaje de éxito o la razón del descuento (Ej: "15% por ser Platino").
+    private String mensaje; // Mensaje de éxito o la razón del descuento 
 
     // -----------------------------------------------------
-    // 1. Constructor sin argumentos (Requerido para la deserialización de JSON por Spring)
+    // 1. Constructor sin argumentos 
     // -----------------------------------------------------
     public DescuentoAplicadoResponse() {
         // Inicialización por defecto
     }
 
     // -----------------------------------------------------
-    // 2. Constructor con todos los argumentos (Utilizado en el DiscountService para crear la respuesta)
+    // 2. Constructor con todos los argumentos 
     // -----------------------------------------------------
     public DescuentoAplicadoResponse(String tipoDescuento, BigDecimal montoDescontado, BigDecimal nuevoTotalVenta, String mensaje) {
         this.tipoDescuento = tipoDescuento;
