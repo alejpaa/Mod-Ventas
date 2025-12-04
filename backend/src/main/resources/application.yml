@@ -27,7 +27,7 @@ springdoc:
     path: /api-docs
     enabled: true
   swagger-ui:
-    path: /swagger-ui.html
+    path: /docs
     enabled: true
     operations-sorter: method
     tags-sorter: alpha

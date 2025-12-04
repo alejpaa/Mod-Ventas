@@ -3,13 +3,10 @@ info:
   title: API de Ventas
   description: API para gestión de ventas, cotizaciones, clientes, productos, descuentos y vendedores
   version: 1.0.0
-  contact:
-    name: Equipo de Desarrollo
-    email: dev@ventas.com
 servers:
   - url: http://localhost:8080
     description: Servidor de Desarrollo
-  - url: https://api-ventas.azure.com
+  - url: https://mod-ventas.onrender.com
     description: Servidor de Producción
 
 tags:
@@ -102,6 +99,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Cotizacion'
+
+  /api/cotizaciones/{id}:
+    get:
+      tags:
+        - Cotizaciones
+      summary: Obtiene los detalles de una cotización específica.
+      operationId: obtenerCotizacion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID de la cotización a consultar.
+      responses:
+        '200':
+          description: Detalles de la cotización.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cotizacion'
+        '404':
+          description: Cotización no encontrada.
+
+  /api/cotizaciones/{id}/aceptacion:
+    post:
+      tags:
+        - Cotizaciones
+      summary: Registra la aceptación de una cotización por parte del cliente.
+      description: Este endpoint es típicamente invocado desde un enlace seguro o un formulario después de que el cliente recibe el correo (acción asíncrona).
+      operationId: aceptarCotizacion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID de la cotización a aceptar.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token_aceptacion:
+                  type: string
+                  description: Token de seguridad para validar que la aceptación proviene del destinatario correcto.
+      responses:
+        '200':
+          description: Cotización aceptada. Se inicia la generación de la orden de venta.
+        '400':
+          description: Token inválido o cotización ya aceptada/expirada.
+        '404':
+          description: Cotización no encontrada.
 
   /api/cotizaciones/enviar:
     post:
