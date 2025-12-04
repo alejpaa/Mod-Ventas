@@ -487,31 +487,35 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDa
           </div>
 
           {/* Bloque de Información Bancaria */}
-          <h3 className="text-lg font-bold text-gray-700 mt-8 mb-4 border-t pt-4">Información Bancaria (Comisiones)</h3>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-            <div>
-              <label className='block text-sm font-medium text-gray-700'>Cuenta Bancaria</label>
-              <input
-                type="text"
-                name="bankAccount"
-                value={formData.bankAccount}
-                onChange={handleChange}
-                placeholder="Ej: 001-XXXXXX-XX"
-                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-              />
-            </div>
-            <div>
-              <label className='block text-sm font-medium text-gray-700'>Nombre del Banco</label>
-              <input
-                type="text"
-                name="bankName"
-                value={formData.bankName}
-                onChange={handleChange}
-                placeholder="Ej: BCP, Interbank"
-                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-              />
-            </div>
-          </div>
+          {!isInternal && (
+            <>
+              <h3 className="text-lg font-bold text-gray-700 mt-8 mb-4 border-t pt-4">Información Bancaria (Comisiones)</h3>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                <div>
+                  <label className='block text-sm font-medium text-gray-700'>Cuenta Bancaria</label>
+                  <input
+                    type="text"
+                    name="bankAccount"
+                    value={formData.bankAccount}
+                    onChange={handleChange}
+                    placeholder="Ej: 001-XXXXXX-XX"
+                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  />
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700'>Nombre del Banco</label>
+                  <input
+                    type="text"
+                    name="bankName"
+                    value={formData.bankName}
+                    onChange={handleChange}
+                    placeholder="Ej: BCP, Interbank"
+                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  />
+                </div>
+              </div>
+            </>
+          )}
 
 
           {/* Botones */}
