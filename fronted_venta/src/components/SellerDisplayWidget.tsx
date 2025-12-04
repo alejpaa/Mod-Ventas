@@ -11,7 +11,7 @@ interface SellerDisplayProps {
 
 const SellerDisplayWidget: React.FC<SellerDisplayProps> = ({
     sellerId,
-    backendBaseUrl = 'https://mod-ventas.onrender.com/api'
+    backendBaseUrl = import.meta.env.VITE_API_URL
 }) => {
 
     const [vendedorData, setVendedorData] = useState<VendedorResponse | null>(null);
