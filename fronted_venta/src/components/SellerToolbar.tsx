@@ -1,4 +1,4 @@
-import { SellerType, type SellerToolbarProps } from "../types/seller.types";
+import { type SellerToolbarProps } from "../types/seller.types";
 
 interface SellerToolbarPropsWithFilter extends SellerToolbarProps {
     onFilterChange: (name: string, value: string) => void;
