@@ -43,6 +43,8 @@ export function PaginaVendedor() {
   const [sedes, setSedes] = useState<SedeResponse[]>([]);
   const [isSedesLoading, setIsSedesLoading] = useState(false);
   const [sedesError, setSedesError] = useState<Error | null>(null);
+  // Para almacenar el vendedor a editar (objeto completo de la API)
+  const [sellerToEdit, setSellerToEdit] = useState<VendedorResponse | null>(null);
 
   // estados para paginación
   const [totalPages, setTotalPages] = useState(0);
@@ -56,13 +58,14 @@ export function PaginaVendedor() {
       page: 0,
   });
 
+
   const handleFilterChange = (name: string, value: string | number) => {
     setFilters(prev => ({
         ...prev,
         [name]: value,
         page: 0, // Siempre reseteamos la paginación al cambiar un filtro
     }));
-};
+  };
 
   const mappedSellers = sellers.map(vendedor => ({
     id: vendedor.sellerId.toString(),
@@ -219,16 +222,39 @@ export function PaginaVendedor() {
     }
   }, [fetchSellers]);
 
+  const handleEditSeller = useCallback(async (sellerId: number) => {
+        try {
+            // 1. Obtener los datos actuales del vendedor del backend
+            const response = await fetch(`${API_BASE_URL}/vendedores/${sellerId}`);
+            if (!response.ok) throw new Error("No se pudo cargar el vendedor para editar.");
+
+            const sellerData: VendedorResponse = await response.json();
+
+            // 2. Almacenar los datos y abrir el modal
+            setSellerToEdit(sellerData);
+            setIsCreateModalOpen(true);
+
+        } catch (e: any) {
+            alert(`Error al cargar datos de edición: ${e.message}`);
+        }
+    }, [API_BASE_URL]);
+
   useEffect(() => {
     if (activeTab === 'vendedores') {
       fetchSellers();
     }
   }, [activeTab, fetchSellers]);
 
+  const handleCloseModal = () => {
+        setIsCreateModalOpen(false);
+        setSellerToEdit(null); // Limpiar el estado de edición al cerrar
+    };
   const handleSaveSuccess = () => {
-   setIsCreateModalOpen(false); // Cerrar el modal
-  fetchSellers(); // Refrescar la lista de vendedores
+    setIsCreateModalOpen(false); // Cerrar el modal
+    setSellerToEdit(null); // Limpiar el estado
+    fetchSellers(); // Refrescar la lista de vendedores
   };
+
 
   return (
     <div className="bg-gray-100 min-h-screen">
@@ -271,7 +297,10 @@ export function PaginaVendedor() {
           {activeTab === 'vendedores' && (
             <div>
               <SellerToolbar
-                onNewSellerClick={() => { setIsCreateModalOpen(true);}}
+                onNewSellerClick={() => {
+                    setSellerToEdit(null);
+                    setIsCreateModalOpen(true);
+                }}
                 onFilterChange={handleFilterChange}
               />
 
@@ -292,6 +321,7 @@ export function PaginaVendedor() {
                         sellers={mappedSellers}
                         onDeactivate={(id) => handleDeactivateSeller(id)}
                         onActivate={(id) => handleActivateSeller(id)}
+                        onEdit={handleEditSeller}
                     />
 
                     <div className='mt-4'>
@@ -335,9 +365,10 @@ export function PaginaVendedor() {
 
       {isCreateModalOpen && (
         <CreateSellerModal
-          onClose={() => setIsCreateModalOpen(false)}
+          onClose={() => handleCloseModal}
           onSaveSuccess={handleSaveSuccess}
           apiBaseUrl={API_BASE_URL}
+          sellerDataToEdit={sellerToEdit}
         />
       )}
     </div>

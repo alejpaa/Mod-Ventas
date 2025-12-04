@@ -1,42 +1,37 @@
-import { useEffect, useState, type FormEvent } from 'react';
-// importamos la URL de VITE para un fallback si no se pasa como prop
+import React, { useEffect, useState, type FormEvent } from 'react';
+// Importamos los tipos necesarios. Asumimos que SedeResponse y VendedorResponse están en Vendedor.ts
+import type { VendedorResponse, SedeResponse } from '../types/Vendedor';
 
 // 1. Tipos de la Sede (coincide con la entidad Sede.java)
-interface Sede {
-  branchId: number; // Coincide con branchId del backend
-  name: string;
-}
+interface Sede extends SedeResponse {}
 
-// 2. Tipo de Datos del Formulario (Alineado a RegistroVendedorRequest.java)
+// 2. Tipo de Datos del Formulario (Alineado a RegistroVendedorRequest.java y ModificacionVendedorRequest.java)
 type SellerFormData = {
-  // Datos obligatorios
+  // Datos principales
   dni: string;
   firstName: string;
   lastName: string;
-  sellerType: 'INTERNAL' | 'EXTERNAL'; // Usamos los valores de Java
-  sellerBranchId: number | string; // Usamos el nombre de Java, será number o string ""
-  // Datos opcionales
+  sellerType: 'INTERNAL' | 'EXTERNAL';
+  sellerBranchId: number | string; // ID de la sede seleccionada
+
+  // Datos de Contacto/Dirección
   email: string;
-  phoneNumber: string; // Coincide con phoneNumber de Java
+  phoneNumber: string;
   address: string;
+
+  // Datos Bancarios/Fiscales
   bankAccount: string;
   bankName: string;
   ruc: string;
-  documentType: 'DNI' | 'CE' | 'PASSPORT' | 'RUC'; // Por defecto será DNI
+  documentType: 'DNI' | 'CE' | 'PASSPORT' | 'RUC';
 };
 
-// 3. Interfaz de Props del Modal
-interface CreateModalProps {
-  onClose: () => void;
-  onSaveSuccess: () => void;
-  apiBaseUrl: string; // <-- RECIBIMOS LA URL AQUÍ
-}
-
+// Estado inicial para el modo CREACIÓN
 const initialState: SellerFormData = {
   dni: '',
   firstName: '',
   lastName: '',
-  sellerType: 'EXTERNAL', // Por defecto
+  sellerType: 'EXTERNAL',
   sellerBranchId: '',
   email: '',
   phoneNumber: '',
@@ -44,11 +39,41 @@ const initialState: SellerFormData = {
   bankAccount: '',
   bankName: '',
   ruc: '',
-  documentType: 'DNI', // Por defecto
+  documentType: 'DNI',
 };
 
-export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl }: CreateModalProps) {
-  const [formData, setFormData] = useState<SellerFormData>(initialState);
+// 3. Interfaz de Props del Modal
+interface CreateModalProps {
+  onClose: () => void;
+  onSaveSuccess: () => void;
+  apiBaseUrl: string;
+  sellerDataToEdit: VendedorResponse | null; // <-- Datos para la edición
+}
+
+// FUNCIÓN DE MAPEO: Convierte el DTO de la API (VendedorResponse) al estado del Formulario (SellerFormData)
+const generateInitialState = (data: VendedorResponse | null): SellerFormData => {
+    if (!data) return initialState;
+
+    return {
+        dni: data.dni || '',
+        firstName: data.firstName || '',
+        lastName: data.lastName || '',
+        sellerType: data.sellerType || 'EXTERNAL',
+        sellerBranchId: data.sellerBranchId || '',
+        email: data.email || '',
+        phoneNumber: data.phoneNumber || '',
+        address: data.address || '',
+        bankAccount: data.bankAccount || '',
+        bankName: data.bankName || '',
+        ruc: data.ruc || '',
+        documentType: data.documentType || 'DNI',
+    };
+};
+
+export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDataToEdit }: CreateModalProps) {
+
+  // 4. ESTADO INICIAL
+  const [formData, setFormData] = useState<SellerFormData>(() => generateInitialState(sellerDataToEdit));
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,8 +85,15 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl }: Create
   const [isSedeDropdownOpen, setIsSedeDropdownOpen] = useState(false);
   const [selectedSedeName, setSelectedSedeName] = useState('');
 
+  // Lógica de Modo y Restricciones
+  const isEditing = !!sellerDataToEdit;
+  const sellerId = isEditing ? sellerDataToEdit!.sellerId : null;
+  const isInternal = formData.sellerType === 'INTERNAL';
+  // Deshabilitar Nombres/Apellidos/DNI si estamos EDITANDO un vendedor INTERNO
+  const disablePersonalData = isInternal && isEditing;
 
-  // 4. FETCH REAL DE SEDES
+
+  // 5. FETCH REAL DE SEDES
   useEffect(() => {
     const fetchSedes = async () => {
       setIsSedesLoading(true);
@@ -82,7 +114,12 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl }: Create
       }
     };
     fetchSedes();
-  }, [apiBaseUrl]);
+
+    // Precarga la sede actual en el campo de texto en modo edición
+    if (sellerDataToEdit) {
+        setSelectedSedeName(sellerDataToEdit.sellerBranchName || '');
+    }
+  }, [apiBaseUrl, sellerDataToEdit]);
 
   // Filtra las sedes por el nombre escrito en el input
   const filteredSedes = sedes.filter((sede) =>
@@ -95,7 +132,6 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl }: Create
 
     if (query.length > 0) {
       setIsSedeDropdownOpen(true);
-      // Limpiamos el ID de la sede si el usuario está buscando
       setFormData((prev) => ({
         ...prev,
         sellerBranchId: '',
@@ -111,26 +147,24 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl }: Create
   };
 
   const handleSedeSelect = (sede: Sede) => {
-    // Al seleccionar, guardamos el ID de la sede del backend (branchId)
     setFormData((prev) => ({
       ...prev,
-      sellerBranchId: sede.branchId, // Usamos branchId
+      sellerBranchId: sede.branchId,
     }));
     setSelectedSedeName(sede.name);
     setSearchQuery(sede.name);
     setIsSedeDropdownOpen(false);
   };
 
-  // Para el manejo de cambios en los inputs
+  // Manejo de cambios en los inputs
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    // Si el campo es el tipo, actualizamos el DocumentType por defecto (DNI)
     if (name === 'sellerType' && value === 'INTERNAL') {
         setFormData((prev) => ({
             ...prev,
-            [name]: value,
-            documentType: 'DNI', // Aseguramos DNI para internos
-            ruc: '', // Limpiamos RUC para internos
+            [name]: value as 'INTERNAL',
+            documentType: 'DNI',
+            ruc: '',
         }));
     } else {
         setFormData((prev) => ({
@@ -141,63 +175,52 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl }: Create
   };
 
   const handleSearchHR = async () => {
-    // 1. LLamar al endpoint /api/vendedores/dni/{dni}
-    // 2. Usar los datos del VendedorResponse para autocompletar el formulario
-
-    // Por ahora, solo simulación para indicar que la lógica iría aquí
-    alert(`Buscando empleado con DNI: ${formData.dni}`);
+    alert(`Buscando empleado con DNI: ${formData.dni}. Esta lógica autocompletará el formulario.`);
   };
 
-  // 5. SUBMIT DE CREACIÓN
+  // 6. SUBMIT (POST para Crear, PUT para Editar)
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
     setError(null);
 
-    // Validación básica antes de enviar
+    // Validación básica
     if (
       !formData.dni ||
       !formData.firstName ||
       !formData.lastName ||
       !formData.sellerType ||
-      typeof formData.sellerBranchId !== 'number' // Verificamos que se haya seleccionado un ID numérico
+      typeof formData.sellerBranchId !== 'number'
     ) {
       setError('Por favor, complete DNI, Nombres, Apellidos y asigne una Sede.');
       setIsSaving(false);
       return;
     }
 
+    // Determinar la URL y el Método
+    const method = isEditing ? 'PUT' : 'POST';
+    const url = isEditing ? `${apiBaseUrl}/vendedores/${sellerId}` : `${apiBaseUrl}/vendedores`;
+
     try {
-      // El Request Body ya coincide con RegistroVendedorRequest.java
+      // El Request Body ya es compatible con RegistroVendedorRequest/ModificacionVendedorRequest
       const requestBody = {
-          dni: formData.dni,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phoneNumber: formData.phoneNumber,
-          address: formData.address,
-          sellerType: formData.sellerType,
-          sellerBranchId: formData.sellerBranchId, // Ya es un number
-          ruc: formData.ruc,
-          bankAccount: formData.bankAccount,
-          bankName: formData.bankName,
-          documentType: formData.documentType,
+          ...formData,
+          sellerBranchId: formData.sellerBranchId as number, // Asegura el tipo
       };
 
-      // POST /api/vendedores
-      const response = await fetch(`${apiBaseUrl}/vendedores`, {
-        method: 'POST',
+      // Llamada a la API
+      const response = await fetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
-        // El GlobalExceptionHandler devuelve un JSON de error
         const errorData = await response.json();
-        // Mostrar el mensaje de negocio del backend (ej: "El DNI ya se encuentra registrado.")
-        throw new Error(errorData.message || 'Error desconocido al registrar el vendedor.');
+        throw new Error(errorData.message || 'Error desconocido al procesar el vendedor.');
       }
 
+      alert(isEditing ? 'Vendedor actualizado exitosamente!' : 'Vendedor registrado exitosamente!');
       onSaveSuccess();
     } catch (err: any) {
       setError(err.message);
@@ -216,7 +239,7 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl }: Create
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Registrar Nuevo Vendedor</h2>
+          <h2 className="text-2xl font-bold text-gray-800">{isEditing ? `Editar Vendedor (ID: ${sellerId})` : 'Registrar Nuevo Vendedor'}</h2>
           <button onClick={onClose} className="text-gray-500 text-3xl">
             &times;
           </button>
@@ -227,21 +250,22 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl }: Create
 
           <div className="grid grid-cols-2 gap-x-6 gap-y-4">
 
-            {/* Tipo de Vendedor */}
+            {/* Tipo de Vendedor: Deshabilitado en Edición */}
             <div>
               <label className='block text-sm font-medium text-gray-700'>Tipo de Vendedor</label>
               <select
-                name="sellerType" // <-- Nombre alineado al backend
+                name="sellerType"
                 value={formData.sellerType}
                 onChange={handleChange}
-                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                disabled={isEditing} // BLOQUEAR TIPO EN EDICIÓN
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2 disabled:bg-gray-100"
               >
                 <option value="EXTERNAL">Externo</option>
                 <option value="INTERNAL">Interno (Planilla)</option>
               </select>
             </div>
 
-            {/* Document Type (Oculto, solo si es EXTERNAL y puede ser RUC) */}
+            {/* Document Type */}
             {formData.sellerType === 'EXTERNAL' && (
                 <div>
                     <label className='block text-sm font-medium text-gray-700'>Tipo Doc.</label>
@@ -257,7 +281,6 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl }: Create
                     </select>
                 </div>
             )}
-            {/* Si es Interno, el tipo de documento es DNI, se puede ocultar */}
             {formData.sellerType === 'INTERNAL' && <div></div>}
 
 
@@ -271,15 +294,15 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl }: Create
                   value={formData.dni}
                   onChange={handleChange}
                   placeholder="DNI (8 dígitos)"
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  disabled={isEditing} // BLOQUEAR DNI EN EDICIÓN
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 disabled:bg-gray-100"
                 />
 
-                {/* Agregamos condicional para agregar el botón de RRHH */}
                 {formData.sellerType === 'INTERNAL' && (
                   <button
                     type="button"
                     onClick={handleSearchHR}
-                    disabled={!formData.dni || formData.dni.length !== 8}
+                    disabled={!formData.dni || formData.dni.length !== 8 || isEditing}
                     className="mt-1 px-4 py-2 bg-blue-100 text-blue-700 rounded-md whitespace-nowrap disabled:bg-gray-200 disabled:text-gray-500 transition-colors"
                   >
                     Buscar en RRHH
@@ -288,16 +311,16 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl }: Create
               </div>
             </div>
 
-            {/* RUC (Solo si es EXTERNAL y DocumentType no es RUC, se puede omitir si solo usamos el campo DNI para la búsqueda) */}
-            {formData.sellerType === 'EXTERNAL' && formData.documentType !== 'RUC' && (
+            {/* RUC (Solo si es EXTERNAL y DocumentType es RUC) */}
+            {formData.sellerType === 'EXTERNAL' && formData.documentType === 'RUC' && (
                 <div className='col-span-2'>
-                  <label className='block text-sm font-medium text-gray-700'>RUC (Opcional)</label>
+                  <label className='block text-sm font-medium text-gray-700'>RUC (11 dígitos)</label>
                   <input
                     type="text"
                     name="ruc"
                     value={formData.ruc}
                     onChange={handleChange}
-                    placeholder="RUC (11 dígitos, opcional)"
+                    placeholder="RUC (11 dígitos)"
                     className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   />
                 </div>
@@ -313,8 +336,8 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl }: Create
                 value={formData.firstName}
                 onChange={handleChange}
                 placeholder="Ej: Juan"
-                disabled={formData.sellerType === 'INTERNAL'} // Deshabilitado si viene de RRHH
-                className="mt-1 block w-full border border-gray-300 rounded-md p-2 disabled:bg-gray-50"
+                disabled={disablePersonalData} // APLICAR RESTRICCIÓN DE INTERNO
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2 disabled:bg-gray-100"
               />
             </div>
 
@@ -327,8 +350,8 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl }: Create
                 value={formData.lastName}
                 onChange={handleChange}
                 placeholder="Ej: Pérez"
-                disabled={formData.sellerType === 'INTERNAL'}
-                className="mt-1 block w-full border border-gray-300 rounded-md p-2 disabled:bg-gray-50"
+                disabled={disablePersonalData} // APLICAR RESTRICCIÓN DE INTERNO
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2 disabled:bg-gray-100"
               />
             </div>
 
@@ -349,7 +372,7 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl }: Create
               <label className='block text-sm font-medium text-gray-700'>Teléfono</label>
               <input
                 type="tel"
-                name="phoneNumber" // <-- Nombre alineado al backend
+                name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleChange}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
@@ -377,7 +400,6 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl }: Create
                 value={selectedSedeName}
                 onChange={handleSedeSearchChange}
                 onFocus={() => setIsSedeDropdownOpen(true)}
-                // Usamos onBlur con un timeout para que el onMouseDown (handleSedeSelect) se active primero
                 onBlur={() => setTimeout(() => setIsSedeDropdownOpen(false), 200)}
                 placeholder={isSedesLoading ? 'Cargando sedes...' : 'Busque por nombre de sede...'}
                 disabled={isSedesLoading}
@@ -396,7 +418,6 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl }: Create
                     filteredSedes.map((sede) => (
                       <li
                         key={sede.branchId}
-                        // Usamos onMouseDown para capturar el click antes del onBlur
                         onMouseDown={() => handleSedeSelect(sede)}
                         className="p-2 cursor-pointer hover:bg-blue-100 text-gray-700"
                       >
@@ -453,7 +474,7 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl }: Create
               disabled={isSaving}
               className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
-              {isSaving ? 'Guardando...' : 'Guardar Vendedor'}
+              {isSaving ? 'Guardando...' : isEditing ? 'Guardar Cambios' : 'Guardar Vendedor'}
             </button>
           </div>
         </form>

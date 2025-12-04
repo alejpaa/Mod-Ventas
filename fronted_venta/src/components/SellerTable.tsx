@@ -2,7 +2,7 @@ import StatusPill from "./StatusPill";
 import TypePill from "./TypePill";
 import { type SellerTableProps, SellerStatus } from "../types/seller.types";
 
-const SellerTable = ({ sellers, onDeactivate, onActivate }: SellerTableProps) => (
+const SellerTable = ({ sellers, onDeactivate, onActivate, onEdit }: SellerTableProps) => (
   <div className="overflow-x-auto">
     <table className="min-w-full divide-y divide-gray-200">
       {/* Encabezados de la Tabla */}
@@ -33,7 +33,16 @@ const SellerTable = ({ sellers, onDeactivate, onActivate }: SellerTableProps) =>
               <StatusPill status={seller.status} />
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-4">
-              <a href="#" className="text-blue-600 hover:text-blue-800">Editar</a>
+              <button
+                  onClick={(e) => {
+                      e.preventDefault();
+                      // Llamamos a onEdit, convirtiendo el ID de vuelta a número
+                      onEdit(Number(seller.id));
+                  }}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  Editar
+              </button>
 
               {seller.status === SellerStatus.Activo ? (
                 <button
