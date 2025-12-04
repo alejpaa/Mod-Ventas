@@ -1,8 +1,7 @@
-import React from 'react'
-import { useRole } from '../contexts/RoleContext'
+import { useRole } from '../contexts/RoleContext';
 
 export function Login() {
-  const { setRole } = useRole()
+  const { setRole } = useRole();
 
   return (
     <div className="flex items-center justify-center h-screen bg-gray-100">
@@ -26,7 +25,7 @@ export function Login() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default Login
+export default Login;
