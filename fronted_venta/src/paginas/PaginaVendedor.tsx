@@ -3,6 +3,7 @@ import SellerToolbar from '../components/SellerToolbar';
 import SellerTable from '../components/SellerTable';
 import { type Seller, SellerType, SellerStatus } from '../types/seller.types';
 import { CreateSellerModal } from '../components/CreateSellerModal';
+import SellerDisplayWidget from '../components/SellerDisplayWidget';
 
 type TabId = 'vendedores' | 'sedes';
 
