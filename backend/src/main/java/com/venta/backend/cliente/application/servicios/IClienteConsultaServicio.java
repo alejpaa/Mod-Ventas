@@ -49,5 +49,14 @@ public interface IClienteConsultaServicio {
      * @return Un ClienteVentaDTO con los datos operativos y flag de deuda del cliente.
      */
     ClienteVentaDTO buscarClienteParaVenta(String dni);
+
+    /**
+     * Obtiene un cliente por su ID.
+     * Devuelve la información completa del cliente.
+     *
+     * @param clienteId El ID del cliente a buscar.
+     * @return Un ClienteResponse con los datos del cliente.
+     */
+    ClienteResponse obtenerClientePorId(Long clienteId);
 }
 

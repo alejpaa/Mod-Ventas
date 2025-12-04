@@ -256,6 +256,13 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
                 .build();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ClienteResponse obtenerClientePorId(Long clienteId) {
+        Cliente cliente = findClienteEntityById(clienteId);
+        return clienteMapeador.toClienteResponse(cliente);
+    }
+
     // ========== MÉTODOS PRIVADOS AUXILIARES ==========
 
     private Cliente findClienteEntityById(Long clienteId) {
