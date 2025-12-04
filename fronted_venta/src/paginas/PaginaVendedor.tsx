@@ -2,8 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import SellerToolbar from '../components/SellerToolbar';
 import SellerTable from '../components/SellerTable';
 import { SellerType, SellerStatus } from '../types/seller.types';
-import type { VendedorResponse } from '../types/Vendedor';
+import type { VendedorResponse, SedeResponse } from '../types/Vendedor';
 import { CreateSellerModal } from '../components/CreateSellerModal';
+import SedeTable from '../components/SedeTable';
 
 type TabId = 'vendedores' | 'sedes';
 
@@ -26,6 +27,11 @@ export function PaginaVendedor() {
   const [sellers, setSellers] = useState<VendedorResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+
+  // [ESTADOS PARA SEDES]
+  const [sedes, setSedes] = useState<SedeResponse[]>([]);
+  const [isSedesLoading, setIsSedesLoading] = useState(false);
+  const [sedesError, setSedesError] = useState<Error | null>(null);
 
   const mappedSellers = sellers.map(vendedor => ({
     id: vendedor.sellerId.toString(),
@@ -67,6 +73,39 @@ export function PaginaVendedor() {
         setIsLoading(false);
     }
   }, []);
+
+  // para obtener las sedes
+  const fetchSedes = useCallback(async () => {
+    setIsSedesLoading(true);
+    setSedesError(null);
+    try {
+      // Endpoint GET /api/sedes
+      const response = await fetch(`${API_BASE_URL}/sedes`);
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: No se pudo cargar la lista de sedes`);
+      }
+
+      const data: SedeResponse[] = await response.json();
+      setSedes(data);
+
+    } catch (error: unknown) {
+      setSedesError(error as Error);
+      setSedes([]);
+    } finally {
+      setIsSedesLoading(false);
+    }
+  }, []);
+
+  // para cargar sedes cuando se cambia de pestaña
+  useEffect(() => {
+    if (activeTab === 'vendedores') {
+      fetchSellers();
+    } else if (activeTab === 'sedes' && sedes.length === 0 && !isSedesLoading) {
+      // Solo cargar si estamos en la pestaña y aún no hay datos
+      fetchSedes();
+    }
+  }, [activeTab, fetchSellers, fetchSedes, sedes.length, isSedesLoading]);
 
   const handleDeactivateSeller = useCallback(async (sellerId: number) => {
     if (!confirm(`¿Está seguro de desactivar al vendedor con ID ${sellerId}?`)) {
@@ -205,8 +244,24 @@ export function PaginaVendedor() {
           {/* Contenido de la pestaña SEDES */}
           {activeTab === 'sedes' && (
             <div className="p-4">
-              <h3 className="text-xl font-semibold">Visualizar Sedes de Venta por TODO</h3>
-              <p className="text-gray-500 mt-2">Waaaaaaa.).</p>
+                <h3 className="text-xl font-semibold">Listados de sede de ventas</h3>
+                {isSedesLoading && <p className='py-4 text-center text-gray-600'>Cargando sedes...</p>}
+
+                {sedesError && (
+                    <div className='p-4 my-4 bg-red-100 text-red-700 rounded-md'>
+                        <p className='font-bold'>Error al cargar sedes:</p>
+                        <p>{sedesError.message}</p>
+                        <p className='mt-2 text-sm'>Asegúrese de que el backend ({API_BASE_URL}) esté activo.</p>
+                    </div>
+                )}
+
+                {/* VISUALIZACIÓN DE LA TABLA */}
+                {!isSedesLoading && !sedesError && sedes.length > 0 && (
+                    <SedeTable sedes={sedes} />
+                )}
+                {!isSedesLoading && !sedesError && sedes.length === 0 && (
+                    <p className='py-4 text-center text-gray-500 italic'>No hay sedes registradas o activas.</p>
+                )}
             </div>
           )}
         </div>
