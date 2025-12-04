@@ -1,7 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
 // importamos la URL de VITE para un fallback si no se pasa como prop
-const FALLBACK_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
-
 
 // 1. Tipos de la Sede (coincide con la entidad Sede.java)
 interface Sede {

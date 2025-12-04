@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PendingLeadSalesModal } from '../components/PendingLeadSalesModal';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 // --- Tipos para Ventas ---
 type EstadoVenta = 'Aprobada' | 'Cancelada' | 'En Borrador';
 
@@ -70,7 +71,7 @@ export function PaginaVenta() {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch('/api/venta');
+        const response = await fetch(`${API_BASE_URL}/venta`);
         if (!response.ok) {
           throw new Error('No se pudo obtener la lista de ventas');
         }
@@ -118,7 +119,7 @@ export function PaginaVenta() {
   const handleCrearOrdenVenta = async () => {
   try {
     setCreating(true);
-    const response = await fetch('/api/venta/directa/borrador', {
+    const response = await fetch(`${API_BASE_URL}/venta/directa/borrador`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

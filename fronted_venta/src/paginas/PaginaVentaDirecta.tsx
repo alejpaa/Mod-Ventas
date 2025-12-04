@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ConfirmCancelModal } from '../components/ConfirmCancelModal'; // <--- IMPORTAR MODAL
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 // --- Iconos SVG ---
 const SearchIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-400">
@@ -91,7 +92,7 @@ export function PaginaVentaDirecta() {
 
     const fetchResumen = async () => {
       try {
-        const response = await fetch(`/api/venta/${ventaId}/carrito`);
+        const response = await fetch(`${API_BASE_URL}/venta/${ventaId}/carrito`);
         if (!response.ok) {
           throw new Error('No se pudo cargar el resumen de la venta');
         }
