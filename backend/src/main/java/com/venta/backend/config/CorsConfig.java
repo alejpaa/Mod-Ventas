@@ -2,29 +2,36 @@ package com.venta.backend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 public class CorsConfig {
 
     @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                        .allowedOrigins(
-                                "https://mod-ventas.vercel.app",
-                                "https://prueba-vercel-venta-9ubr.vercel.app", // otro vercel de rhamses
-                                "http://localhost:5173",
-                                "http://localhost:3000"
-                        )
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-                        .allowedHeaders("*")
-                        .allowCredentials(true)
-                        .maxAge(3600);
-            }
-        };
+    public CorsFilter corsFilter() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+
+        // Permite tus frontends de Vercel
+        config.addAllowedOrigin("https://prueba-vercel-venta-9ubr.vercel.app"); // vercel privadito de rhamses
+        config.addAllowedOrigin("https://mod-ventas.vercel.app");
+
+        // Para desarrollo local también (opcional)
+        config.addAllowedOrigin("http://localhost:5173");
+        config.addAllowedOrigin("http://localhost:3000");
+
+        // Permite todos los métodos HTTP
+        config.addAllowedMethod("*");
+
+        // Permite todos los headers
+        config.addAllowedHeader("*");
+
+        // Permite credenciales (cookies, auth headers)
+        config.setAllowCredentials(true);
+
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
     }
 }
