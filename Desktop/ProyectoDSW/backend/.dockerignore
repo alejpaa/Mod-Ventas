@@ -1,0 +1,51 @@
+# Build outputs
+**/.pytest_cache/
+**/test-results/
+# Tests
+
+docs/
+HELP.md
+README.md
+# Documentation
+
+docker-compose*.yml
+.dockerignore
+Dockerfile
+# Docker
+
+.gitattributes
+.gitignore
+.git/
+# Git
+
+*.log
+# Logs
+
+Thumbs.db
+.DS_Store
+# OS
+
+.settings/
+.classpath
+.project
+*.iws
+*.ipr
+*.iml
+.vscode/
+.idea/
+# IDE
+
+!gradle-wrapper.properties
+!gradle-wrapper.jar
+gradle-app.setting
+.gradle/
+# Gradle
+
+*.ear
+*.war
+*.jar
+out/
+target/
+bin/
+build/
+
