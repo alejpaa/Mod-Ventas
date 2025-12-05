@@ -1,6 +1,6 @@
 package com.venta.backend.vendedor.application.adaptadores.impl;
 
-import com.venta.backend.vendedor.application.adaptadores.IAdaptadorEmpleado;
+import com.venta.backend.vendedor.application.adaptadores.IEmpleadoAdapter;
 import com.venta.backend.vendedor.entities.Vendedor;
 import com.venta.backend.vendedor.enums.DocumentType;
 import com.venta.backend.vendedor.enums.SellerStatus;
@@ -10,22 +10,29 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 
 @Component
-public class RRHHAdaptadorImpl implements IAdaptadorEmpleado {
+public class RrhhEmpleadoAdapter implements IEmpleadoAdapter {
     @Override
     public Vendedor adaptar(EmpleadoRRHHDTO empleadoDTO) {
+
+        String lastName = empleadoDTO.getApellidoPaterno() + " " + empleadoDTO.getApellidoMaterno();
+
         return Vendedor.builder()
-                .dni(empleadoDTO.getDni())
-                .firstName(empleadoDTO.getFirstName())
-                .lastName(empleadoDTO.getLastName())
+                // Mapeo de campos
+                .dni(empleadoDTO.getDocumentoIdentidad())
+                .firstName(empleadoDTO.getNombres())
+                .lastName(lastName)
                 .email(empleadoDTO.getEmail())
-                .phoneNumber(empleadoDTO.getPhoneNumber())
-                .address(empleadoDTO.getAddress())
-                // Asignaciones internas por defecto al adaptarse de RRHH:
+                .phoneNumber(empleadoDTO.getTelefono())
+                .address(empleadoDTO.getDireccion())
+
+                // Asignaciones internas por defecto
                 .sellerStatus(SellerStatus.ACTIVE)
                 .registrationDate(LocalDate.now())
-                .employeeRrhhId(empleadoDTO.getEmployeeId())
+
+                // Mapeo del ID de Referencia
+                .employeeRrhhId(empleadoDTO.getIdEmpleado())
+
                 .documentType(DocumentType.DNI)
-                // Nota: sellerType y sellerBranch se asignan en la estrategia/servicio principal
                 .build();
     }
 }
