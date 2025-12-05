@@ -27,7 +27,6 @@ public interface IVendedorConsultaService {
      */
     VendedorResponse findSellerByDni(String dni);
 
-    // No entiendo esto xd
     /**
      * Lista todos los vendedores con filtros dinámicos y paginación.
      *
@@ -48,7 +47,6 @@ public interface IVendedorConsultaService {
 
     /**
      * Obtiene una lista simple de todos los vendedores activos.
-     * (Útil para otros módulos, como Ventas, que necesitan un dropdown de vendedores)
      *
      * @return Lista de VendedorResponse activos.
      */
@@ -56,7 +54,9 @@ public interface IVendedorConsultaService {
 
     /**
      * Busca el VendedorResponse local por su ID de empleado de RRHH.
-     * (Usado por módulos externos para obtener el sellerId local para transacciones).
+     * Usado para que el componente de venta pueda consultar y exponer un endpoint
+     * para que RRHH pueda consultar qué ventas realizó un vendedor interno
+     * y así puedan premiarlos
      *
      * @param employeeRrhhId El ID del empleado de RRHH.
      * @return El VendedorResponse (contiene el sellerId, que es la llave de la tabla Venta).

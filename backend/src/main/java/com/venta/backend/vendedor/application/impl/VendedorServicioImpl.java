@@ -48,12 +48,13 @@ public class VendedorServicioImpl implements IVendedorAdminService, IVendedorCon
     public VendedorResponse createSeller(RegistroVendedorRequest request) {
         IRegistroVendedorStrategy strategia = fabricaStrategia.getRegistrationStrategy(request.getSellerType());
 
-        strategia.validateData(request);
-
         if (request.getSellerBranchId() == null) {
             throw new RegistroVendedorException("Debe asignar una Sede de Venta.");
         }
+
         Sede sedeAsignada = findSedeEntityById(request.getSellerBranchId());
+
+        strategia.validateData(request, sedeAsignada);
 
         validateBranchCapacity(sedeAsignada);
 
@@ -62,7 +63,7 @@ public class VendedorServicioImpl implements IVendedorAdminService, IVendedorCon
 
         Vendedor savedVendedor = vendedorRepositorio.save(newVendedor);
 
-        return vendedorMapeador.toVendedorResponse(savedVendedor);
+        return vendedorMapeador.toVendedorResponse(savedVendedor); // Devolver dto en vez de la entidad
     }
 
     @Override
@@ -140,16 +141,15 @@ public class VendedorServicioImpl implements IVendedorAdminService, IVendedorCon
     @Transactional(readOnly = true)
     public Page<VendedorResponse> searchSellers(SellerType sellerType, SellerStatus sellerStatus,
                                                 Long sellerBranchId, String dni, Pageable pageable) {
-        // 1. Usar nuestro helper para construir la consulta dinámica
+        //  Usar nuestro helper para construir la consulta dinámica
         Specification<Vendedor> spec = VendedorEspecificacion.buildSpecification(
                 sellerType, sellerStatus, sellerBranchId, dni
         );
 
-        // 2. Ejecutar la consulta con paginación
+        //  Ejecutar la consulta con paginación
         Page<Vendedor> vendedorPage = vendedorRepositorio.findAll(spec, pageable);
 
-        // 3. Mapear la página de Entidades a una página de DTOs
-        // (vendedorMapeador::toVendedorResponse es un atajo para v -> vendedorMapeador.toVendedorResponse(v))
+        // Mapear la página de Entidades a una página de DTOs
         return vendedorPage.map(vendedorMapeador::toVendedorResponse);
     }
 

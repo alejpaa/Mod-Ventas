@@ -124,7 +124,6 @@ public class VendedorController {
     /**
      * GET /api/vendedores/activos
      * Lista todos los vendedores activos (sin paginación)
-     * Útil para dropdowns en otros módulos
      */
     @GetMapping("/activos")
     public ResponseEntity<List<VendedorResponse>> listActiveSellers() {

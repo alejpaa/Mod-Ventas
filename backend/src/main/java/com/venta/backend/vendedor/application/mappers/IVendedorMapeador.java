@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Interfaz de Mapeo (traducción) entre la Entidad de Dominio (Vendedor)
  * y el DTO de Respuesta (VendedorResponse).
- * * Usamos MapStruct para generar la implementación.
+ * Usamos MapStruct para generar la implementación.
  */
 @Mapper(componentModel = "spring")
 public interface IVendedorMapeador {
@@ -32,8 +32,7 @@ public interface IVendedorMapeador {
 
     /**
      * Convierte una lista de entidades Vendedor a una lista de DTOs VendedorResponse.
-     * MapStruct es lo suficientemente inteligente para saber que debe usar
-     * el método de 'toVendedorResponse' para cada elemento de la lista.
+     * el metodo de 'toVendedorResponse' para cada elemento de la lista.
      *
      * @param vendedores La lista de entidades Vendedor.
      * @return La lista de DTOs VendedorResponse.

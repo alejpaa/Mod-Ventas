@@ -36,6 +36,6 @@ public interface IVendedorAdminService {
      * @param sellerId El ID del vendedor a reactivar.
      * @return Un VendedorResponse con el estado actualizado a ACTIVE.
      */
-    VendedorResponse reactivateSeller(Long sellerId); // ¡Método en Inglés!
+    VendedorResponse reactivateSeller(Long sellerId);
 
 }

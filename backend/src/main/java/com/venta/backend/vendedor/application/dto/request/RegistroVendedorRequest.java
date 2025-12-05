@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegistroVendedorRequest { // ¡Clase en Español!
+public class RegistroVendedorRequest {
 
     // --- Datos de RRHH (si es INTERNO) o manuales (si es EXTERNO) ---
     private String dni;
@@ -28,13 +28,10 @@ public class RegistroVendedorRequest { // ¡Clase en Español!
     private Long sellerBranchId;
 
     /**
-     * RUC (solo para vendedores externos que son personas jurídicas)
+     * RUC (solo para vendedores externos)
      */
     private String ruc;
 
-    /**
-     * Cuenta bancaria para comisiones
-     */
     private String bankAccount;
 
     /**

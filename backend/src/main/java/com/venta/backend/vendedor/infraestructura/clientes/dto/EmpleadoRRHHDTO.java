@@ -12,7 +12,7 @@ public class EmpleadoRRHHDTO {
     private String documentoIdentidad;
     private String nombres;
     private String apellidoPaterno;
-    private String apellidoMaterno; // Lo usaremos para el fullName
+    private String apellidoMaterno;
     private String direccion;
     private String telefono;
     private String email;

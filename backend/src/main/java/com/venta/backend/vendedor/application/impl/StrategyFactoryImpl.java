@@ -19,10 +19,10 @@ public class StrategyFactoryImpl implements IStrategyFactory {
 
     /**
      * Constructor de la Fábrica.
-     * @param internoRegistroImpl   Implementación de registro interno.
-     * @param externoRegistroImpl   Implementación de registro externo.
-     * @param internoEdicionImpl    Implementación de edición interna.
-     * @param externoEdicionImpl    Implementación de edición externa.
+     * @param internoRegistroImpl
+     * @param externoRegistroImpl
+     * @param internoEdicionImpl
+     * @param externoEdicionImpl
      */
     public StrategyFactoryImpl(
             // Spring busca los Beans que coinciden con estos tipos
@@ -31,15 +31,15 @@ public class StrategyFactoryImpl implements IStrategyFactory {
             EdicionInternaStrategyImpl internoEdicionImpl,
             EdicionExternaStrategyImpl externoEdicionImpl
     ) {
-        // 1. Inicializa los mapas
+        // Inicializa los mapas
         registrationStrategies = new EnumMap<>(SellerType.class);
         editionStrategies = new EnumMap<>(SellerType.class);
 
-        // 2. Llena el mapa de estrategias de registro
+        // Llena el mapa de estrategias de registro
         registrationStrategies.put(SellerType.INTERNAL, internoRegistroImpl);
         registrationStrategies.put(SellerType.EXTERNAL, externoRegistroImpl);
 
-        // 3. Llena el mapa de estrategias de edición
+        // Llena el mapa de estrategias de edición
         editionStrategies.put(SellerType.INTERNAL, internoEdicionImpl);
         editionStrategies.put(SellerType.EXTERNAL, externoEdicionImpl);
     }
