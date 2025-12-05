@@ -36,7 +36,7 @@ public class VentaLeadConsultaService {
 
         return ventasPendientes.stream()
                 .map(venta -> {
-                    VentaLead ventaLead = ventaLeadRepositorio.findById(venta.getId())
+                    VentaLead ventaLead = ventaLeadRepositorio.findByIdVenta(venta.getId())
                             .orElse(null);
                     
                     if (ventaLead == null) {
@@ -44,9 +44,12 @@ public class VentaLeadConsultaService {
                     }
 
                     // Obtener nombre del cliente
-                    String nombreCliente = clienteRepositorio.findById(venta.getClienteId())
-                            .map(cliente -> cliente.getFirstName() + " " + cliente.getLastName())
-                            .orElse("Cliente no encontrado");
+                    String nombreCliente = "Cliente no encontrado";
+                    if (venta.getClienteId() != null) {
+                        nombreCliente = clienteRepositorio.findById(venta.getClienteId())
+                                .map(cliente -> cliente.getFirstName() + " " + cliente.getLastName())
+                                .orElse("Cliente no encontrado");
+                    }
 
                     return VentaLeadPendienteResponse.builder()
                             .ventaId(venta.getId())
@@ -68,10 +71,14 @@ public class VentaLeadConsultaService {
         Venta venta = ventaRepositorio.findById(ventaId)
                 .orElseThrow(() -> new RuntimeException("Venta no encontrada"));
 
-        VentaLead ventaLead = ventaLeadRepositorio.findById(ventaId)
+        VentaLead ventaLead = ventaLeadRepositorio.findByIdVenta(ventaId)
                 .orElseThrow(() -> new RuntimeException("Datos de lead no encontrados"));
 
         // Obtener datos del cliente
+        if (venta.getClienteId() == null) {
+            throw new RuntimeException("La venta no tiene un cliente asociado");
+        }
+        
         var cliente = clienteRepositorio.findById(venta.getClienteId())
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
 
