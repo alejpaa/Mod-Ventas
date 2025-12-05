@@ -70,7 +70,9 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
+                .telefonoFijo(request.getTelefonoFijo())
                 .address(request.getAddress())
+                .fechaNacimiento(request.getFechaNacimiento())
                 .registrationDate(LocalDate.now())
                 .estado(EstadoClienteEnum.ACTIVO)
                 .categoria("Estándar") // Categoría inicial
@@ -155,6 +157,8 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
+                .telefonoFijo(request.getTelefonoFijo())
+                .fechaNacimiento(request.getFechaNacimiento())
                 .registrationDate(LocalDate.now())
                 .estado(EstadoClienteEnum.ACTIVO)
                 .categoria("Estándar")
