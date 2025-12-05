@@ -97,6 +97,38 @@ paths:
         '500':
           description: Error interno del servidor
 
+
+  /api/venta/{ventaId}/vendedor/{vendedorId}:
+    put:
+      tags:
+        - Ventas
+      summary: Asignar vendedor a una venta
+      description: Asigna un vendedor a una venta en estado BORRADOR. Solo se puede asignar vendedor a ventas que aún no han sido confirmadas.
+      operationId: asignarVendedor
+      parameters:
+        - name: ventaId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID de la venta
+        - name: vendedorId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID del vendedor a asignar
+      responses:
+        '204':
+          description: Vendedor asignado exitosamente
+        '404':
+          description: Venta o vendedor no encontrado
+        '400':
+          description: No se puede asignar vendedor a una venta que no está en estado BORRADOR
+        '500':
+          description: Error interno del servidor
   /api/venta/{ventaId}/carrito/items:
     post:
       tags:
@@ -1865,4 +1897,5 @@ components:
           format: decimal
           description: Monto vendido en la boleta
           example: 1500.50
+
 
