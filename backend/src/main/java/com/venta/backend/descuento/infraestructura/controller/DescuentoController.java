@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.venta.backend.descuento.aplicacion.exceptions.CuponNoValidoException;
 
 // Define la ruta base para este controlador
 @RestController
@@ -45,17 +46,18 @@ public class DescuentoController {
         }
 
         try {
-            // Llama al servicio de aplicación (donde se implementa la lógica de las Reglas y la Estrategia)
             DescuentoAplicadoResponse response = discountService.aplicarMejorDescuento(request);
-
-            // Retorna una respuesta exitosa con el resultado del descuento
             return ResponseEntity.ok(response);
 
+        } catch (CuponNoValidoException e) {
+            // Manejo específico para errores de Cupón
+            System.err.println("Error de Cupón: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    new DescuentoAplicadoResponse("ERROR_CUPON", null, null, e.getMessage())
+            );
         } catch (Exception e) {
-            // Manejo genérico de excepciones de negocio (Ej. Venta no encontrada, Cupón expirado)
+            // Manejo genérico de excepciones de negocio (Venta no encontrada, Cliente no encontrado, etc.)
             System.err.println("Error al aplicar el descuento: " + e.getMessage());
-
-            // Retorna un código de error 400 (Bad Request) con un mensaje del error
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                     new DescuentoAplicadoResponse("ERROR_APLICACION", null, null, e.getMessage())
             );

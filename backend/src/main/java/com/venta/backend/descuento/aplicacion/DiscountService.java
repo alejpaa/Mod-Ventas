@@ -9,6 +9,9 @@ import com.venta.backend.venta.entities.Venta;
 import com.venta.backend.venta.infraestructura.repository.VentaRepositorio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.venta.backend.descuento.aplicacion.exceptions.CuponNoValidoException;
+import com.venta.backend.descuento.dominio.entidades.Cupon;
+import com.venta.backend.descuento.infraestructura.repository.CuponRepositorio;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,6 +27,7 @@ public class DiscountService {
     private final List<IReglaDescuento> todasLasReglas;
     private final VentaRepositorio ventaRepositorio;
     private final ClienteRepositorio clienteRepositorio;
+    private final CuponRepositorio cuponRepositorio;
 
     /**
      * Aplica el mejor descuento disponible para una venta.
@@ -42,7 +46,34 @@ public class DiscountService {
 
         DescuentoAplicadoResponse mejorDescuento = null;
 
-        // 2. Evaluar todas las reglas (incluyendo el cupón)
+        // 2. Lógica de validación explícita del cupón (Si se proporciona)
+        if (request.getCodigoCupon() != null && !request.getCodigoCupon().trim().isEmpty()) {
+            String codigoCupon = request.getCodigoCupon().trim();
+            Optional<Cupon> cuponOpt = cuponRepositorio.findByCodigo(codigoCupon);
+            BigDecimal totalVenta = venta.calcularTotal();
+
+            if (cuponOpt.isEmpty()) {
+                // **Motivo: No existe**
+                throw new CuponNoValidoException("El cupón '" + codigoCupon + "' no existe.");
+            }
+
+            Cupon cupon = cuponOpt.get();
+
+            if (cupon.estaExpirado()) {
+                // **Motivo: Vencido**
+                throw new CuponNoValidoException("El cupón '" + codigoCupon + "' está expirado (Fecha: " + cupon.getFechaExpiracion() + ").");
+            }
+
+            if (!cupon.tieneUsosDisponibles()) {
+                // **Motivo: Usos agotados**
+                throw new CuponNoValidoException("El cupón '" + codigoCupon + "' ya fue utilizado la cantidad máxima de veces.");
+            }
+
+            // Nota: La validación de monto mínimo se podría manejar aquí o en la ReglaCupon.
+            // La dejaremos en la ReglaCupon por si se quiere que el error solo aparezca si se aplica.
+        }
+
+        // 3. Evaluar todas las reglas (incluyendo el cupón)
         for (IReglaDescuento regla : todasLasReglas) {
             if (regla.esAplicable(venta, cliente, request.getCodigoCupon())) {
                 DescuentoAplicadoResponse descuentoActual = regla.aplicar(venta, cliente);
