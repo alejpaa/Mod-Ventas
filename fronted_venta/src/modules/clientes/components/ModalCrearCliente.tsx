@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { registrarCliente } from '../services/cliente.service';
-import { RegistroClienteRequest } from '../types/cliente.types';
+import type { RegistroClienteRequest } from '../types/cliente.types';
 
 interface ModalCrearClienteProps {
   onClose: () => void;
@@ -86,7 +86,9 @@ export function ModalCrearCliente({ onClose, onSuccess }: ModalCrearClienteProps
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
-    const { name, value, type, checked } = e.target;
+    const target = e.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+    const { name, value, type } = target;
+    const checked = 'checked' in target ? target.checked : false;
     const nextValue = type === 'checkbox' ? checked : value;
     setFormData((prev) => ({
       ...prev,

@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { ClienteResponse, ModificacionClienteRequest } from '../types/cliente.types';
+import type { ClienteResponse, ModificacionClienteRequest } from '../types/cliente.types';
 import { obtenerClientePorId, actualizarCliente } from '../services/cliente.service';
 
 interface ModalEditarClienteProps {

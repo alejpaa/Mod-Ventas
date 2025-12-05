@@ -3,7 +3,7 @@ import {
   obtenerClientePorId,
   actualizarCliente,
 } from '../services/cliente.service';
-import { ClienteResponse, ModificacionClienteRequest } from '../types/cliente.types';
+import type { ClienteResponse, ModificacionClienteRequest } from '../types/cliente.types';
 
 type Paso = 1 | 2 | 3;
 
@@ -80,7 +80,9 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
-    const { name, value, type, checked } = e.target;
+    const target = e.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+    const { name, value, type } = target;
+    const checked = 'checked' in target ? target.checked : false;
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ClienteResponse } from '../types/cliente.types';
+import type { ClienteResponse } from '../types/cliente.types';
 
 type EstadoPago = 'Pagado' | 'Pendiente' | 'Anulado';
 

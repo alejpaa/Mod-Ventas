@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ModalActualizarCliente } from '../modules/clientes/components/ModalActualizarCliente';
 import { ModalCrearCliente } from '../modules/clientes/components/ModalCrearCliente';
 import { ModalHistorialCompras } from '../modules/clientes/components/ModalHistorialCompras';
-import { ClienteResponse } from '../modules/clientes/types/cliente.types';
+import type { ClienteResponse } from '../modules/clientes/types/cliente.types';
 import { filtrarClientes } from '../modules/clientes/services/cliente.service';
 
 type EstadoFiltro = 'TODOS' | 'ACTIVO' | 'INACTIVO';
