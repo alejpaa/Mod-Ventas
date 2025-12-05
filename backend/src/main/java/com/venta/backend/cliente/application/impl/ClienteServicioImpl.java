@@ -235,19 +235,35 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
     @Transactional(readOnly = true)
     public PageMarketingClienteResponse obtenerDatosParaMarketing(Pageable pageable) {
         Page<Cliente> clientePage = clienteRepositorio.findAll(pageable);
+        java.time.LocalDate hoy = java.time.LocalDate.now();
 
         List<PageMarketingClienteResponse.ClienteMarketingDTO> clientesMarketing = clientePage.getContent().stream()
-                .map(cliente -> PageMarketingClienteResponse.ClienteMarketingDTO.builder()
-                        .clienteId(cliente.getClienteId())
-                        .dni(cliente.getDni())
-                        .fullName(cliente.getFullName())
-                        .email(cliente.getEmail())
-                        .categoria(cliente.getCategoria())
-                        .estado(cliente.getEstado().name())
-                        .recencyScore(0) // TODO: Calcular desde historial de compras
-                        .frequencyScore(0) // TODO: Calcular desde historial de compras
-                        .monetaryScore(java.math.BigDecimal.ZERO) // TODO: Calcular desde historial de compras
-                        .build())
+                .map(cliente -> {
+                    // Calcular edad si existe fechaNacimiento
+                    Integer edad = null;
+                    if (cliente.getFechaNacimiento() != null) {
+                        edad = java.time.Period.between(cliente.getFechaNacimiento(), hoy).getYears();
+                    }
+
+                    // Obtener ubicación desde address (si existe)
+                    String ubicacion = cliente.getAddress();
+
+                    // Los scores se dejan como null si no hay datos de compras
+                    // TODO: Calcular desde historial de compras cuando esté disponible
+                    return PageMarketingClienteResponse.ClienteMarketingDTO.builder()
+                            .clienteId(cliente.getClienteId())
+                            .dni(cliente.getDni())
+                            .fullName(cliente.getFullName())
+                            .email(cliente.getEmail())
+                            .categoria(cliente.getCategoria())
+                            .estado(cliente.getEstado().name())
+                            .recencyScore(null) // Se calculará desde historial de compras cuando esté disponible
+                            .frequencyScore(null) // Se calculará desde historial de compras cuando esté disponible
+                            .monetaryScore(null) // Se calculará desde historial de compras cuando esté disponible
+                            .ubicacion(ubicacion)
+                            .edad(edad)
+                            .build();
+                })
                 .collect(Collectors.toList());
 
         return PageMarketingClienteResponse.builder()
@@ -286,6 +302,58 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
     public ClienteResponse obtenerClientePorId(Long clienteId) {
         Cliente cliente = findClienteEntityById(clienteId);
         return clienteMapeador.toClienteResponse(cliente);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ClienteResponse obtenerClientePorDni(String dni) {
+        Cliente cliente = clienteRepositorio.findByDni(dni)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado con DNI: " + dni));
+        return clienteMapeador.toClienteResponse(cliente);
+    }
+
+    @Override
+    @Transactional
+    public ClienteResponse actualizarClientePorDni(String dni, ModificacionClienteRequest request) {
+        Cliente cliente = clienteRepositorio.findByDni(dni)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado con DNI: " + dni));
+        
+        // Actualizar campos si están presentes en el request (mismo patrón que actualizarCliente)
+        if (request.getDni() != null) {
+            cliente.setDni(request.getDni());
+        }
+        if (request.getFirstName() != null) {
+            cliente.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null) {
+            cliente.setLastName(request.getLastName());
+        }
+        if (request.getEmail() != null) {
+            // Validar que el email no esté en uso por otro cliente
+            if (clienteRepositorio.existsByEmail(request.getEmail()) 
+                    && !cliente.getEmail().equals(request.getEmail())) {
+                throw new RegistroClienteException("Ya existe un cliente con el email: " + request.getEmail());
+            }
+            cliente.setEmail(request.getEmail());
+        }
+        if (request.getPhoneNumber() != null) {
+            cliente.setPhoneNumber(request.getPhoneNumber());
+        }
+        if (request.getTelefonoFijo() != null) {
+            cliente.setTelefonoFijo(request.getTelefonoFijo());
+        }
+        if (request.getAddress() != null) {
+            cliente.setAddress(request.getAddress());
+        }
+        if (request.getFechaNacimiento() != null) {
+            cliente.setFechaNacimiento(request.getFechaNacimiento());
+        }
+        if (request.getEstado() != null) {
+            cliente.changeStatus(request.getEstado());
+        }
+
+        Cliente clienteActualizado = clienteRepositorio.save(cliente);
+        return clienteMapeador.toClienteResponse(clienteActualizado);
     }
 
     // ========== MÉTODOS PRIVADOS AUXILIARES ==========

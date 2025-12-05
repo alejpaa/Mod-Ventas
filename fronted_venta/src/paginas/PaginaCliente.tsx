@@ -90,10 +90,6 @@ export function PaginaCliente() {
     }
   };
 
-  const handleEstadisticas = () => {
-    alert('Aquí iría el panel de estadísticas del cliente.');
-  };
-
   const getEstadoBadge = (value?: string) => {
     if (value === 'INACTIVO') return 'bg-gray-100 text-gray-700';
     return 'bg-green-100 text-green-700';

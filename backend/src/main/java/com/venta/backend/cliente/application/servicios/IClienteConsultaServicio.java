@@ -58,5 +58,14 @@ public interface IClienteConsultaServicio {
      * @return Un ClienteResponse con los datos del cliente.
      */
     ClienteResponse obtenerClientePorId(Long clienteId);
+
+    /**
+     * Obtiene un cliente por su DNI.
+     * Devuelve la información completa del cliente.
+     *
+     * @param dni El DNI del cliente a buscar.
+     * @return Un ClienteResponse con los datos del cliente.
+     */
+    ClienteResponse obtenerClientePorDni(String dni);
 }
 
