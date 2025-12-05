@@ -1,0 +1,1794 @@
+openapi: 3.0.1
+info:
+  title: API de Ventas
+  description: API para gestión de ventas, cotizaciones, clientes, productos, descuentos y vendedores
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Servidor de Desarrollo
+  - url: https://mod-ventas.onrender.com
+    description: Servidor de Producción
+
+tags:
+  - name: Ventas
+    description: Operaciones relacionadas con ventas
+  - name: Cotizaciones
+    description: Operaciones relacionadas con cotizaciones
+  - name: Clientes
+    description: Gestión de clientes
+  - name: Productos
+    description: Gestión de productos
+  - name: Vendedores
+    description: Gestión de vendedores
+  - name: Sedes
+    description: Obtener sedes
+  - name: Descuentos
+    description: Gestión de descuentos
+
+paths:
+  /api/venta:
+    get:
+      tags:
+        - Ventas
+      summary: Listar todas las ventas
+      description: Obtiene un listado de todas las ventas registradas en el sistema
+      operationId: listarVentas
+      responses:
+        '200':
+          description: Lista de ventas obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VentaListadoResponse'
+        '500':
+          description: Error interno del servidor
+
+  /api/venta/directa/borrador:
+    post:
+      tags:
+        - Ventas
+      summary: Crear una venta directa en borrador
+      description: Crea una nueva venta directa en estado borrador con código generado automáticamente (VTA-DIR-XXXXXX)
+      operationId: crearVentaDirectaBorrador
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearVentaDirectaRequest'
+      responses:
+        '201':
+          description: Venta directa borrador creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VentaResumenResponse'
+        '400':
+          description: Datos de entrada inválidos
+        '500':
+          description: Error interno del servidor
+
+  /api/venta/{ventaId}/carrito:
+    get:
+      tags:
+        - Ventas
+      summary: Obtener resumen del carrito de venta
+      description: Obtiene el resumen completo de una venta incluyendo sus items, subtotales y totales
+      operationId: obtenerResumen
+      parameters:
+        - name: ventaId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID de la venta
+      responses:
+        '200':
+          description: Resumen de la venta obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VentaResumenResponse'
+        '404':
+          description: Venta no encontrada
+        '500':
+          description: Error interno del servidor
+
+  /api/venta/{ventaId}/carrito/items:
+    post:
+      tags:
+        - Ventas
+      summary: Agregar item al carrito de venta
+      description: Agrega un producto al carrito de una venta. Si el producto ya existe, incrementa la cantidad. Recalcula automáticamente los totales.
+      operationId: agregarItem
+      parameters:
+        - name: ventaId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID de la venta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgregarItemVentaRequest'
+      responses:
+        '200':
+          description: Item agregado exitosamente al carrito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VentaResumenResponse'
+        '400':
+          description: Datos de entrada inválidos o venta no está en borrador
+        '404':
+          description: Venta o producto no encontrado
+        '500':
+          description: Error interno del servidor
+
+  /api/venta/lead/desde-marketing:
+    post:
+      tags:
+        - Ventas
+      summary: Crear venta desde lead de marketing
+      description: Crea una nueva venta en estado BORRADOR originada desde un lead de marketing. Registra automáticamente al cliente, genera número de venta VTA-LED-XXXXXX y guarda los datos de la campaña.
+      operationId: crearVentaDesdeLeadMarketing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearVentaLeadRequest'
+      responses:
+        '201':
+          description: Venta creada exitosamente desde lead de marketing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VentaLeadResponse'
+        '400':
+          description: Datos de entrada inválidos o error al registrar cliente
+        '500':
+          description: Error interno del servidor
+
+  /api/venta/leads/pendientes:
+    get:
+      tags:
+        - Ventas
+      summary: Listar ventas lead pendientes
+      description: Retorna todas las ventas originadas desde leads de marketing que están en estado BORRADOR (pendientes de atender)
+      operationId: listarVentasLeadPendientes
+      responses:
+        '200':
+          description: Lista de ventas lead pendientes obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VentaLeadPendienteResponse'
+        '500':
+          description: Error interno del servidor
+
+  /api/venta/leads/{ventaId}:
+    get:
+      tags:
+        - Ventas
+      summary: Obtener detalle de venta lead
+      description: Obtiene todos los datos de una venta lead específica para cargar en el formulario de registro de venta
+      operationId: obtenerDetalleVentaLead
+      parameters:
+        - name: ventaId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID de la venta lead
+      responses:
+        '200':
+          description: Detalle de venta lead obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VentaLeadDetalleResponse'
+        '404':
+          description: Venta lead no encontrada
+        '500':
+          description: Error interno del servidor
+
+  /api/cotizaciones:
+    get:
+      tags:
+        - Cotizaciones
+      summary: Listar todas las cotizaciones
+      operationId: listarCotizaciones
+      responses:
+        '200':
+          description: Lista de cotizaciones obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cotizacion'
+    post:
+      tags:
+        - Cotizaciones
+      summary: Crear una nueva cotización
+      operationId: crearCotizacion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CotizacionRequest'
+      responses:
+        '201':
+          description: Cotización creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cotizacion'
+
+  /api/cotizaciones/{id}:
+    get:
+      tags:
+        - Cotizaciones
+      summary: Obtiene los detalles de una cotización específica.
+      operationId: obtenerCotizacion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID de la cotización a consultar.
+      responses:
+        '200':
+          description: Detalles de la cotización.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cotizacion'
+        '404':
+          description: Cotización no encontrada.
+
+  /api/cotizaciones/{id}/aceptacion:
+    post:
+      tags:
+        - Cotizaciones
+      summary: Registra la aceptación de una cotización por parte del cliente.
+      description: Este endpoint es típicamente invocado desde un enlace seguro o un formulario después de que el cliente recibe el correo (acción asíncrona).
+      operationId: aceptarCotizacion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID de la cotización a aceptar.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token_aceptacion:
+                  type: string
+                  description: Token de seguridad para validar que la aceptación proviene del destinatario correcto.
+      responses:
+        '200':
+          description: Cotización aceptada. Se inicia la generación de la orden de venta.
+        '400':
+          description: Token inválido o cotización ya aceptada/expirada.
+        '404':
+          description: Cotización no encontrada.
+
+  /api/cotizaciones/enviar:
+    post:
+      tags:
+        - Cotizaciones
+      summary: Enviar cotización por email
+      operationId: enviarCotizacion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cotizacionId:
+                  type: integer
+                  format: int64
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Cotización enviada exitosamente
+        '400':
+          description: Datos inválidos
+        '404':
+          description: Cotización no encontrada
+
+  # ==================== ENDPOINTS DE CLIENTES ====================
+  /api/clientes/registroClientes:
+    post:
+      tags:
+        - Clientes
+      summary: Registrar nuevo cliente
+      description: Crea un cliente nuevo validando DNI y deudas
+      operationId: registrarCliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistroClienteRequest'
+      responses:
+        '201':
+          description: Cliente registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteResponse'
+        '400':
+          description: Datos inválidos o cliente no apto
+        '409':
+          description: DNI o email ya existe
+
+  /api/clientes/actualizacionClientes/{id}:
+    put:
+      tags:
+        - Clientes
+      summary: Actualizar cliente
+      description: Actualiza datos o cambia estado de un cliente
+      operationId: actualizarCliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID del cliente a actualizar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModificacionClienteRequest'
+      responses:
+        '200':
+          description: Cliente actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteResponse'
+        '404':
+          description: Cliente no encontrado
+        '409':
+          description: Email ya existe para otro cliente
+
+  /api/clientes/filtroClientes:
+    get:
+      tags:
+        - Clientes
+      summary: Filtrar clientes
+      description: Búsqueda paginada por criterios
+      operationId: filtrarClientes
+      parameters:
+        - name: filtro
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Texto para buscar en DNI, nombre o email
+        - name: estado
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/EstadoClienteEnum'
+          description: Estado del cliente (ACTIVO, INACTIVO)
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+          description: Número de página (inicia en 0)
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Cantidad de elementos por página
+      responses:
+        '200':
+          description: Lista de clientes obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageClienteResponse'
+
+  /api/clientes/HistorialCompras/{id}:
+    get:
+      tags:
+        - Clientes
+      summary: Historial de compras
+      description: Obtiene detalle financiero del cliente
+      operationId: obtenerHistorial
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID del cliente
+      responses:
+        '200':
+          description: Historial obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistorialComprasResponse'
+        '404':
+          description: Cliente no encontrado
+
+  /api/clientes/{id}:
+    delete:
+      tags:
+        - Clientes
+      summary: Dar de baja cliente
+      description: Desactiva un cliente validando que no tenga deudas ni equipos pendientes
+      operationId: darBajaCliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID del cliente a dar de baja
+      responses:
+        '204':
+          description: Cliente dado de baja exitosamente
+        '404':
+          description: Cliente no encontrado
+        '400':
+          description: Cliente tiene deudas o equipos pendientes
+
+  # ==================== ENDPOINTS DE INTEGRACIÓN - ATENCIÓN AL CLIENTE ====================
+  /api/clientes/integracion/atencion-cliente/{idCliente}:
+    get:
+      tags:
+        - Clientes
+      summary: Obtener cliente por ID
+      description: Devuelve la información completa del cliente
+      operationId: obtenerClientePorId
+      parameters:
+        - name: idCliente
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID del cliente
+      responses:
+        '200':
+          description: Cliente encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteResponse'
+        '404':
+          description: Cliente no encontrado
+    patch:
+      tags:
+        - Clientes
+      summary: Actualizar cliente parcialmente
+      description: Actualiza parcialmente los datos del cliente
+      operationId: actualizarClienteParcial
+      parameters:
+        - name: idCliente
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID del cliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModificacionClienteRequest'
+      responses:
+        '200':
+          description: Cliente actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteResponse'
+        '404':
+          description: Cliente no encontrado
+
+  # ==================== ENDPOINTS DE INTEGRACIÓN - MARKETING ====================
+  /api/clientes/integracion/marketing:
+    get:
+      tags:
+        - Clientes
+      summary: Data para Marketing
+      description: Retorna clientes con score y datos analíticos (RFM, demografía)
+      operationId: obtenerDatosMarketing
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Datos de marketing obtenidos exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageMarketingClienteResponse'
+
+  # ==================== ENDPOINTS DE INTEGRACIÓN - VENTAS ====================
+  /api/clientes/integracion/ventas/buscar/{dni}:
+    get:
+      tags:
+        - Clientes
+      summary: Buscar cliente para venta
+      description: Devuelve datos operativos y flag de deuda para realizar una venta
+      operationId: buscarClienteParaVenta
+      parameters:
+        - name: dni
+          in: path
+          required: true
+          schema:
+            type: string
+          description: DNI del cliente
+      responses:
+        '200':
+          description: Cliente encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteVentaDTO'
+        '404':
+          description: Cliente no encontrado
+
+  /api/clientes/integracion/ventas/crear:
+    post:
+      tags:
+        - Clientes
+      summary: Crear cliente simplificado
+      description: Crea un cliente recibiendo datos básicos y devolviendo solo el ID generado
+      operationId: crearClienteSimple
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearClienteSimpleRequest'
+      responses:
+        '201':
+          description: Cliente creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteIdResponse'
+        '400':
+          description: Datos inválidos o cliente no apto
+
+  # ==================== ENDPOINTS DE DESCUENTOS ====================
+  /api/descuentos/aplicar-mejor-descuento:
+    post:
+      tags:
+        - Descuentos
+      summary: Aplicar mejor descuento disponible
+      description: Evalúa todas las reglas de descuento y aplica el que ofrece mayor beneficio
+      operationId: aplicarMejorDescuento
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplicarDescuentoRequest'
+      responses:
+        '200':
+          description: Descuento aplicado exitosamente o no se aplicó ninguno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DescuentoAplicadoResponse'
+        '400':
+          description: Datos inválidos, venta no encontrada o cliente no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DescuentoAplicadoResponse'
+
+  # ==================== ENDPOINTS DE VENDEDORES ====================
+
+  /api/vendedores:
+    get:
+      tags:
+        - Vendedores
+      summary: Buscar y listar vendedores con filtros y paginación
+      description: Obtiene una lista paginada de vendedores. Permite filtrar por tipo, estado, ID de sede y DNI.
+      operationId: searchSellers
+      parameters:
+        - name: sellerType
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ INTERNAL, EXTERNAL ]
+          description: Tipo de vendedor (Interno o Externo)
+        - name: sellerStatus
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ ACTIVE, INACTIVE ]
+          description: Estado del vendedor
+        - name: sellerBranchId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+          description: ID de la Sede de Venta
+        - name: dni
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filtro por DNI o código de documento
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+          description: Número de página (base 0)
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Tamaño de la página
+      responses:
+        '200':
+          description: Lista de vendedores paginada obtenida exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageVendedorResponse'
+        '500':
+          description: Error interno del servidor
+    post:
+      tags:
+        - Vendedores
+      summary: Registrar un nuevo vendedor
+      description: Crea un nuevo vendedor, aplicando las estrategias de registro (Interno o Externo) y validando la capacidad de la sede.
+      operationId: createSeller
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistroVendedorRequest'
+      responses:
+        '201':
+          description: Vendedor creado exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendedorResponse'
+        '400':
+          description: Datos de entrada inválidos o la sede ha superado su capacidad máxima.
+        '500':
+          description: Error interno del servidor
+
+  /api/vendedores/{id}/reactivar:
+    post:
+      tags:
+        - Vendedores
+      summary: Reactivar un vendedor inactivo
+      description: Cambia el estado del vendedor a ACTIVO. **Valida la capacidad de la sede** antes de permitir la reactivación.
+      operationId: reactivateSeller
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID del vendedor a reactivar.
+      responses:
+        '200':
+          description: Vendedor reactivado exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendedorResponse'
+        '400':
+          description: La sede actual del vendedor ha alcanzado su capacidad máxima activa.
+        '404':
+          description: Vendedor no encontrado.
+
+  /api/vendedores/rrhh-employee/{dni}:
+    get:
+      tags:
+        - Vendedores
+      summary: Obtener datos de empleado RRHH (Proxy BFF)
+      description: Llama al sistema de RRHH para obtener datos de un empleado (DNI) para autocompletar el formulario de registro.
+      operationId: getRrhhEmployeeData
+      parameters:
+        - name: dni
+          in: path
+          required: true
+          schema:
+            type: string
+          description: DNI del empleado de RRHH.
+      responses:
+        '200':
+          description: Datos del empleado obtenidos y mapeados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmpleadoRRHHDTO'
+        '404':
+          description: Empleado no encontrado en el sistema de RRHH.
+        '500':
+          description: Error de conexión con la API de RRHH.
+
+  /api/vendedores/{id}:
+    get:
+      tags:
+        - Vendedores
+      summary: Obtener un vendedor por ID y validar su estado.
+      description: Endpoint crítico. Obtiene los datos del vendedor. Usado por módulos externos (Venta/Cotización) para **validar que el vendedor esté ACTIVO** antes de realizar una transacción.
+      operationId: getSellerById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID del vendedor a consultar.
+      responses:
+        '200':
+          description: Vendedor encontrado y puede estar activo o inactivo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendedorResponse'
+        '400':
+          description: Vendedor encontrado, pero INACTIVO. (Bloqueo de venta).
+        '404':
+          description: Vendedor no encontrado.
+    put:
+      tags:
+        - Vendedores
+      summary: Modificar un vendedor existente
+      description: Actualiza la información del vendedor, aplicando estrategias de edición (Interna o Externa). Valida la capacidad de la sede si se reasigna.
+      operationId: updateSeller
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID del vendedor a modificar.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModificacionVendedorRequest'
+      responses:
+        '200':
+          description: Vendedor modificado exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendedorResponse'
+        '400':
+          description: Datos inválidos o la nueva sede supera su capacidad.
+        '404':
+          description: Vendedor no encontrado.
+    delete:
+      tags:
+        - Vendedores
+      summary: Dar de baja (desactivar) un vendedor
+      description: Cambia el estado del vendedor a INACTIVO. **Requiere consulta previa al módulo de Cotizaciones** para asegurar que no tiene cotizaciones pendientes.
+      operationId: deactivateSeller
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID del vendedor a desactivar.
+      responses:
+        '204':
+          description: Vendedor desactivado exitosamente.
+        '400':
+          description: El vendedor tiene cotizaciones pendientes y no puede ser dado de baja.
+        '404':
+          description: Vendedor no encontrado.
+
+    # =========================================================================
+    # ENDPOINTS DE SEDES
+    # =========================================================================
+
+  /api/sedes:
+    get:
+      tags:
+        - Sedes
+      summary: Lista todas las sedes disponibles
+      description: Lista todas las sedes (activas e inactivas) para la visualización en la tabla de gestión de sedes.
+      operationId: listAllBranches
+      responses:
+        '200':
+          description: Lista de sedes obtenida.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Sede'
+        '500':
+          description: Error interno del servidor
+
+  /api/sedes/activas:
+    get:
+      tags:
+        - Sedes
+      summary: Lista solo las sedes activas
+      description: Útil para poblar dropdowns o selects en formularios donde solo se permiten asignaciones a sedes activas.
+      operationId: listActiveBranches
+      responses:
+        '200':
+          description: Lista de sedes activas obtenida.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Sede'
+        '500':
+          description: Error interno del servidor
+
+components:
+  schemas:
+    #VENDEDOR
+    VendedorResponse:
+      type: object
+      properties:
+        sellerId:
+          type: integer
+          format: int64
+          example: 1
+        dni:
+          type: string
+          example: "12345678"
+        firstName:
+          type: string
+          example: "Juan"
+        lastName:
+          type: string
+          example: "Perez"
+        sellerType:
+          type: string
+          enum: [ INTERNAL, EXTERNAL ]
+          example: EXTERNAL
+        sellerStatus:
+          type: string
+          enum: [ ACTIVE, INACTIVE ]
+          example: ACTIVE
+        sellerBranchId:
+          type: integer
+          format: int64
+          example: 10
+        sellerBranchName:
+          type: string
+          example: "Sede Centro Comercial"
+
+    RegistroVendedorRequest:
+      type: object
+      properties:
+        dni:
+          type: string
+          example: "12345678"
+        firstName:
+          type: string
+          example: "Juan"
+        lastName:
+          type: string
+          example: "Perez"
+        sellerType:
+          type: string
+          enum: [ INTERNAL, EXTERNAL ]
+          example: EXTERNAL
+        sellerBranchId:
+          type: integer
+          format: int64
+          example: 10
+        email:
+          type: string
+          format: email
+        bankAccount:
+          type: string
+          example: "001-234567-01"
+          description: Solo para vendedores EXTERNOS
+        ruc:
+          type: string
+          example: "20123456789"
+          description: Opcional para EXTERNOS
+
+    ModificacionVendedorRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+          example: "Juan Alberto"
+        lastName:
+          type: string
+          example: "Perez Lopez"
+        sellerBranchId:
+          type: integer
+          format: int64
+          example: 11
+        email:
+          type: string
+          format: email
+        bankAccount:
+          type: string
+          example: "001-234567-01"
+        ruc:
+          type: string
+          example: "20123456789"
+
+    EmpleadoRRHHDTO:
+      type: object
+      description: DTO de respuesta del API Proxy de RRHH.
+      properties:
+        dni:
+          type: string
+          example: "98765432"
+        nombres:
+          type: string
+          example: "Maria Alejandra"
+        apellidoPaterno:
+          type: string
+          example: "Gomez"
+        apellidoMaterno:
+          type: string
+          example: "Rojas"
+        emailCorporativo:
+          type: string
+          format: email
+          example: "mgomezr@empresa.com"
+
+    PageVendedorResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/VendedorResponse'
+        totalPages:
+          type: integer
+          example: 5
+        totalElements:
+          type: integer
+          example: 50
+        number:
+          type: integer
+          description: Número de página actual
+          example: 0
+
+      # -------------------------------------------------------------------------
+      # ESQUEMAS DE SEDE
+      # -------------------------------------------------------------------------
+    Sede:
+      type: object
+      properties:
+        branchId:
+          type: integer
+          format: int64
+          example: 10
+        name:
+          type: string
+          example: "Sede Lince"
+        address:
+          type: string
+          example: "Av. Pardo 123"
+        maxCapacity:
+          type: integer
+          example: 10
+        branchType:
+          type: string
+          enum: [ CENTRO_DE_ATENCION, CALL_CENTER, MESA_DE_PARTES ]
+          example: CENTRO_DE_ATENCION
+        warehouseRefId:
+          type: string
+          example: "ALM-LIN01"
+          description: ID de referencia al módulo de Inventario
+        active:
+          type: boolean
+          example: true
+
+    # ENUMS DE VENTA
+    OrigenVentaEnum:
+      type: string
+      enum: [DIRECTA, LEAD, COTIZACION]
+      description: Origen de la venta
+    VentaEstadoEnum:
+      type: string
+      enum: [BORRADOR, CONFIRMADA, CANCELADA]
+      description: Estado de la venta
+
+    # REQUEST DTOs
+    CrearVentaDirectaRequest:
+      type: object
+      required:
+        - usuarioCreador
+      properties:
+        usuarioCreador:
+          type: string
+          description: Usuario que crea la venta
+          example: "admin@empresa.com"
+
+    AgregarItemVentaRequest:
+      type: object
+      required:
+        - itemProductoId
+        - cantidad
+      properties:
+        itemProductoId:
+          type: integer
+          format: int64
+          description: ID del producto a agregar
+          example: 1
+        cantidad:
+          type: integer
+          minimum: 1
+          description: Cantidad del producto a agregar
+          example: 2
+
+    # RESPONSE DTOs
+    VentaListadoResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID de la venta
+          example: 1
+        numVenta:
+          type: string
+          description: Número de venta generado
+          example: "VTA-DIR-000001"
+        origenVenta:
+          $ref: '#/components/schemas/OrigenVentaEnum'
+        estado:
+          $ref: '#/components/schemas/VentaEstadoEnum'
+        fechaVentaCreada:
+          type: string
+          format: date
+          description: Fecha de creación de la venta
+          example: "2025-12-03"
+        nombreCliente:
+          type: string
+          nullable: true
+          description: Nombre del cliente (null si no está asignado)
+          example: "Juan Pérez"
+
+    VentaResumenResponse:
+      type: object
+      properties:
+        ventaId:
+          type: integer
+          format: int64
+          description: ID de la venta
+          example: 1
+        origen:
+          $ref: '#/components/schemas/OrigenVentaEnum'
+        estado:
+          $ref: '#/components/schemas/VentaEstadoEnum'
+        subtotal:
+          type: number
+          format: decimal
+          description: Subtotal de la venta (suma de items sin descuentos)
+          example: 1500.00
+        descuentoTotal:
+          type: number
+          format: decimal
+          description: Total de descuentos aplicados
+          example: 0.00
+        total:
+          type: number
+          format: decimal
+          description: Total final de la venta
+          example: 1500.00
+        items:
+          type: array
+          description: Lista de items en el carrito
+          items:
+            $ref: '#/components/schemas/LineaCarritoResponse'
+
+    LineaCarritoResponse:
+      type: object
+      properties:
+        detalleId:
+          type: integer
+          format: int64
+          description: ID del detalle de venta
+          example: 1
+        itemProductoId:
+          type: integer
+          format: int64
+          description: ID del producto
+          example: 5
+        nombreProducto:
+          type: string
+          description: Nombre del producto
+          example: "Internet 100 Mbps"
+        cantidad:
+          type: integer
+          description: Cantidad del producto
+          example: 2
+        precioUnitario:
+          type: number
+          format: decimal
+          description: Precio unitario del producto
+          example: 750.00
+        subtotal:
+          type: number
+          format: decimal
+          description: Subtotal de la línea (precioUnitario * cantidad - descuentos)
+          example: 1500.00
+    
+    Cotizacion:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        fecha:
+          type: string
+          format: date-time
+        clienteId:
+          type: integer
+          format: int64
+        vendedorId:
+          type: integer
+          format: int64
+        total:
+          type: number
+          format: double
+        estado:
+          type: string
+          enum: [BORRADOR, ENVIADA, ACEPTADA, RECHAZADA, VENCIDA]
+        vigencia:
+          type: string
+          format: date
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CotizacionItem'
+    
+    CotizacionRequest:
+      type: object
+      required:
+        - clienteId
+        - vendedorId
+        - items
+      properties:
+        clienteId:
+          type: integer
+          format: int64
+        vendedorId:
+          type: integer
+          format: int64
+        vigencia:
+          type: string
+          format: date
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CotizacionItemRequest'
+    
+    CotizacionItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        productoId:
+          type: integer
+          format: int64
+        cantidad:
+          type: integer
+        precioUnitario:
+          type: number
+          format: double
+        subtotal:
+          type: number
+          format: double
+    
+    CotizacionItemRequest:
+      type: object
+      required:
+        - productoId
+        - cantidad
+      properties:
+        productoId:
+          type: integer
+          format: int64
+        cantidad:
+          type: integer
+          minimum: 1
+
+    # ==================== SCHEMAS DE CLIENTES ====================
+    EstadoClienteEnum:
+      type: string
+      enum: [ACTIVO, INACTIVO]
+      description: Estado del cliente
+
+    RegistroClienteRequest:
+      type: object
+      required:
+        - dni
+        - firstName
+        - lastName
+      properties:
+        dni:
+          type: string
+          description: DNI del cliente (8 dígitos)
+          example: "12345678"
+        firstName:
+          type: string
+          description: Nombre del cliente
+          example: "Juan"
+        lastName:
+          type: string
+          description: Apellido del cliente
+          example: "Pérez"
+        email:
+          type: string
+          format: email
+          description: Email del cliente
+          example: "juan.perez@email.com"
+        phoneNumber:
+          type: string
+          description: Número de teléfono celular (9 dígitos)
+          example: "987654321"
+        telefonoFijo:
+          type: string
+          description: Número de teléfono fijo
+          example: "555-1001"
+        address:
+          type: string
+          description: Dirección del cliente
+          example: "Av. Principal 123"
+        fechaNacimiento:
+          type: string
+          format: date
+          description: Fecha de nacimiento (usada para verificación de identidad)
+          example: "1985-01-15"
+
+    ModificacionClienteRequest:
+      type: object
+      properties:
+        lastName:
+          type: string
+          description: Apellido del cliente
+          example: "García"
+        email:
+          type: string
+          format: email
+          description: Email del cliente
+          example: "nuevo.email@email.com"
+        phoneNumber:
+          type: string
+          description: Número de teléfono (9 dígitos)
+          example: "987654321"
+        address:
+          type: string
+          description: Dirección del cliente
+          example: "Calle Nueva 456"
+        estado:
+          $ref: '#/components/schemas/EstadoClienteEnum'
+
+    ClienteResponse:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+          format: int64
+        dni:
+          type: string
+          example: "12345678"
+        firstName:
+          type: string
+          example: "Juan"
+        lastName:
+          type: string
+          example: "Pérez"
+        fullName:
+          type: string
+          description: Nombre completo del cliente
+          example: "Juan Pérez"
+        email:
+          type: string
+          format: email
+          example: "juan.perez@email.com"
+        phoneNumber:
+          type: string
+          example: "987654321"
+        address:
+          type: string
+          example: "Av. Principal 123"
+        registrationDate:
+          type: string
+          format: date
+          description: Fecha de registro del cliente
+          example: "2025-01-15"
+        estado:
+          type: string
+          description: Estado del cliente
+          example: "ACTIVO"
+        categoria:
+          type: string
+          description: Categoría del cliente
+          example: "Estándar"
+
+    PageClienteResponse:
+      type: object
+      properties:
+        clientes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClienteResponse'
+        currentPage:
+          type: integer
+          description: Página actual (cero basado)
+          example: 0
+        totalPages:
+          type: integer
+          description: Total de páginas
+          example: 5
+        totalElements:
+          type: integer
+          format: int64
+          description: Total de elementos
+          example: 50
+        pageSize:
+          type: integer
+          description: Tamaño de la página
+          example: 10
+
+    HistorialComprasResponse:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+          format: int64
+        clienteNombre:
+          type: string
+          example: "Juan Pérez"
+        categoria:
+          type: string
+          example: "Estándar"
+        totalCompras:
+          type: number
+          format: decimal
+          description: Total acumulado de compras
+          example: 5000.00
+        cantidadCompras:
+          type: integer
+          description: Cantidad de compras realizadas
+          example: 10
+        compras:
+          type: array
+          items:
+            type: object
+            properties:
+              compraId:
+                type: integer
+                format: int64
+              fecha:
+                type: string
+                format: date
+              producto:
+                type: string
+              monto:
+                type: number
+                format: decimal
+              metodoPago:
+                type: string
+
+    # ==================== SCHEMAS DE DESCUENTOS ====================
+    AplicarDescuentoRequest:
+      type: object
+      required:
+        - ventaId
+        - dniCliente
+      properties:
+        ventaId:
+          type: string
+          description: ID de la venta a la que se aplicará el descuento
+          example: "1"
+        dniCliente:
+          type: string
+          description: DNI del cliente para evaluar descuentos por tipo de cliente
+          example: "12345678"
+        codigoCupon:
+          type: string
+          description: Código de cupón promocional (opcional)
+          example: "VERANO2024"
+
+    DescuentoAplicadoResponse:
+      type: object
+      properties:
+        tipoDescuento:
+          type: string
+          description: Tipo de descuento aplicado
+          example: "TIPO_CLIENTE"
+        montoDescontado:
+          type: number
+          format: decimal
+          description: Monto descontado
+          example: 150.00
+        nuevoTotalVenta:
+          type: number
+          format: decimal
+          description: Nuevo total de la venta después del descuento
+          example: 1350.00
+        mensaje:
+          type: string
+          description: Mensaje descriptivo del descuento aplicado
+          example: "15% de descuento por ser cliente Platino"
+
+    # ==================== SCHEMAS DE INTEGRACIÓN ====================
+    CrearClienteSimpleRequest:
+      type: object
+      required:
+        - firstName
+        - lastName
+      properties:
+        dni:
+          type: string
+          nullable: true
+          description: DNI del cliente (opcional para ventas)
+          example: "12345678"
+        firstName:
+          type: string
+          description: Nombre del cliente
+          example: "Juan"
+        lastName:
+          type: string
+          description: Apellido del cliente
+          example: "Pérez"
+        email:
+          type: string
+          format: email
+          description: Email del cliente
+          example: "juan.perez@email.com"
+        phoneNumber:
+          type: string
+          description: Número de teléfono
+          example: "987654321"
+
+    ClienteIdResponse:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+          format: int64
+          description: ID del cliente creado
+          example: 123
+
+    ClienteVentaDTO:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+          format: int64
+          example: 123
+        dni:
+          type: string
+          example: "12345678"
+        fullName:
+          type: string
+          description: Nombre completo del cliente
+          example: "Juan Pérez"
+        email:
+          type: string
+          format: email
+          example: "juan.perez@email.com"
+        phoneNumber:
+          type: string
+          example: "987654321"
+        estado:
+          type: string
+          description: Estado del cliente
+          example: "ACTIVO"
+        tieneDeuda:
+          type: boolean
+          description: Indica si el cliente tiene deudas pendientes
+          example: false
+        puedeComprar:
+          type: boolean
+          description: Flag operativo que indica si el cliente puede realizar compras
+          example: true
+
+    PageMarketingClienteResponse:
+      type: object
+      properties:
+        clientes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClienteMarketingDTO'
+        currentPage:
+          type: integer
+          description: Página actual (cero basado)
+          example: 0
+        totalPages:
+          type: integer
+          description: Total de páginas
+          example: 5
+        totalElements:
+          type: integer
+          format: int64
+          description: Total de elementos
+          example: 100
+        pageSize:
+          type: integer
+          description: Tamaño de la página
+          example: 20
+
+    ClienteMarketingDTO:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+          format: int64
+        dni:
+          type: string
+          example: "12345678"
+        fullName:
+          type: string
+          example: "Juan Pérez"
+        email:
+          type: string
+          format: email
+          example: "juan.perez@email.com"
+        categoria:
+          type: string
+          description: Categoría del cliente
+          example: "Platino"
+        estado:
+          type: string
+          description: Estado del cliente
+          example: "ACTIVO"
+        recencyScore:
+          type: integer
+          description: Días desde última compra (RFM - Recency)
+          example: 15
+        frequencyScore:
+          type: integer
+          description: Frecuencia de compras (RFM - Frequency)
+          example: 8
+        monetaryScore:
+          type: number
+          format: decimal
+          description: Valor total de compras (RFM - Monetary)
+          example: 5000.00
+        ubicacion:
+          type: string
+          description: Ubicación del cliente
+          example: "Lima"
+        edad:
+          type: integer
+          description: Edad del cliente
+          example: 35
+
+    # ==================== SCHEMAS DE VENTA LEAD ====================
+    CrearVentaLeadRequest:
+      type: object
+      required:
+        - dni
+        - nombres
+        - apellidos
+      properties:
+        idLeadMarketing:
+          type: integer
+          description: ID del lead en el sistema de marketing
+          example: 12345
+        nombres:
+          type: string
+          description: Nombres del cliente
+          example: "Juan"
+        apellidos:
+          type: string
+          description: Apellidos del cliente
+          example: "Pérez López"
+        correo:
+          type: string
+          format: email
+          description: Correo electrónico del cliente
+          example: "juan.perez@example.com"
+        telefono:
+          type: string
+          description: Teléfono del cliente
+          example: "+51987654321"
+        dni:
+          type: string
+          description: DNI del cliente (8 dígitos)
+          example: "12345678"
+        canalOrigen:
+          type: string
+          description: Canal de origen del lead
+          example: "CAMPANIA_TELEFONICA"
+        idCampaniaMarketing:
+          type: integer
+          description: ID de la campaña de marketing
+          example: 1001
+        nombreCampania:
+          type: string
+          description: Nombre de la campaña
+          example: "Renovación iPhone 16 VIP"
+        tematica:
+          type: string
+          description: Temática de la campaña
+          example: "Tecnología y renovación"
+        descripcion:
+          type: string
+          description: Descripción detallada de la campaña
+          example: "Campaña de renovación de equipos iPhone para clientes VIP"
+        notasLlamada:
+          type: string
+          description: Notas de la llamada o contacto
+          example: "Cliente interesado, solicita más información sobre planes"
+        fechaEnvio:
+          type: string
+          format: date-time
+          description: Fecha y hora de envío de la campaña
+          example: "2025-12-01T10:30:00"
+
+    VentaLeadResponse:
+      type: object
+      properties:
+        ventaId:
+          type: integer
+          format: int64
+          description: ID de la venta creada
+          example: 123
+        numVenta:
+          type: string
+          description: Número de venta generado
+          example: "VTA-LED-000001"
+        clienteId:
+          type: integer
+          format: int64
+          description: ID del cliente registrado
+          example: 456
+        mensaje:
+          type: string
+          description: Mensaje de confirmación
+          example: "Venta creada exitosamente desde lead de marketing"
+
+    VentaLeadPendienteResponse:
+      type: object
+      properties:
+        ventaId:
+          type: integer
+          format: int64
+          description: ID de la venta
+          example: 123
+        numVenta:
+          type: string
+          description: Número de venta generado
+          example: "VTA-LED-000001"
+        nombreCliente:
+          type: string
+          description: Nombre completo del cliente
+          example: "Juan Pérez López"
+        nombreCampania:
+          type: string
+          description: Nombre de la campaña de marketing
+          example: "Renovación iPhone 16 VIP"
+        fechaEnvio:
+          type: string
+          format: date-time
+          description: Fecha y hora de envío de la campaña
+          example: "2025-12-01T10:30:00"
+        canalOrigen:
+          type: string
+          description: Canal de origen del lead
+          example: "CAMPANIA_TELEFONICA"
+
+    VentaLeadDetalleResponse:
+      type: object
+      properties:
+        ventaId:
+          type: integer
+          format: int64
+          example: 123
+        numVenta:
+          type: string
+          example: "VTA-LED-000001"
+        clienteId:
+          type: integer
+          format: int64
+          example: 456
+        dni:
+          type: string
+          example: "12345678"
+        nombres:
+          type: string
+          example: "Juan"
+        apellidos:
+          type: string
+          example: "Pérez López"
+        correo:
+          type: string
+          format: email
+          example: "juan.perez@example.com"
+        telefono:
+          type: string
+          example: "+51987654321"
+        idLeadMarketing:
+          type: integer
+          example: 12345
+        canalOrigen:
+          type: string
+          example: "CAMPANIA_TELEFONICA"
+        idCampaniaMarketing:
+          type: integer
+          example: 1001
+        nombreCampania:
+          type: string
+          example: "Renovación iPhone 16 VIP"
+        tematica:
+          type: string
+          example: "Tecnología y renovación"
+        descripcion:
+          type: string
+          example: "Campaña de renovación de equipos iPhone para clientes VIP"
+        notasLlamada:
+          type: string
+          example: "Cliente interesado, solicita más información sobre planes"
+        fechaEnvio:
+          type: string
+          format: date-time
+          example: "2025-12-01T10:30:00"
+
