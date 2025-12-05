@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ConfirmCancelModal } from '../components/ConfirmCancelModal';
 import { ProductCatalogModal } from '../components/ProductCatalogModal';
+import SellerDisplayWidget from '../components/SellerDisplayWidget';
+import type { VendedorResponse } from '../types/Vendedor';
 import type { Product } from '../components/ProductCatalogModal';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
@@ -80,6 +82,9 @@ export function PaginaVentaDirecta() {
   const [descuentoApi, setDescuentoApi] = useState(0);
   //const [setTotalApi] = useState(0);
 
+  const [sellerIdInput, setSellerIdInput] = useState<number | null>(null); // Lo que el usuario digita
+  const [validatedSeller, setValidatedSeller] = useState<VendedorResponse | null>(null); // Datos validados
+
   // Estado para cliente
   const [clienteSeleccionado, setClienteSeleccionado] = useState<{
     id: number;
@@ -128,7 +133,7 @@ export function PaginaVentaDirecta() {
   const calcularTotalesLocales = () => {
     const nuevoSubtotal = productos.reduce((acc, prod) => acc + (prod.precioUnitario * prod.cantidad), 0);
     // Asumiendo que descuentoApi es un valor fijo por ahora, si fuera porcentaje habría que recalcular
-    const nuevoTotal = nuevoSubtotal - descuentoApi; 
+    const nuevoTotal = nuevoSubtotal - descuentoApi;
     return { subtotal: nuevoSubtotal, total: nuevoTotal };
   };
 
@@ -153,7 +158,7 @@ export function PaginaVentaDirecta() {
   const handleAddProductFromModal = (catalogProduct: Product) => {
     // Verificar si ya existe
     const existe = productos.find(p => p.id === catalogProduct.id);
-    
+
     if (existe) {
       updateCantidad(catalogProduct.id, 1);
     } else {
@@ -166,10 +171,10 @@ export function PaginaVentaDirecta() {
       };
       setProductos(prev => [...prev, nuevoProducto]);
     }
-    
+
     // Opcional: Cerrar el modal o dejarlo abierto para agregar más
-    // setIsCatalogOpen(false); 
-    
+    // setIsCatalogOpen(false);
+
     // Aquí podrías llamar al backend para sincronizar
     // addProductToCartApi(ventaId, nuevoProducto);
   };
@@ -195,10 +200,10 @@ export function PaginaVentaDirecta() {
 
   return (
     <div className="bg-gray-100 min-h-screen p-6 pt-4">
-      
+
       {/* Encabezado con Botón Regresar y Título Centrado */}
       <div className="mb-6 flex items-center relative justify-center">
-        <button 
+        <button
           onClick={() => navigate(-1)}
           className="absolute left-0 flex items-center text-gray-600 hover:text-blue-600 font-medium transition-colors"
         >
@@ -210,10 +215,10 @@ export function PaginaVentaDirecta() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* === COLUMNA IZQUIERDA === */}
         <div className="lg:col-span-2 space-y-6">
-          
+
           {/* Tarjeta Cliente */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex justify-between items-center mb-4">
@@ -223,14 +228,14 @@ export function PaginaVentaDirecta() {
                   <span className="mr-1 text-lg leading-none">+</span> Registrar cliente
                 </button>
                 {clienteSeleccionado ? (
-                  <button 
+                  <button
                     onClick={handleEliminarCliente}
                     className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm flex items-center font-medium transition-colors"
                   >
                     Eliminar Cliente
                   </button>
                 ) : (
-                  <button 
+                  <button
                     onClick={handleAsignarCliente}
                     disabled={!busquedaCliente.trim()}
                     className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded text-sm flex items-center font-medium transition-colors"
@@ -245,9 +250,9 @@ export function PaginaVentaDirecta() {
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <SearchIcon />
               </div>
-              <input 
-                type="text" 
-                placeholder="Buscar por Nombre, DNI, RUC..." 
+              <input
+                type="text"
+                placeholder="Buscar por Nombre, DNI, RUC..."
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 value={busquedaCliente}
                 onChange={(e) => setBusquedaCliente(e.target.value)}
@@ -289,10 +294,10 @@ export function PaginaVentaDirecta() {
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
               <h2 className="text-lg font-bold text-gray-800">Selección de Productos</h2>
-              
+
               <div className="flex gap-3">
                 {/* Botón modificado para abrir el catálogo */}
-                <button 
+                <button
                   onClick={() => setIsCatalogOpen(true)}
                   className="px-4 py-2 border border-blue-200 text-blue-600 rounded hover:bg-blue-50 text-sm font-medium flex items-center whitespace-nowrap transition-colors"
                 >
@@ -324,14 +329,14 @@ export function PaginaVentaDirecta() {
                       <td className="py-4 px-2 text-gray-900">S/ {prod.precioUnitario.toFixed(2)}</td>
                       <td className="py-4 px-2">
                         <div className="flex items-center justify-center border border-gray-300 rounded w-fit mx-auto bg-white">
-                          <button 
+                          <button
                             onClick={() => updateCantidad(prod.id, -1)}
                             className="px-2 py-1 text-gray-600 hover:bg-gray-100 border-r border-gray-300"
                           >
                             <MinusIcon />
                           </button>
                           <span className="px-3 py-1 font-medium text-gray-900 w-8 text-center">{prod.cantidad}</span>
-                          <button 
+                          <button
                             onClick={() => updateCantidad(prod.id, 1)}
                             className="px-2 py-1 text-gray-600 hover:bg-gray-100 border-l border-gray-300"
                           >
@@ -343,7 +348,7 @@ export function PaginaVentaDirecta() {
                         S/ {(prod.precioUnitario * prod.cantidad).toFixed(2)}
                       </td>
                       <td className="py-4 px-2 text-center">
-                        <button 
+                        <button
                           onClick={() => eliminarProducto(prod.id)}
                           className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors"
                         >
@@ -367,7 +372,7 @@ export function PaginaVentaDirecta() {
 
         {/* === COLUMNA DERECHA === */}
         <div className="space-y-6">
-          
+
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <h3 className="font-bold text-gray-800 mb-4">Resumen de la Venta</h3>
             <div className="space-y-3 text-sm border-b border-gray-200 pb-4 mb-4">
@@ -400,9 +405,9 @@ export function PaginaVentaDirecta() {
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <h3 className="font-bold text-gray-800 mb-3">Descuentos y Cupones</h3>
             <div className="flex gap-2">
-              <input 
-                type="text" 
-                placeholder="Ingresar código de cupón" 
+              <input
+                type="text"
+                placeholder="Ingresar código de cupón"
                 className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               <button className="px-4 py-2 border border-gray-300 text-blue-600 rounded hover:bg-gray-50 text-sm font-medium transition-colors">
@@ -418,9 +423,9 @@ export function PaginaVentaDirecta() {
               </svg>
               Confirmar Venta
             </button>
-            
+
             {/* Botón Cancelar con Fondo Rojo */}
-            <button 
+            <button
               onClick={() => setIsCancelModalOpen(true)} // Abrir modal al hacer clic
               className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded shadow-sm flex justify-center items-center transition-colors"
             >
@@ -436,24 +441,38 @@ export function PaginaVentaDirecta() {
                 Buscar vendedor
               </button>
             </div>
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder="Codigo de Vendedor"
+              onChange={(e) => setSellerIdInput(parseInt(e.target.value) || null)}
               className="w-full px-3 py-2 border border-gray-300 rounded text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
+            {/* WIDGET DE VALIDACIÓN */}
             <div className="pt-3 border-t border-gray-100">
-              <p className="text-xs text-gray-500">Nombre del Vendedor: <span className="font-medium text-gray-800">Fardito Leon Chacon</span></p>
+                <SellerDisplayWidget
+                    sellerId={sellerIdInput}
+                    // Callback para recibir el objeto completo VendedorResponse (o null si falla)
+                    onSellerDataLoaded={setValidatedSeller}
+                />
             </div>
+
+            {/* DEBUGGING: Muestra los datos que se usarán en la transacción */}
+            {validatedSeller && (
+                <div className="mt-2 text-xs text-gray-500">
+                    <p>OK: Sede Asignada ID: {validatedSeller.sellerBranchId}</p>
+                    <p>OK: Almacén Ref ID: {validatedSeller.warehouseRefId}</p>
+                </div>
+            )}
           </div>
 
         </div>
       </div>
 
       {/* MODAL DE CONFIRMACIÓN */}
-      <ConfirmCancelModal 
-        isOpen={isCancelModalOpen} 
-        onClose={() => setIsCancelModalOpen(false)} 
-        onConfirm={() => navigate(-1)} 
+      <ConfirmCancelModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        onConfirm={() => navigate(-1)}
       />
 
       {/* MODAL DE CATÁLOGO (STEAM STYLE) */}

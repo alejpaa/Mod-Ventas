@@ -7,11 +7,15 @@ interface SellerDisplayProps {
 
     /** URL base de tu backend. */
     backendBaseUrl?: string;
+
+    /** Callback opcional para notificar al componente padre cuando se carguen los datos del vendedor. */
+    onSellerDataLoaded?: (data: VendedorResponse | null) => void;
 }
 
 const SellerDisplayWidget: React.FC<SellerDisplayProps> = ({
     sellerId,
-    backendBaseUrl = import.meta.env.VITE_API_URL
+    backendBaseUrl = import.meta.env.VITE_API_URL,
+    onSellerDataLoaded
 }) => {
 
     const [vendedorData, setVendedorData] = useState<VendedorResponse | null>(null);
@@ -23,6 +27,7 @@ const SellerDisplayWidget: React.FC<SellerDisplayProps> = ({
         if (!sellerId) {
             setVendedorData(null);
             setStatusText(null);
+            onSellerDataLoaded?.(null); // Notificar que no hay datos
             return;
         }
 
@@ -38,6 +43,7 @@ const SellerDisplayWidget: React.FC<SellerDisplayProps> = ({
                 if (response.ok) {
                     const data: VendedorResponse = await response.json();
                     setVendedorData(data);
+                    onSellerDataLoaded?.(data); // Notificar al padre con los datos cargados
                 } else {
                     const errorData: ErrorResponse = await response.json();
 
@@ -49,17 +55,19 @@ const SellerDisplayWidget: React.FC<SellerDisplayProps> = ({
                     } else {
                         setStatusText(`Error ${response.status} del servidor.`);
                     }
+                    onSellerDataLoaded?.(null); // Notificar error
                 }
 
             } catch (error) {
                 setStatusText('Error de conexión.');
+                onSellerDataLoaded?.(null); // Notificar error
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchSeller();
-    }, [sellerId, backendBaseUrl]);
+    }, [sellerId, backendBaseUrl, onSellerDataLoaded]);
 
 
     // ----------------------------------------------------
