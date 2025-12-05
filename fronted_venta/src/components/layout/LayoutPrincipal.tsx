@@ -1,13 +1,12 @@
 // src/components/LayoutPrincipal.tsx
 
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import { Outlet, NavLink } from 'react-router-dom';
 import { useRole } from '../../contexts/RoleContext';
 import { Header } from '../Header';
 import { QuoteIcon, UsersIcon, UserIcon, ShoppingCartIcon, LogOutIcon, BoxIcon } from '../Icons';
 
 export function LayoutPrincipal() {
   const { role, logout } = useRole();
-  const location = useLocation();
 
   // Navigation configuration with icons
   const adminNav = [
@@ -23,15 +22,6 @@ export function LayoutPrincipal() {
   const defaultNav = [{ to: '/', label: 'Venta', icon: ShoppingCartIcon }];
 
   const nav = role === 'administrador' ? adminNav : role === 'vendedor' ? vendedorNav : defaultNav;
-
-  // Get page title based on current route
-  const getPageTitle = () => {
-    if (location.pathname === '/pagina-cliente') return 'Clientes';
-    const route = nav.find((item) => item.to === location.pathname);
-    if (route) return route.label;
-    if (location.pathname === '/registrar-venta') return 'Registrar Venta';
-    return 'Gestión de Ventas';
-  };
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -91,7 +81,7 @@ export function LayoutPrincipal() {
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <Header title={getPageTitle()} />
+        <Header />
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto bg-gray-50 p-8">

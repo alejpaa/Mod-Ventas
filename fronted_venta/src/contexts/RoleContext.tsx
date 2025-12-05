@@ -1,7 +1,8 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
 // Definimos los únicos roles permitidos
-export type Role = 'administrador' | 'vendedor' | null;
+type Role = 'administrador' | 'vendedor' | null;
 
 interface RoleContextValue {
   role: Role;
@@ -17,7 +18,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     try {
       const stored = localStorage.getItem('role');
       if (stored === 'administrador' || stored === 'vendedor') return stored;
-    } catch (e) {
+    } catch {
       // localStorage puede fallar en entornos especiales; ignoramos
     }
     return null;
@@ -30,7 +31,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
       } else {
         localStorage.removeItem('role');
       }
-    } catch (e) {
+    } catch {
       // ignore
     }
   }, [role]);
@@ -45,5 +46,8 @@ export const useRole = () => {
   if (!contexto) throw new Error('El useRole debe usarse dentro de un RoleProvider');
   return contexto;
 };
+
+// Re-export Role type for external use
+export type { Role };
 
 export default RoleContext;

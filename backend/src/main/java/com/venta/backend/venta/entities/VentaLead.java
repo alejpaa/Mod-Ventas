@@ -19,12 +19,15 @@ import java.time.LocalDateTime;
 public class VentaLead {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_venta_lead")
+    private Long id;
+
     @Column(name = "id_venta")
     private Long idVenta;
 
     @OneToOne
-    @MapsId
-    @JoinColumn(name = "id_venta")
+    @JoinColumn(name = "id_venta", insertable = false, updatable = false)
     private Venta venta;
 
     @Column(name = "id_lead_marketing")

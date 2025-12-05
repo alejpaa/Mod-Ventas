@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mod-ventas.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mod-ventas.onrender.com/api';
 
 export interface VentaLeadPendiente {
     ventaId: number;
@@ -29,7 +29,7 @@ export interface VentaLeadDetalle {
 }
 
 export const listarVentasLeadPendientes = async (): Promise<VentaLeadPendiente[]> => {
-    const response = await fetch(`${API_BASE_URL}/api/venta/leads/pendientes`);
+    const response = await fetch(`${API_BASE_URL}/venta/leads/pendientes`);
     if (!response.ok) {
         throw new Error('Error al cargar ventas lead pendientes');
     }
@@ -37,7 +37,7 @@ export const listarVentasLeadPendientes = async (): Promise<VentaLeadPendiente[]
 };
 
 export const obtenerDetalleVentaLead = async (ventaId: number): Promise<VentaLeadDetalle> => {
-    const response = await fetch(`${API_BASE_URL}/api/venta/leads/${ventaId}`);
+    const response = await fetch(`${API_BASE_URL}/venta/leads/${ventaId}`);
     if (!response.ok) {
         throw new Error('Error al cargar detalle de venta lead');
     }

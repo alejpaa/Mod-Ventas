@@ -1,25 +1,38 @@
 import { ShoppingCartIcon, UsersIcon } from '../../../components/Icons';
-import type { QuotationItem } from '../types/quotation.types';
-import { mockProducts } from '../hooks/useQuotation';
+import type { QuotationFormData } from '../types/quotation.types';
+import type { Cliente } from '../../cliente/services/clienteService';
+import type { VendedorResponse } from '../../vendedor/services/vendedorService';
+import type { Producto } from '../../producto/services/productoService';
+import { ProductCatalogModal, type Product } from '../../../components/ProductCatalogModal';
 
 interface QuotationFormProps {
-  newClientName: string;
-  onClientNameChange: (name: string) => void;
-  newItems: QuotationItem[];
-  selectedProduct: string;
-  onSelectedProductChange: (productId: string) => void;
+  formData: QuotationFormData;
+  onFormDataChange: (data: QuotationFormData) => void;
+  clientes: Cliente[];
+  vendedores: VendedorResponse[];
+  productos: Producto[];
+  selectedProduct: number | null;
+  onSelectedProductChange: (productId: number | null) => void;
   onAddItem: () => void;
-  onRemoveItem: (id: string) => void;
-  onUpdateQuantity: (id: string, quantity: number) => void;
+  onRemoveItem: (tempId: string) => void;
+  onUpdateQuantity: (tempId: string, quantity: number) => void;
   totals: { subtotal: number; tax: number; total: number };
   onSave: () => void;
   onCancel: () => void;
+  isSubmitting?: boolean;
+  error?: string | null;
+  catalogModalOpen: boolean;
+  onOpenCatalog: () => void;
+  onCloseCatalog: () => void;
+  onAddProductFromCatalog: (product: Product) => void;
 }
 
 export function QuotationForm({
-  newClientName,
-  onClientNameChange,
-  newItems,
+  formData,
+  onFormDataChange,
+  clientes,
+  vendedores,
+  productos,
   selectedProduct,
   onSelectedProductChange,
   onAddItem,
@@ -28,6 +41,12 @@ export function QuotationForm({
   totals,
   onSave,
   onCancel,
+  isSubmitting = false,
+  error = null,
+  catalogModalOpen,
+  onOpenCatalog,
+  onCloseCatalog,
+  onAddProductFromCatalog,
 }: QuotationFormProps) {
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
@@ -38,8 +57,14 @@ export function QuotationForm({
         </button>
       </div>
 
+      {error && (
+        <div className="mx-6 mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-800 text-sm">{error}</p>
+        </div>
+      )}
+
       <div className="p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Client & Items */}
+        {/* Left Column: Client, Seller & Items */}
         <div className="lg:col-span-2 space-y-8">
           {/* Client Selection */}
           <section>
@@ -49,20 +74,79 @@ export function QuotationForm({
             </h3>
             <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Buscar o Crear Cliente
+                Seleccionar Cliente *
               </label>
-              <div className="flex gap-3">
-                <input
-                  type="text"
-                  placeholder="Nombre del cliente..."
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                  value={newClientName}
-                  onChange={(e) => onClientNameChange(e.target.value)}
-                />
-                <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 font-medium">
-                  Buscar
-                </button>
-              </div>
+              <select
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                value={formData.clienteId || ''}
+                onChange={(e) =>
+                  onFormDataChange({
+                    ...formData,
+                    clienteId: e.target.value ? Number(e.target.value) : null,
+                  })
+                }
+              >
+                <option value="">Seleccione un cliente...</option>
+                {clientes.map((cliente) => (
+                  <option key={cliente.id} value={cliente.id}>
+                    {cliente.nombre} {cliente.documento ? `- ${cliente.documento}` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </section>
+
+          {/* Seller Selection */}
+          <section>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <UsersIcon size={20} className="text-primary-500" />
+              Vendedor Asignado
+            </h3>
+            <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Seleccionar Vendedor *
+              </label>
+              <select
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                value={formData.vendedorId || ''}
+                onChange={(e) =>
+                  onFormDataChange({
+                    ...formData,
+                    vendedorId: e.target.value ? Number(e.target.value) : null,
+                  })
+                }
+              >
+                <option value="">Seleccione un vendedor...</option>
+                {vendedores.map((vendedor) => (
+                  <option key={vendedor.sellerId} value={vendedor.sellerId}>
+                    {vendedor.fullName} - {vendedor.sellerBranchName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </section>
+
+          {/* Validity Days */}
+          <section>
+            <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Días de Validez
+              </label>
+              <input
+                type="number"
+                min="1"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                value={formData.validezDias}
+                onChange={(e) =>
+                  onFormDataChange({
+                    ...formData,
+                    validezDias: parseInt(e.target.value) || 15,
+                  })
+                }
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                La cotización será válida por {formData.validezDias} días desde la fecha de creación
+              </p>
             </div>
           </section>
 
@@ -77,13 +161,15 @@ export function QuotationForm({
             <div className="flex gap-3 mb-6">
               <select
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                value={selectedProduct}
-                onChange={(e) => onSelectedProductChange(e.target.value)}
+                value={selectedProduct || ''}
+                onChange={(e) =>
+                  onSelectedProductChange(e.target.value ? Number(e.target.value) : null)
+                }
               >
                 <option value="">Seleccionar producto o servicio...</option>
-                {mockProducts.map((p) => (
+                {productos.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name} - S/ {p.price}
+                    {p.nombre} - S/ {p.precio.toFixed(2)}
                   </option>
                 ))}
               </select>
@@ -93,6 +179,14 @@ export function QuotationForm({
                 className="bg-primary-600 disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
               >
                 Agregar
+              </button>
+              <button
+                onClick={onOpenCatalog}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                title="Abrir catálogo de productos"
+              >
+                <ShoppingCartIcon size={18} />
+                Catálogo
               </button>
             </div>
 
@@ -109,29 +203,31 @@ export function QuotationForm({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {newItems.length > 0 ? (
-                    newItems.map((item) => (
-                      <tr key={item.id}>
-                        <td className="px-4 py-3 text-gray-800">{item.description}</td>
+                  {formData.items.length > 0 ? (
+                    formData.items.map((item) => (
+                      <tr key={item.tempId}>
+                        <td className="px-4 py-3 text-gray-800">{item.productoNombre}</td>
                         <td className="px-4 py-3">
                           <input
                             type="number"
                             min="1"
                             className="w-16 px-2 py-1 border border-gray-300 rounded text-center"
-                            value={item.quantity}
+                            value={item.cantidad}
                             onChange={(e) =>
-                              onUpdateQuantity(item.id, parseInt(e.target.value) || 1)
+                              onUpdateQuantity(item.tempId, parseInt(e.target.value) || 1)
                             }
                           />
                         </td>
-                        <td className="px-4 py-3 text-gray-600">S/ {item.unitPrice.toFixed(2)}</td>
+                        <td className="px-4 py-3 text-gray-600">
+                          S/ {item.precioUnitario.toFixed(2)}
+                        </td>
                         <td className="px-4 py-3 font-medium text-gray-900">
-                          S/ {item.total.toFixed(2)}
+                          S/ {item.subtotal.toFixed(2)}
                         </td>
                         <td className="px-4 py-3 text-right">
                           <button
-                            onClick={() => onRemoveItem(item.id)}
-                            className="text-red-400 hover:text-red-600"
+                            onClick={() => onRemoveItem(item.tempId)}
+                            className="text-red-400 hover:text-red-600 text-xl"
                           >
                             &times;
                           </button>
@@ -174,13 +270,41 @@ export function QuotationForm({
             <div className="space-y-3">
               <button
                 onClick={onSave}
-                className="w-full bg-primary-600 hover:bg-primary-700 text-white py-3 rounded-lg font-bold shadow-lg transition-all"
+                disabled={isSubmitting}
+                className="w-full bg-primary-600 hover:bg-primary-700 text-white py-3 rounded-lg font-bold shadow-lg transition-all disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Guardar Cotización
+                {isSubmitting ? (
+                  <>
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Guardando...
+                  </>
+                ) : (
+                  'Guardar Cotización'
+                )}
               </button>
               <button
                 onClick={onCancel}
-                className="w-full bg-white border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50 transition-all"
+                disabled={isSubmitting}
+                className="w-full bg-white border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancelar
               </button>
@@ -188,6 +312,13 @@ export function QuotationForm({
           </div>
         </div>
       </div>
+
+      {/* Product Catalog Modal */}
+      <ProductCatalogModal
+        isOpen={catalogModalOpen}
+        onClose={onCloseCatalog}
+        onAddProduct={onAddProductFromCatalog}
+      />
     </div>
   );
 }

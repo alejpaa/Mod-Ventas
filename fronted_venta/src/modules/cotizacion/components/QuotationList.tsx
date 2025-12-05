@@ -1,6 +1,5 @@
 import { BoxIcon, QuoteIcon, UsersIcon } from '../../../components/Icons';
 import type { Quotation } from '../types/quotation.types';
-import { QuotationStatus } from '../types/quotation.types';
 
 interface QuotationListProps {
   quotations: Quotation[];
@@ -8,10 +7,11 @@ interface QuotationListProps {
   onSearchChange: (term: string) => void;
   statusFilter: string;
   onFilterChange: (status: string) => void;
-  onGeneratePDF: (id: string) => void;
-  onSendEmail: (id: string) => void;
-  onAccept: (id: string) => void;
-  onConvertToSale: (id: string) => void;
+  onGeneratePDF: (id: number) => void;
+  onSendEmail: (quotation: Quotation) => void;
+  onAccept: (id: number) => void;
+  onConvertToSale: (id: number) => void;
+  isLoading?: boolean;
 }
 
 export function QuotationList({
@@ -24,18 +24,17 @@ export function QuotationList({
   onSendEmail,
   onAccept,
   onConvertToSale,
+  isLoading = false,
 }: QuotationListProps) {
-  const getStatusColor = (status: QuotationStatus) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case QuotationStatus.Draft:
+      case 'BORRADOR':
         return 'bg-gray-100 text-gray-800';
-      case QuotationStatus.Sent:
+      case 'ENVIADA':
         return 'bg-blue-100 text-blue-800';
-      case QuotationStatus.Accepted:
+      case 'ACEPTADA':
         return 'bg-green-100 text-green-800';
-      case QuotationStatus.Expired:
-        return 'bg-red-100 text-red-800';
-      case QuotationStatus.Rejected:
+      case 'RECHAZADA':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -60,11 +59,10 @@ export function QuotationList({
             onChange={(e) => onFilterChange(e.target.value)}
           >
             <option value="ALL">Todos los estados</option>
-            {Object.values(QuotationStatus).map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
+            <option value="BORRADOR">Borrador</option>
+            <option value="ENVIADA">Enviada</option>
+            <option value="ACEPTADA">Aceptada</option>
+            <option value="RECHAZADA">Rechazada</option>
           </select>
         </div>
       </div>
@@ -83,20 +81,30 @@ export function QuotationList({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {quotations.length > 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                  Cargando cotizaciones...
+                </td>
+              </tr>
+            ) : quotations.length > 0 ? (
               quotations.map((q) => (
                 <tr key={q.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-gray-900">{q.id}</td>
-                  <td className="px-6 py-4 text-gray-700">{q.clientName}</td>
-                  <td className="px-6 py-4 text-gray-500">{q.date}</td>
-                  <td className="px-6 py-4 font-medium text-gray-900">S/ {q.total.toFixed(2)}</td>
+                  <td className="px-6 py-4 font-medium text-gray-900">{q.numCotizacion}</td>
+                  <td className="px-6 py-4 text-gray-700">Cliente #{q.idCliente}</td>
+                  <td className="px-6 py-4 text-gray-500">
+                    {new Date(q.fechaCotizacion).toLocaleDateString('es-PE')}
+                  </td>
+                  <td className="px-6 py-4 font-medium text-gray-900">
+                    S/ {q.totalCotizado.toFixed(2)}
+                  </td>
                   <td className="px-6 py-4">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-                        q.status
+                        q.estado
                       )}`}
                     >
-                      {q.status}
+                      {q.estado}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right space-x-2">
@@ -108,13 +116,13 @@ export function QuotationList({
                       <BoxIcon size={18} />
                     </button>
                     <button
-                      onClick={() => onSendEmail(q.id)}
+                      onClick={() => onSendEmail(q)}
                       className="text-gray-500 hover:text-primary-600 p-1"
                       title="Enviar por Correo"
                     >
                       <QuoteIcon size={18} />
                     </button>
-                    {q.status !== QuotationStatus.Accepted && (
+                    {q.estado !== 'ACEPTADA' && (
                       <button
                         onClick={() => onAccept(q.id)}
                         className="text-gray-500 hover:text-green-600 p-1"
@@ -123,7 +131,7 @@ export function QuotationList({
                         <UsersIcon size={18} />
                       </button>
                     )}
-                    {q.status === QuotationStatus.Accepted && (
+                    {q.estado === 'ACEPTADA' && (
                       <button
                         onClick={() => onConvertToSale(q.id)}
                         className="text-primary-600 hover:text-primary-800 font-medium text-sm ml-2"

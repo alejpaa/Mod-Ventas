@@ -2,7 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { ClienteTable } from '../modules/clientes/components/ClienteTable';
 import { ModalAgregarCliente } from '../modules/clientes/components/ModalAgregarCliente';
 import type { ClienteResponse, EstadoClienteFilter } from '../modules/clientes/types/cliente.types';
-import { filtrarClientes, obtenerGastoTotalCliente } from '../modules/clientes/services/cliente.service';
+import {
+  filtrarClientes,
+  obtenerGastoTotalCliente,
+} from '../modules/clientes/services/cliente.service';
 
 export function PaginaCliente() {
   const [clientes, setClientes] = useState<ClienteResponse[]>([]);
@@ -39,8 +42,9 @@ export function PaginaCliente() {
       setClientes(clientesConGasto);
       setTotalPages(response.totalPages);
       setTotalElements(response.totalElements);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar los clientes');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al cargar los clientes';
+      setError(errorMessage);
       setClientes([]);
     } finally {
       setIsLoading(false);

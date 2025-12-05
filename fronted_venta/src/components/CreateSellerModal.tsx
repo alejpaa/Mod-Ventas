@@ -3,7 +3,7 @@ import React, { useEffect, useState, type FormEvent } from 'react';
 import type { VendedorResponse, SedeResponse } from '../types/Vendedor';
 
 // 1. Tipos de la Sede (coincide con la entidad Sede.java)
-interface Sede extends SedeResponse {}
+type Sede = SedeResponse;
 
 // 2. Tipo de Datos del Formulario (Alineado a RegistroVendedorRequest.java y ModificacionVendedorRequest.java)
 type SellerFormData = {
@@ -43,16 +43,16 @@ const initialState: SellerFormData = {
 };
 
 interface RrhhData {
-    nombres: string;
-    apellidoPaterno: string;
-    apellidoMaterno: string;
-    email: string;
-    telefono: string;
-    direccion: string;
-    idEmpleado: number;
-    documentoIdentidad: string;
-    // Agrega aquí cualquier otro campo que el RRHH DTO envíe que necesites
-  }
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  email: string;
+  telefono: string;
+  direccion: string;
+  idEmpleado: number;
+  documentoIdentidad: string;
+  // Agrega aquí cualquier otro campo que el RRHH DTO envíe que necesites
+}
 
 // 3. Interfaz de Props del Modal
 interface CreateModalProps {
@@ -64,28 +64,34 @@ interface CreateModalProps {
 
 // FUNCIÓN DE MAPEO: Convierte el DTO de la API (VendedorResponse) al estado del Formulario (SellerFormData)
 const generateInitialState = (data: VendedorResponse | null): SellerFormData => {
-    if (!data) return initialState;
+  if (!data) return initialState;
 
-    return {
-        dni: data.dni || '',
-        firstName: data.firstName || '',
-        lastName: data.lastName || '',
-        sellerType: data.sellerType || 'EXTERNAL',
-        sellerBranchId: data.sellerBranchId || '',
-        email: data.email || '',
-        phoneNumber: data.phoneNumber || '',
-        address: data.address || '',
-        bankAccount: data.bankAccount || '',
-        bankName: data.bankName || '',
-        ruc: data.ruc || '',
-        documentType: data.documentType || 'DNI',
-    };
+  return {
+    dni: data.dni || '',
+    firstName: data.firstName || '',
+    lastName: data.lastName || '',
+    sellerType: data.sellerType || 'EXTERNAL',
+    sellerBranchId: data.sellerBranchId || '',
+    email: data.email || '',
+    phoneNumber: data.phoneNumber || '',
+    address: data.address || '',
+    bankAccount: data.bankAccount || '',
+    bankName: data.bankName || '',
+    ruc: data.ruc || '',
+    documentType: data.documentType || 'DNI',
+  };
 };
 
-export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDataToEdit }: CreateModalProps) {
-
+export function CreateSellerModal({
+  onClose,
+  onSaveSuccess,
+  apiBaseUrl,
+  sellerDataToEdit,
+}: CreateModalProps) {
   // 4. ESTADO INICIAL
-  const [formData, setFormData] = useState<SellerFormData>(() => generateInitialState(sellerDataToEdit));
+  const [formData, setFormData] = useState<SellerFormData>(() =>
+    generateInitialState(sellerDataToEdit)
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -104,7 +110,6 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDa
   // Deshabilitar Nombres/Apellidos/DNI si estamos EDITANDO un vendedor INTERNO
   const disablePersonalData = isInternal && isEditing;
 
-
   // 5. FETCH REAL DE SEDES
   useEffect(() => {
     const fetchSedes = async () => {
@@ -119,8 +124,9 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDa
 
         const data: Sede[] = await response.json();
         setSedes(data);
-      } catch (err: any) {
-        setError(`Error al cargar sedes: ${err.message}`);
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+        setError(`Error al cargar sedes: ${errorMessage}`);
       } finally {
         setIsSedesLoading(false);
       }
@@ -129,7 +135,7 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDa
 
     // Precarga la sede actual en el campo de texto en modo edición
     if (sellerDataToEdit) {
-        setSelectedSedeName(sellerDataToEdit.sellerBranchName || '');
+      setSelectedSedeName(sellerDataToEdit.sellerBranchName || '');
     }
   }, [apiBaseUrl, sellerDataToEdit]);
 
@@ -172,63 +178,63 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDa
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name === 'sellerType' && value === 'INTERNAL') {
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value as 'INTERNAL',
-            documentType: 'DNI',
-            ruc: '',
-        }));
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value as 'INTERNAL',
+        documentType: 'DNI',
+        ruc: '',
+      }));
     } else {
-        setFormData((prev) => ({
-          ...prev,
-          [name]: value,
-        }));
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
     }
   };
 
   const handleSearchHR = async () => {
     if (!formData.dni) {
-        setError('Ingrese el DNI para buscar en RRHH.');
-        return;
+      setError('Ingrese el DNI para buscar en RRHH.');
+      return;
     }
 
     setIsSaving(true); // Reutilizamos el estado de guardado para indicar la carga
     setError(null);
 
     try {
-        // Llamada al nuevo endpoint Proxy de tu backend
-        const response = await fetch(`${apiBaseUrl}/vendedores/rrhh-employee/${formData.dni}`);
+      // Llamada al nuevo endpoint Proxy de tu backend
+      const response = await fetch(`${apiBaseUrl}/vendedores/rrhh-employee/${formData.dni}`);
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Error al buscar empleado en RRHH.');
-        }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al buscar empleado en RRHH.');
+      }
 
-        const data: RrhhData = await response.json();
+      const data: RrhhData = await response.json();
 
-        // AUTOCOMPLETADO DE CAMPOS
-        setFormData((prev) => ({
-            ...prev,
-            dni: data.documentoIdentidad,
-            firstName: data.nombres,
-            lastName: `${data.apellidoPaterno} ${data.apellidoMaterno}`, // Concatenamos para el formulario
-            email: data.email,
-            phoneNumber: data.telefono,
-            address: data.direccion,
-            // CLAVE: Almacenamos el ID de RRHH en el campo de referencia (employee_rrhh_id)
-            // Aunque este campo no existe en SellerFormData, lo enviamos en el request final.
-            // Para ser limpios, deberías crear un campo temporal para este ID.
-            // Por ahora, usaremos un truco en el submit, pero la DTO de Java lo tiene como employeeRrhhId
-            // Como el campo en el DTO de Vendedor es employeeRrhhId (Long), actualizaremos el form data.
-            employeeRrhhId: data.idEmpleado,
-        }));
+      // AUTOCOMPLETADO DE CAMPOS
+      setFormData((prev) => ({
+        ...prev,
+        dni: data.documentoIdentidad,
+        firstName: data.nombres,
+        lastName: `${data.apellidoPaterno} ${data.apellidoMaterno}`, // Concatenamos para el formulario
+        email: data.email,
+        phoneNumber: data.telefono,
+        address: data.direccion,
+        // CLAVE: Almacenamos el ID de RRHH en el campo de referencia (employee_rrhh_id)
+        // Aunque este campo no existe en SellerFormData, lo enviamos en el request final.
+        // Para ser limpios, deberías crear un campo temporal para este ID.
+        // Por ahora, usaremos un truco en el submit, pero la DTO de Java lo tiene como employeeRrhhId
+        // Como el campo en el DTO de Vendedor es employeeRrhhId (Long), actualizaremos el form data.
+        employeeRrhhId: data.idEmpleado,
+      }));
 
-        alert(`Empleado ${data.nombres} encontrado. Datos rellenados.`);
-
-    } catch (err: any) {
-        setError(err.message);
+      alert(`Empleado ${data.nombres} encontrado. Datos rellenados.`);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+      setError(errorMessage);
     } finally {
-        setIsSaving(false);
+      setIsSaving(false);
     }
   };
 
@@ -258,8 +264,8 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDa
     try {
       // El Request Body ya es compatible con RegistroVendedorRequest/ModificacionVendedorRequest
       const requestBody = {
-          ...formData,
-          sellerBranchId: formData.sellerBranchId as number, // Asegura el tipo
+        ...formData,
+        sellerBranchId: formData.sellerBranchId as number, // Asegura el tipo
       };
 
       // Llamada a la API
@@ -276,8 +282,9 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDa
 
       alert(isEditing ? 'Vendedor actualizado exitosamente!' : 'Vendedor registrado exitosamente!');
       onSaveSuccess();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+      setError(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -293,20 +300,25 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDa
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">{isEditing ? `Editar Vendedor (ID: ${sellerId})` : 'Registrar Nuevo Vendedor'}</h2>
+          <h2 className="text-2xl font-bold text-gray-800">
+            {isEditing ? `Editar Vendedor (ID: ${sellerId})` : 'Registrar Nuevo Vendedor'}
+          </h2>
           <button onClick={onClose} className="text-gray-500 text-3xl">
             &times;
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
-          {error && <p className="text-red-500 mb-4 p-2 bg-red-100 border border-red-300 rounded-md">{error}</p>}
+          {error && (
+            <p className="text-red-500 mb-4 p-2 bg-red-100 border border-red-300 rounded-md">
+              {error}
+            </p>
+          )}
 
           <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-
             {/* Tipo de Vendedor: Deshabilitado en Edición */}
             <div>
-              <label className='block text-sm font-medium text-gray-700'>Tipo de Vendedor</label>
+              <label className="block text-sm font-medium text-gray-700">Tipo de Vendedor</label>
               <select
                 name="sellerType"
                 value={formData.sellerType}
@@ -321,26 +333,27 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDa
 
             {/* Document Type */}
             {formData.sellerType === 'EXTERNAL' && (
-                <div>
-                    <label className='block text-sm font-medium text-gray-700'>Tipo Doc.</label>
-                    <select
-                        name="documentType"
-                        value={formData.documentType}
-                        onChange={handleChange}
-                        className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                    >
-                        <option value="DNI">DNI</option>
-                        <option value="CE">CE (Carnet Extranjería)</option>
-                        <option value="RUC">RUC</option>
-                    </select>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Tipo Doc.</label>
+                <select
+                  name="documentType"
+                  value={formData.documentType}
+                  onChange={handleChange}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                >
+                  <option value="DNI">DNI</option>
+                  <option value="CE">CE (Carnet Extranjería)</option>
+                  <option value="RUC">RUC</option>
+                </select>
+              </div>
             )}
             {formData.sellerType === 'INTERNAL' && <div></div>}
 
-
             {/* DNI / RUC y Botón RRHH */}
             <div className="col-span-2">
-              <label className='block text-sm font-medium text-gray-700'>DNI / {formData.sellerType === 'EXTERNAL' && 'RUC Opcional'}</label>
+              <label className="block text-sm font-medium text-gray-700">
+                DNI / {formData.sellerType === 'EXTERNAL' && 'RUC Opcional'}
+              </label>
               <div className="flex items-center space-x-2">
                 <input
                   type="text"
@@ -367,23 +380,22 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDa
 
             {/* RUC (Solo si es EXTERNAL y DocumentType es RUC) */}
             {formData.sellerType === 'EXTERNAL' && formData.documentType === 'RUC' && (
-                <div className='col-span-2'>
-                  <label className='block text-sm font-medium text-gray-700'>RUC (11 dígitos)</label>
-                  <input
-                    type="text"
-                    name="ruc"
-                    value={formData.ruc}
-                    onChange={handleChange}
-                    placeholder="RUC (11 dígitos)"
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                  />
-                </div>
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700">RUC (11 dígitos)</label>
+                <input
+                  type="text"
+                  name="ruc"
+                  value={formData.ruc}
+                  onChange={handleChange}
+                  placeholder="RUC (11 dígitos)"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                />
+              </div>
             )}
-
 
             {/* Nombres */}
             <div>
-              <label className='block text-sm font-medium text-gray-700'>Nombres</label>
+              <label className="block text-sm font-medium text-gray-700">Nombres</label>
               <input
                 type="text"
                 name="firstName"
@@ -397,7 +409,7 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDa
 
             {/* Apellidos */}
             <div>
-              <label className='block text-sm font-medium text-gray-700'>Apellidos</label>
+              <label className="block text-sm font-medium text-gray-700">Apellidos</label>
               <input
                 type="text"
                 name="lastName"
@@ -411,7 +423,7 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDa
 
             {/* Correo Electrónico */}
             <div>
-              <label className='block text-sm font-medium text-gray-700'>Correo Electrónico</label>
+              <label className="block text-sm font-medium text-gray-700">Correo Electrónico</label>
               <input
                 type="email"
                 name="email"
@@ -423,7 +435,7 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDa
 
             {/* Teléfono */}
             <div>
-              <label className='block text-sm font-medium text-gray-700'>Teléfono</label>
+              <label className="block text-sm font-medium text-gray-700">Teléfono</label>
               <input
                 type="tel"
                 name="phoneNumber"
@@ -435,7 +447,7 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDa
 
             {/* Dirección */}
             <div className="col-span-2">
-              <label className='block text-sm font-medium text-gray-700'>Dirección</label>
+              <label className="block text-sm font-medium text-gray-700">Dirección</label>
               <input
                 type="text"
                 name="address"
@@ -447,7 +459,9 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDa
 
             {/* Sede de venta */}
             <div className="col-span-2 relative">
-              <label className='block text-sm font-medium text-gray-700'>Sede de venta asignada</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Sede de venta asignada
+              </label>
               {/* Input de busqueda */}
               <input
                 type="text"
@@ -489,10 +503,12 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDa
           {/* Bloque de Información Bancaria */}
           {!isInternal && (
             <>
-              <h3 className="text-lg font-bold text-gray-700 mt-8 mb-4 border-t pt-4">Información Bancaria (Comisiones)</h3>
+              <h3 className="text-lg font-bold text-gray-700 mt-8 mb-4 border-t pt-4">
+                Información Bancaria (Comisiones)
+              </h3>
               <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                 <div>
-                  <label className='block text-sm font-medium text-gray-700'>Cuenta Bancaria</label>
+                  <label className="block text-sm font-medium text-gray-700">Cuenta Bancaria</label>
                   <input
                     type="text"
                     name="bankAccount"
@@ -503,7 +519,9 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDa
                   />
                 </div>
                 <div>
-                  <label className='block text-sm font-medium text-gray-700'>Nombre del Banco</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Nombre del Banco
+                  </label>
                   <input
                     type="text"
                     name="bankName"
@@ -516,7 +534,6 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDa
               </div>
             </>
           )}
-
 
           {/* Botones */}
           <div className="flex justify-end space-x-4 mt-8">
