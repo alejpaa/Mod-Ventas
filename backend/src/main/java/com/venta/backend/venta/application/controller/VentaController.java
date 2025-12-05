@@ -6,9 +6,12 @@ import com.venta.backend.venta.application.dto.request.CrearVentaLeadRequest;
 import com.venta.backend.venta.application.dto.response.VentaResumenResponse;
 import com.venta.backend.venta.application.dto.response.VentaListadoResponse;
 import com.venta.backend.venta.application.dto.response.VentaLeadResponse;
+import com.venta.backend.venta.application.dto.response.VentaLeadPendienteResponse;
+import com.venta.backend.venta.application.dto.response.VentaLeadDetalleResponse;
 import com.venta.backend.venta.application.servicios.IVentaCarritoService;
 import com.venta.backend.venta.application.servicios.IVentaConsultaService;
 import com.venta.backend.venta.application.servicios.VentaLeadService;
+import com.venta.backend.venta.application.servicios.VentaLeadConsultaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,6 +25,7 @@ public class VentaController {
     private final IVentaCarritoService ventaCarritoService;
     private final IVentaConsultaService ventaConsultaService;
     private final VentaLeadService ventaLeadService;
+    private final VentaLeadConsultaService ventaLeadConsultaService;
 
     @GetMapping
     public java.util.List<VentaListadoResponse> listarVentas() {
@@ -51,5 +55,15 @@ public class VentaController {
     @ResponseStatus(HttpStatus.CREATED)
     public VentaLeadResponse crearVentaDesdeLeadMarketing(@Valid @RequestBody CrearVentaLeadRequest request) {
         return ventaLeadService.crearVentaDesdeLeadMarketing(request);
+    }
+
+    @GetMapping("/leads/pendientes")
+    public java.util.List<VentaLeadPendienteResponse> listarVentasLeadPendientes() {
+        return ventaLeadConsultaService.listarVentasLeadPendientes();
+    }
+
+    @GetMapping("/leads/{ventaId}")
+    public VentaLeadDetalleResponse obtenerDetalleVentaLead(@PathVariable Long ventaId) {
+        return ventaLeadConsultaService.obtenerDetalleVentaLead(ventaId);
     }
 }

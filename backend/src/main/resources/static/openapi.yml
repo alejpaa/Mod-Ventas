@@ -157,6 +157,52 @@ paths:
         '500':
           description: Error interno del servidor
 
+  /api/venta/leads/pendientes:
+    get:
+      tags:
+        - Ventas
+      summary: Listar ventas lead pendientes
+      description: Retorna todas las ventas originadas desde leads de marketing que están en estado BORRADOR (pendientes de atender)
+      operationId: listarVentasLeadPendientes
+      responses:
+        '200':
+          description: Lista de ventas lead pendientes obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VentaLeadPendienteResponse'
+        '500':
+          description: Error interno del servidor
+
+  /api/venta/leads/{ventaId}:
+    get:
+      tags:
+        - Ventas
+      summary: Obtener detalle de venta lead
+      description: Obtiene todos los datos de una venta lead específica para cargar en el formulario de registro de venta
+      operationId: obtenerDetalleVentaLead
+      parameters:
+        - name: ventaId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID de la venta lead
+      responses:
+        '200':
+          description: Detalle de venta lead obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VentaLeadDetalleResponse'
+        '404':
+          description: Venta lead no encontrada
+        '500':
+          description: Error interno del servidor
+
   /api/cotizaciones:
     get:
       tags:
@@ -1659,4 +1705,90 @@ components:
           type: string
           description: Mensaje de confirmación
           example: "Venta creada exitosamente desde lead de marketing"
+
+    VentaLeadPendienteResponse:
+      type: object
+      properties:
+        ventaId:
+          type: integer
+          format: int64
+          description: ID de la venta
+          example: 123
+        numVenta:
+          type: string
+          description: Número de venta generado
+          example: "VTA-LED-000001"
+        nombreCliente:
+          type: string
+          description: Nombre completo del cliente
+          example: "Juan Pérez López"
+        nombreCampania:
+          type: string
+          description: Nombre de la campaña de marketing
+          example: "Renovación iPhone 16 VIP"
+        fechaEnvio:
+          type: string
+          format: date-time
+          description: Fecha y hora de envío de la campaña
+          example: "2025-12-01T10:30:00"
+        canalOrigen:
+          type: string
+          description: Canal de origen del lead
+          example: "CAMPANIA_TELEFONICA"
+
+    VentaLeadDetalleResponse:
+      type: object
+      properties:
+        ventaId:
+          type: integer
+          format: int64
+          example: 123
+        numVenta:
+          type: string
+          example: "VTA-LED-000001"
+        clienteId:
+          type: integer
+          format: int64
+          example: 456
+        dni:
+          type: string
+          example: "12345678"
+        nombres:
+          type: string
+          example: "Juan"
+        apellidos:
+          type: string
+          example: "Pérez López"
+        correo:
+          type: string
+          format: email
+          example: "juan.perez@example.com"
+        telefono:
+          type: string
+          example: "+51987654321"
+        idLeadMarketing:
+          type: integer
+          example: 12345
+        canalOrigen:
+          type: string
+          example: "CAMPANIA_TELEFONICA"
+        idCampaniaMarketing:
+          type: integer
+          example: 1001
+        nombreCampania:
+          type: string
+          example: "Renovación iPhone 16 VIP"
+        tematica:
+          type: string
+          example: "Tecnología y renovación"
+        descripcion:
+          type: string
+          example: "Campaña de renovación de equipos iPhone para clientes VIP"
+        notasLlamada:
+          type: string
+          example: "Cliente interesado, solicita más información sobre planes"
+        fechaEnvio:
+          type: string
+          format: date-time
+          example: "2025-12-01T10:30:00"
 
