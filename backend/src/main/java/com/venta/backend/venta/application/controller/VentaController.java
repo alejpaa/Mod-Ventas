@@ -9,6 +9,7 @@ import com.venta.backend.venta.application.dto.response.VentaLeadResponse;
 import com.venta.backend.venta.application.dto.response.VentaLeadPendienteResponse;
 import com.venta.backend.venta.application.dto.response.VentaLeadDetalleResponse;
 import com.venta.backend.venta.application.dto.response.BoletaResponse;
+import com.venta.backend.venta.application.dto.response.VentaPaginadaResponse;
 import com.venta.backend.venta.application.servicios.IVentaCarritoService;
 import com.venta.backend.venta.application.servicios.IVentaConsultaService;
 import com.venta.backend.venta.application.servicios.VentaLeadService;
@@ -33,6 +34,16 @@ public class VentaController {
     @GetMapping
     public java.util.List<VentaListadoResponse> listarVentas() {
         return ventaConsultaService.listarVentas();
+    }
+
+    @GetMapping("/paginadas")
+    public VentaPaginadaResponse listarVentasPaginadas(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
+    ) {
+        return ventaConsultaService.listarVentasPaginadas(page, size, sortBy, sortDir);
     }
 
     @PostMapping("/directa/borrador")

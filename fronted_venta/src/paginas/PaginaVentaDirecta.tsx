@@ -60,6 +60,7 @@ interface LineaCarritoApi {
 
 interface VentaResumenApi {
   ventaId: number;
+  numVenta?: string;
   origen: 'DIRECTA' | 'LEAD' | 'COTIZACION';
   estado: 'BORRADOR' | 'CONFIRMADA' | 'CANCELADA';
   subtotal: number;
@@ -95,6 +96,7 @@ export function PaginaVentaDirecta() {
   } | null>(null);
   const [busquedaCliente, setBusquedaCliente] = useState('');
   const [metodoPago, setMetodoPago] = useState<'EFECTIVO' | 'TARJETA'>('EFECTIVO');
+  const [numVenta, setNumVenta] = useState<string>('');
 
   // --- Carga Inicial de Datos ---
   useEffect(() => {
@@ -120,6 +122,7 @@ export function PaginaVentaDirecta() {
         //setSubtotalApi(data.subtotal);
         setDescuentoApi(data.descuentoTotal);
         //setTotalApi(data.total);
+        setNumVenta(data.numVenta || `VENTA-${data.ventaId}`);
       } catch (e) {
         console.error(e);
       }
@@ -202,16 +205,23 @@ export function PaginaVentaDirecta() {
     <div className="bg-gray-100 min-h-screen p-6 pt-4">
 
       {/* Encabezado con Botón Regresar y Título Centrado */}
-      <div className="mb-6 flex items-center relative justify-center">
+      <div className="mb-6 flex items-center relative justify-between">
         <button
           onClick={() => navigate(-1)}
-          className="absolute left-0 flex items-center text-gray-600 hover:text-blue-600 font-medium transition-colors"
+          className="flex items-center text-gray-600 hover:text-blue-600 font-medium transition-colors"
         >
           <ArrowLeftIcon />
           Regresar
         </button>
 
-        <h1 className="text-2xl font-bold text-gray-800">Registrar Venta Directa</h1>
+        <h1 className="text-2xl font-bold text-gray-800 absolute left-1/2 transform -translate-x-1/2">Registrar Venta Directa</h1>
+
+        {numVenta && (
+          <div className="text-right">
+            <span className="text-sm text-gray-500">Número de Venta</span>
+            <p className="text-lg font-bold text-blue-600">{numVenta}</p>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -301,10 +311,10 @@ export function PaginaVentaDirecta() {
                   onClick={() => setIsCatalogOpen(true)}
                   className="px-4 py-2 border border-blue-200 text-blue-600 rounded hover:bg-blue-50 text-sm font-medium flex items-center whitespace-nowrap transition-colors"
                 >
-                  <span className="mr-2"><PlusIcon/></span> Agregar producto
+                  <span className="mr-2"><PlusIcon /></span> Agregar producto
                 </button>
                 <button className="px-4 py-2 border border-blue-200 text-blue-600 rounded hover:bg-blue-50 text-sm font-medium flex items-center whitespace-nowrap transition-colors">
-                  <span className="mr-2"><CheckIcon/></span> Validar stock
+                  <span className="mr-2"><CheckIcon /></span> Validar stock
                 </button>
               </div>
             </div>
@@ -449,19 +459,19 @@ export function PaginaVentaDirecta() {
             />
             {/* WIDGET DE VALIDACIÓN */}
             <div className="pt-3 border-t border-gray-100">
-                <SellerDisplayWidget
-                    sellerId={sellerIdInput}
-                    // Callback para recibir el objeto completo VendedorResponse (o null si falla)
-                    onSellerDataLoaded={setValidatedSeller}
-                />
+              <SellerDisplayWidget
+                sellerId={sellerIdInput}
+                // Callback para recibir el objeto completo VendedorResponse (o null si falla)
+                onSellerDataLoaded={setValidatedSeller}
+              />
             </div>
 
             {/* DEBUGGING: Muestra los datos que se usarán en la transacción */}
             {validatedSeller && (
-                <div className="mt-2 text-xs text-gray-500">
-                    <p>OK: Sede Asignada ID: {validatedSeller.sellerBranchId}</p>
-                    <p>OK: Almacén Ref ID: {validatedSeller.warehouseRefId}</p>
-                </div>
+              <div className="mt-2 text-xs text-gray-500">
+                <p>OK: Sede Asignada ID: {validatedSeller.sellerBranchId}</p>
+                <p>OK: Almacén Ref ID: {validatedSeller.warehouseRefId}</p>
+              </div>
             )}
           </div>
 
