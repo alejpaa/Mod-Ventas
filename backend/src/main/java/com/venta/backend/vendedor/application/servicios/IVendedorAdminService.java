@@ -4,7 +4,7 @@ import com.venta.backend.vendedor.application.dto.request.ModificacionVendedorRe
 import com.venta.backend.vendedor.application.dto.request.RegistroVendedorRequest;
 import com.venta.backend.vendedor.application.dto.response.VendedorResponse;
 
-public interface IVendedorAdminServicio {
+public interface IVendedorAdminService {
 
     /**
      * Registra un nuevo vendedor en el sistema (Interno o Externo).

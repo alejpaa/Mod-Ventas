@@ -3,8 +3,8 @@ package com.venta.backend.vendedor.application.controller;
 import com.venta.backend.vendedor.application.dto.request.ModificacionVendedorRequest;
 import com.venta.backend.vendedor.application.dto.request.RegistroVendedorRequest;
 import com.venta.backend.vendedor.application.dto.response.VendedorResponse;
-import com.venta.backend.vendedor.application.servicios.IVendedorAdminServicio;
-import com.venta.backend.vendedor.application.servicios.IVendedorConsultaServicio;
+import com.venta.backend.vendedor.application.servicios.IVendedorAdminService;
+import com.venta.backend.vendedor.application.servicios.IVendedorConsultaService;
 import com.venta.backend.vendedor.enums.SellerStatus;
 import com.venta.backend.vendedor.enums.SellerType;
 import com.venta.backend.vendedor.infraestructura.clientes.dto.EmpleadoRRHHDTO;
@@ -24,8 +24,8 @@ import java.util.List;
 @CrossOrigin(origins = "*") // Permite CORS para desarrollo
 
 public class VendedorController {
-    private final IVendedorAdminServicio adminServicio;
-    private final IVendedorConsultaServicio consultaServicio;
+    private final IVendedorAdminService adminServicio;
+    private final IVendedorConsultaService consultaServicio;
 
     /**
      * POST /api/vendedores

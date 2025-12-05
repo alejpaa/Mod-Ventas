@@ -9,8 +9,8 @@ import com.venta.backend.vendedor.application.exceptions.RecursoNoEncontradoExce
 import com.venta.backend.vendedor.application.exceptions.RegistroVendedorException;
 import com.venta.backend.vendedor.application.fabricas.IFabricaStrategia;
 import com.venta.backend.vendedor.application.mappers.IVendedorMapeador;
-import com.venta.backend.vendedor.application.servicios.IVendedorAdminServicio;
-import com.venta.backend.vendedor.application.servicios.IVendedorConsultaServicio;
+import com.venta.backend.vendedor.application.servicios.IVendedorAdminService;
+import com.venta.backend.vendedor.application.servicios.IVendedorConsultaService;
 import com.venta.backend.vendedor.application.specifications.VendedorEspecificacion;
 import com.venta.backend.vendedor.entities.Sede;
 import com.venta.backend.vendedor.entities.Vendedor;
@@ -33,7 +33,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorConsultaServicio {
+public class VendedorServicioImpl implements IVendedorAdminService, IVendedorConsultaService {
     private final VendedorRepositorio vendedorRepositorio;
     private final SedeRepositorio sedeRepositorio;
     private final IFabricaStrategia fabricaStrategia;
