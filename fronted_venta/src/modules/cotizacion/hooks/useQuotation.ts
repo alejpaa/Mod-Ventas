@@ -1,216 +1,368 @@
-import { useState } from 'react';
-import type { Quotation, QuotationItem } from '../types/quotation.types';
-import { QuotationStatus } from '../types/quotation.types';
-
-// Mock Data
-const mockQuotations: Quotation[] = [
-  {
-    id: 'COT-001',
-    clientName: 'Empresa ABC S.A.C.',
-    date: '2023-10-25',
-    expirationDate: '2023-11-25',
-    status: QuotationStatus.Sent,
-    items: [
-      {
-        id: '1',
-        description: 'Servicio de Internet Fibra Óptica 200Mbps',
-        quantity: 1,
-        unitPrice: 150,
-        total: 150,
-      },
-      {
-        id: '2',
-        description: 'Instalación y Configuración',
-        quantity: 1,
-        unitPrice: 100,
-        total: 100,
-      },
-    ],
-    subtotal: 250,
-    tax: 45,
-    total: 295,
-  },
-  {
-    id: 'COT-002',
-    clientName: 'Juan Pérez',
-    date: '2023-10-28',
-    expirationDate: '2023-11-10',
-    status: QuotationStatus.Draft,
-    items: [],
-    subtotal: 0,
-    tax: 0,
-    total: 0,
-  },
-  {
-    id: 'COT-003',
-    clientName: 'Tech Solutions EIRL',
-    date: '2023-10-20',
-    expirationDate: '2023-10-30',
-    status: QuotationStatus.Accepted,
-    items: [
-      {
-        id: '1',
-        description: 'Plan Móvil Corporativo Ilimitado',
-        quantity: 5,
-        unitPrice: 80,
-        total: 400,
-      },
-    ],
-    subtotal: 400,
-    tax: 72,
-    total: 472,
-  },
-];
-
-export const mockProducts = [
-  { id: 'P001', name: 'Internet Fibra Óptica 100Mbps', price: 90 },
-  { id: 'P002', name: 'Internet Fibra Óptica 200Mbps', price: 150 },
-  { id: 'P003', name: 'Plan Móvil Ilimitado', price: 65 },
-  { id: 'P004', name: 'Plan Móvil Corporativo', price: 80 },
-  { id: 'S001', name: 'Instalación Estándar', price: 50 },
-  { id: 'S002', name: 'Instalación Premium', price: 100 },
-];
+import { useState, useEffect } from 'react';
+import type {
+  Quotation,
+  QuotationItemFormData,
+  QuotationFormData,
+  CotizacionRequest,
+} from '../types/quotation.types';
+import { cotizacionService } from '../services/cotizacionService';
+import { vendedorService, type VendedorResponse } from '../../vendedor/services/vendedorService';
+import { clienteService, type Cliente } from '../../cliente/services/clienteService';
+import { productoService, type Producto } from '../../producto/services/productoService';
+import type { ApiError } from '../../../services/apiClient';
 
 export function useQuotation() {
+  // View State
   const [viewMode, setViewMode] = useState<'LIST' | 'CREATE'>('LIST');
-  const [quotations, setQuotations] = useState<Quotation[]>(mockQuotations);
+
+  // Data State
+  const [quotations, setQuotations] = useState<Quotation[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [vendedores, setVendedores] = useState<VendedorResponse[]>([]);
+  const [productos, setProductos] = useState<Producto[]>([]);
+
+  // Loading States
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+
+  // Error States
+  const [error, setError] = useState<string | null>(null);
+
+  // Filter State
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
-  // Create Form State
-  const [newClientName, setNewClientName] = useState('');
-  const [newItems, setNewItems] = useState<QuotationItem[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState('');
+  // Form State
+  const [formData, setFormData] = useState<QuotationFormData>({
+    clienteId: null,
+    vendedorId: null,
+    validezDias: 15,
+    items: [],
+  });
+  const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
+
+  // Email Dialog State
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [selectedQuotationForEmail, setSelectedQuotationForEmail] = useState<Quotation | null>(
+    null
+  );
+
+  // Product Catalog Modal State
+  const [catalogModalOpen, setCatalogModalOpen] = useState(false);
+
+  // Load initial data
+  useEffect(() => {
+    loadQuotations();
+    loadClientes();
+    loadVendedores();
+    loadProductos();
+  }, []);
+
+  const loadQuotations = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await cotizacionService.listarCotizaciones();
+      setQuotations(data);
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.message || 'Error al cargar las cotizaciones');
+      console.error('Error loading quotations:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadClientes = async () => {
+    try {
+      const data = await clienteService.listarClientes();
+      setClientes(data);
+    } catch (err) {
+      console.error('Error loading clients:', err);
+      // Don't set main error state for background data loads
+    }
+  };
+
+  const loadVendedores = async () => {
+    try {
+      const data = await vendedorService.listarVendedoresActivos();
+      setVendedores(data);
+    } catch (err) {
+      console.error('Error loading sellers:', err);
+    }
+  };
+
+  const loadProductos = async () => {
+    try {
+      const data = await productoService.listarProductosActivos();
+      setProductos(data);
+    } catch (err) {
+      console.error('Error loading products:', err);
+    }
+  };
 
   // Filtered Quotations
   const filteredQuotations = quotations.filter((q) => {
     const matchesSearch =
-      q.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      q.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'ALL' || q.status === statusFilter;
+      q.numCotizacion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      q.idCliente.toString().includes(searchTerm);
+    const matchesStatus = statusFilter === 'ALL' || q.estado === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  // Actions
+  // Form Actions
   const handleCreateQuotation = () => {
     setViewMode('CREATE');
-    setNewClientName('');
-    setNewItems([]);
+    setFormData({
+      clienteId: null,
+      vendedorId: null,
+      validezDias: 15,
+      items: [],
+    });
+    setSelectedProduct(null);
+    setError(null);
   };
 
   const handleAddItem = () => {
-    const product = mockProducts.find((p) => p.id === selectedProduct);
+    if (!selectedProduct) return;
+
+    const product = productos.find((p) => p.id === selectedProduct);
     if (!product) return;
 
-    const newItem: QuotationItem = {
-      id: Date.now().toString(),
-      description: product.name,
-      quantity: 1,
-      unitPrice: product.price,
-      total: product.price,
+    const newItem: QuotationItemFormData = {
+      tempId: Date.now().toString(),
+      productoId: product.id,
+      productoNombre: product.nombre,
+      cantidad: 1,
+      precioUnitario: product.precio,
+      subtotal: product.precio,
     };
 
-    setNewItems([...newItems, newItem]);
-    setSelectedProduct('');
+    setFormData({
+      ...formData,
+      items: [...formData.items, newItem],
+    });
+    setSelectedProduct(null);
   };
 
-  const handleRemoveItem = (id: string) => {
-    setNewItems(newItems.filter((item) => item.id !== id));
+  const handleAddProductFromCatalog = (catalogProduct: {
+    id: string;
+    name: string;
+    price: number;
+  }) => {
+    // Convert catalog product to quotation item
+    const newItem: QuotationItemFormData = {
+      tempId: Date.now().toString(),
+      productoId: parseInt(catalogProduct.id.replace('PROD-', '')), // Convert PROD-XXX to number
+      productoNombre: catalogProduct.name,
+      cantidad: 1,
+      precioUnitario: catalogProduct.price,
+      subtotal: catalogProduct.price,
+    };
+
+    setFormData({
+      ...formData,
+      items: [...formData.items, newItem],
+    });
+
+    // Close the modal after adding
+    setCatalogModalOpen(false);
   };
 
-  const handleUpdateQuantity = (id: string, quantity: number) => {
-    if (quantity < 1) return;
-    setNewItems(
-      newItems.map((item) =>
-        item.id === id ? { ...item, quantity, total: item.unitPrice * quantity } : item
-      )
-    );
+  const handleRemoveItem = (tempId: string) => {
+    setFormData({
+      ...formData,
+      items: formData.items.filter((item) => item.tempId !== tempId),
+    });
+  };
+
+  const handleUpdateQuantity = (tempId: string, cantidad: number) => {
+    if (cantidad < 1) return;
+
+    setFormData({
+      ...formData,
+      items: formData.items.map((item) =>
+        item.tempId === tempId
+          ? { ...item, cantidad, subtotal: item.precioUnitario * cantidad }
+          : item
+      ),
+    });
   };
 
   const calculateTotals = () => {
-    const subtotal = newItems.reduce((sum, item) => sum + item.total, 0);
+    const subtotal = formData.items.reduce((sum, item) => sum + item.subtotal, 0);
     const tax = subtotal * 0.18; // 18% IGV
     const total = subtotal + tax;
     return { subtotal, tax, total };
   };
 
-  const handleSaveQuotation = () => {
-    if (!newClientName) {
-      alert('Por favor ingrese el nombre del cliente');
+  const handleSaveQuotation = async () => {
+    setError(null);
+
+    // Validation
+    if (!formData.clienteId) {
+      setError('Por favor seleccione un cliente');
       return;
     }
-    if (newItems.length === 0) {
-      alert('Por favor agregue al menos un ítem');
+    if (!formData.vendedorId) {
+      setError('Por favor seleccione un vendedor');
+      return;
+    }
+    if (formData.items.length === 0) {
+      setError('Por favor agregue al menos un producto');
       return;
     }
 
-    const { subtotal, tax, total } = calculateTotals();
-    const newQuotation: Quotation = {
-      id: `COT-${(quotations.length + 1).toString().padStart(3, '0')}`,
-      clientName: newClientName,
-      date: new Date().toISOString().split('T')[0],
-      expirationDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // +15 days
-      status: QuotationStatus.Draft,
-      items: newItems,
-      subtotal,
-      tax,
-      total,
-    };
+    setIsSubmitting(true);
 
-    setQuotations([newQuotation, ...quotations]);
-    setViewMode('LIST');
-    alert('Cotización guardada exitosamente como Borrador');
-  };
+    try {
+      // Calculate validity date
+      const vigencia = new Date();
+      vigencia.setDate(vigencia.getDate() + formData.validezDias);
+      const vigenciaStr = vigencia.toISOString().split('T')[0];
 
-  const handleGeneratePDF = (id: string) => {
-    alert(`Generando PDF para la cotización ${id}... (Simulación)`);
-  };
+      const request: CotizacionRequest = {
+        clienteId: formData.clienteId,
+        vendedorId: formData.vendedorId,
+        vigencia: vigenciaStr,
+        items: formData.items.map((item) => ({
+          productoId: item.productoId,
+          cantidad: item.cantidad,
+          precioUnitario: item.precioUnitario,
+        })),
+      };
 
-  const handleSendEmail = (id: string) => {
-    alert(`Enviando cotización ${id} por correo... (Simulación)`);
-    // Update status to Sent if it was Draft
-    setQuotations(
-      quotations.map((q) =>
-        q.id === id && q.status === QuotationStatus.Draft
-          ? { ...q, status: QuotationStatus.Sent }
-          : q
-      )
-    );
-  };
+      await cotizacionService.crearCotizacion(request);
 
-  const handleAcceptQuotation = (id: string) => {
-    if (confirm('¿Está seguro de marcar esta cotización como ACEPTADA?')) {
-      setQuotations(
-        quotations.map((q) => (q.id === id ? { ...q, status: QuotationStatus.Accepted } : q))
-      );
+      // Reload quotations and return to list view
+      await loadQuotations();
+      setViewMode('LIST');
+      alert('Cotización creada exitosamente');
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.message || 'Error al crear la cotización');
+      console.error('Error creating quotation:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleConvertToSale = (id: string) => {
-    alert(`Redirigiendo a generar venta para la cotización ${id}...`);
+  const handleGeneratePDF = (id: number) => {
+    // TODO: Implement PDF generation
+    alert(`Generando PDF para la cotización #${id}... (Funcionalidad pendiente)`);
+  };
+
+  const handleOpenEmailDialog = (quotation: Quotation) => {
+    setSelectedQuotationForEmail(quotation);
+    setEmailDialogOpen(true);
+  };
+
+  const handleSendEmail = async (email: string) => {
+    if (!selectedQuotationForEmail) return;
+
+    setIsSendingEmail(true);
+    setError(null);
+
+    try {
+      await cotizacionService.enviarCotizacion({
+        cotizacionId: selectedQuotationForEmail.id,
+        email,
+      });
+
+      // Reload quotations to get updated status
+      await loadQuotations();
+
+      setEmailDialogOpen(false);
+      setSelectedQuotationForEmail(null);
+      alert('Cotización enviada exitosamente');
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.message || 'Error al enviar la cotización');
+      console.error('Error sending quotation:', err);
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
+  const handleAcceptQuotation = async (id: number) => {
+    if (!confirm('¿Está seguro de marcar esta cotización como ACEPTADA?')) {
+      return;
+    }
+
+    setError(null);
+
+    try {
+      await cotizacionService.aceptarCotizacion(id);
+
+      // Reload quotations to get updated status
+      await loadQuotations();
+
+      alert('Cotización aceptada exitosamente');
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.message || 'Error al aceptar la cotización');
+      console.error('Error accepting quotation:', err);
+    }
+  };
+
+  const handleConvertToSale = (id: number) => {
+    // TODO: Implement conversion to sale
+    alert(`Redirigiendo a generar venta para la cotización #${id}...`);
   };
 
   return {
+    // View State
     viewMode,
     setViewMode,
+
+    // Data
     quotations,
     filteredQuotations,
+    clientes,
+    vendedores,
+    productos,
+
+    // Loading States
+    isLoading,
+    isSubmitting,
+    isSendingEmail,
+
+    // Error State
+    error,
+    setError,
+
+    // Filter State
     searchTerm,
     setSearchTerm,
     statusFilter,
     setStatusFilter,
-    newClientName,
-    setNewClientName,
-    newItems,
+
+    // Form State
+    formData,
+    setFormData,
     selectedProduct,
     setSelectedProduct,
+
+    // Email Dialog State
+    emailDialogOpen,
+    setEmailDialogOpen,
+    selectedQuotationForEmail,
+
+    // Catalog Modal State
+    catalogModalOpen,
+    setCatalogModalOpen,
+
+    // Actions
     handleCreateQuotation,
     handleAddItem,
+    handleAddProductFromCatalog,
     handleRemoveItem,
     handleUpdateQuantity,
     calculateTotals,
     handleSaveQuotation,
     handleGeneratePDF,
+    handleOpenEmailDialog,
     handleSendEmail,
     handleAcceptQuotation,
     handleConvertToSale,

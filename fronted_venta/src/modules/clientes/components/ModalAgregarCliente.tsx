@@ -51,21 +51,21 @@ export function ModalAgregarCliente({ onClose, onSaveSuccess }: ModalAgregarClie
       const today = new Date();
       let age = today.getFullYear() - birthDate.getFullYear();
       const monthDiff = today.getMonth() - birthDate.getMonth();
-      
+
       if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
         age--;
       }
-      
-      setFormData(prev => ({ ...prev, edad: age >= 0 ? age : undefined }));
+
+      setFormData((prev) => ({ ...prev, edad: age >= 0 ? age : undefined }));
     } else {
-      setFormData(prev => ({ ...prev, edad: undefined }));
+      setFormData((prev) => ({ ...prev, edad: undefined }));
     }
   }, [formData.fechaNacimiento]);
 
   // Guardar datos en localStorage para persistencia
   useEffect(() => {
-    const hasData = Object.values(formData).some(value => 
-      value !== '' && value !== undefined && value !== false
+    const hasData = Object.values(formData).some(
+      (value) => value !== '' && value !== undefined && value !== false
     );
     if (hasData) {
       localStorage.setItem('clienteFormData', JSON.stringify(formData));
@@ -81,35 +81,37 @@ export function ModalAgregarCliente({ onClose, onSaveSuccess }: ModalAgregarClie
         const parsed = JSON.parse(savedData);
         setFormData(parsed);
         setHasUnsavedChanges(true);
-      } catch (e) {
+      } catch {
         // Ignorar errores de parsing
       }
     }
   }, []);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
+
     // Validar que el DNI solo contenga números
     if (name === 'dni' && value && !/^\d*$/.test(value)) {
       return; // No actualizar si no es un número
     }
-    
+
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
-    
+
     // Limpiar error del campo cuando el usuario empieza a escribir
     if (errors[name]) {
-      setErrors(prev => {
+      setErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[name];
         return newErrors;
       });
     }
-    
+
     // Limpiar error general cuando se hace un cambio
     if (error) {
       setError(null);
@@ -164,7 +166,7 @@ export function ModalAgregarCliente({ onClose, onSaveSuccess }: ModalAgregarClie
         return;
       }
     }
-    
+
     setError(null);
     setActiveTab(tab);
   };
@@ -176,7 +178,7 @@ export function ModalAgregarCliente({ onClose, onSaveSuccess }: ModalAgregarClie
       );
       if (!confirmCancel) return;
     }
-    
+
     localStorage.removeItem('clienteFormData');
     setHasUnsavedChanges(false);
     onClose();
@@ -184,7 +186,7 @@ export function ModalAgregarCliente({ onClose, onSaveSuccess }: ModalAgregarClie
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       setError('Por favor complete todos los campos obligatorios correctamente');
       // Cambiar a la pestaña con errores
@@ -221,9 +223,13 @@ export function ModalAgregarCliente({ onClose, onSaveSuccess }: ModalAgregarClie
         ...(formData.distrito && { distrito: formData.distrito }),
         ...(formData.referencia && { referencia: formData.referencia }),
         ...(formData.idiomaPreferido && { idiomaPreferido: formData.idiomaPreferido }),
-        ...(formData.canalContactoFavorito && { canalContactoFavorito: formData.canalContactoFavorito }),
+        ...(formData.canalContactoFavorito && {
+          canalContactoFavorito: formData.canalContactoFavorito,
+        }),
         ...(formData.intereses && { intereses: formData.intereses }),
-        ...(formData.aceptaPublicidad !== undefined && { aceptaPublicidad: formData.aceptaPublicidad }),
+        ...(formData.aceptaPublicidad !== undefined && {
+          aceptaPublicidad: formData.aceptaPublicidad,
+        }),
       };
 
       const response = await fetch(`${API_BASE_URL}/clientes/registroClientes`, {
@@ -236,7 +242,9 @@ export function ModalAgregarCliente({ onClose, onSaveSuccess }: ModalAgregarClie
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || `Error ${response.status}: No se pudo registrar el cliente`);
+        throw new Error(
+          errorData.message || `Error ${response.status}: No se pudo registrar el cliente`
+        );
       }
 
       // Limpiar datos guardados
@@ -244,8 +252,9 @@ export function ModalAgregarCliente({ onClose, onSaveSuccess }: ModalAgregarClie
       setHasUnsavedChanges(false);
       onSaveSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Error al registrar el cliente');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al registrar el cliente';
+      setError(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -350,9 +359,7 @@ export function ModalAgregarCliente({ onClose, onSaveSuccess }: ModalAgregarClie
                       }`}
                       required
                     />
-                    {errors.dni && (
-                      <p className="mt-1 text-xs text-red-500">{errors.dni}</p>
-                    )}
+                    {errors.dni && <p className="mt-1 text-xs text-red-500">{errors.dni}</p>}
                   </div>
 
                   <div>
@@ -371,9 +378,7 @@ export function ModalAgregarCliente({ onClose, onSaveSuccess }: ModalAgregarClie
                       <option value="ACTIVO">Activo</option>
                       <option value="INACTIVO">Inactivo</option>
                     </select>
-                    {errors.estado && (
-                      <p className="mt-1 text-xs text-red-500">{errors.estado}</p>
-                    )}
+                    {errors.estado && <p className="mt-1 text-xs text-red-500">{errors.estado}</p>}
                   </div>
 
                   <div>
@@ -435,9 +440,7 @@ export function ModalAgregarCliente({ onClose, onSaveSuccess }: ModalAgregarClie
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Edad
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Edad</label>
                     <input
                       type="number"
                       name="edad"
@@ -449,9 +452,7 @@ export function ModalAgregarCliente({ onClose, onSaveSuccess }: ModalAgregarClie
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Género
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Género</label>
                     <select
                       name="genero"
                       value={formData.genero}
@@ -520,9 +521,7 @@ export function ModalAgregarCliente({ onClose, onSaveSuccess }: ModalAgregarClie
                         errors.email ? 'border-red-500' : 'border-gray-300'
                       }`}
                     />
-                    {errors.email && (
-                      <p className="mt-1 text-xs text-red-500">{errors.email}</p>
-                    )}
+                    {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
                   </div>
 
                   <div>
@@ -602,9 +601,7 @@ export function ModalAgregarCliente({ onClose, onSaveSuccess }: ModalAgregarClie
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Distrito
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Distrito</label>
                     <input
                       type="text"
                       name="distrito"

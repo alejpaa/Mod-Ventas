@@ -1791,4 +1791,3 @@ components:
           type: string
           format: date-time
           example: "2025-12-01T10:30:00"
-

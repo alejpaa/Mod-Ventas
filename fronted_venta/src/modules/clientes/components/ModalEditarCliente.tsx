@@ -44,8 +44,10 @@ export function ModalEditarCliente({ clienteId, onClose, onSaveSuccess }: ModalE
           fechaNacimiento: fechaNacimientoFormatted,
           estado: data.estado || '',
         });
-      } catch (err: any) {
-        setError(err.message || 'Error al cargar los datos del cliente');
+      } catch (err: unknown) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Error al cargar los datos del cliente';
+        setError(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -86,8 +88,9 @@ export function ModalEditarCliente({ clienteId, onClose, onSaveSuccess }: ModalE
       await actualizarCliente(clienteId, datosActualizacion);
       onSaveSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Error al actualizar el cliente');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al actualizar el cliente';
+      setError(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -147,9 +150,7 @@ export function ModalEditarCliente({ clienteId, onClose, onSaveSuccess }: ModalE
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ID
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">ID</label>
                 <input
                   type="text"
                   value={cliente?.clienteId || ''}
@@ -159,9 +160,7 @@ export function ModalEditarCliente({ clienteId, onClose, onSaveSuccess }: ModalE
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  DNI *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">DNI *</label>
                 <input
                   type="text"
                   name="dni"
@@ -174,9 +173,7 @@ export function ModalEditarCliente({ clienteId, onClose, onSaveSuccess }: ModalE
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
                 <input
                   type="text"
                   name="firstName"
@@ -188,9 +185,7 @@ export function ModalEditarCliente({ clienteId, onClose, onSaveSuccess }: ModalE
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Apellido *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Apellido *</label>
                 <input
                   type="text"
                   name="lastName"
@@ -224,9 +219,7 @@ export function ModalEditarCliente({ clienteId, onClose, onSaveSuccess }: ModalE
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Correo
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Correo</label>
                 <input
                   type="email"
                   name="email"
@@ -237,9 +230,7 @@ export function ModalEditarCliente({ clienteId, onClose, onSaveSuccess }: ModalE
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Teléfono
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
                 <input
                   type="text"
                   name="phoneNumber"
@@ -263,9 +254,7 @@ export function ModalEditarCliente({ clienteId, onClose, onSaveSuccess }: ModalE
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Dirección
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
                 <input
                   type="text"
                   name="address"
@@ -300,4 +289,3 @@ export function ModalEditarCliente({ clienteId, onClose, onSaveSuccess }: ModalE
     </div>
   );
 }
-
