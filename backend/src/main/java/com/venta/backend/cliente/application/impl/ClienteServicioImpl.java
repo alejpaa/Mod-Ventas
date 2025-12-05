@@ -46,8 +46,9 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
     @Override
     @Transactional
     public ClienteResponse registrarCliente(RegistroClienteRequest request) {
-        // Validar que el DNI no exista
-        if (clienteRepositorio.existsByDni(request.getDni())) {
+        // Validar que el DNI no exista (solo si el DNI no es null)
+        if (request.getDni() != null && !request.getDni().trim().isEmpty() 
+                && clienteRepositorio.existsByDni(request.getDni())) {
             throw new RegistroClienteException("Ya existe un cliente con el DNI: " + request.getDni());
         }
 
@@ -90,8 +91,9 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
 
         // Actualizar campos permitidos (todos excepto clienteId que es la identidad)
         if (request.getDni() != null) {
-            // Validar que el DNI no esté en uso por otro cliente
-            if (clienteRepositorio.existsByDni(request.getDni()) 
+            // Validar que el DNI no esté en uso por otro cliente (solo si no es null)
+            if (!request.getDni().trim().isEmpty() 
+                    && clienteRepositorio.existsByDni(request.getDni()) 
                     && !cliente.getDni().equals(request.getDni())) {
                 throw new RegistroClienteException("Ya existe un cliente con el DNI: " + request.getDni());
             }

@@ -1625,7 +1625,6 @@ components:
     CrearVentaLeadRequest:
       type: object
       required:
-        - dni
         - nombres
         - apellidos
       properties:
@@ -1652,7 +1651,8 @@ components:
           example: "+51987654321"
         dni:
           type: string
-          description: DNI del cliente (8 dígitos)
+          nullable: true
+          description: DNI del cliente (8 dígitos) - Opcional
           example: "12345678"
         canalOrigen:
           type: string
