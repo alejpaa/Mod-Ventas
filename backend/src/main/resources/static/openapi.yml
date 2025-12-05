@@ -1634,9 +1634,9 @@ components:
           example: "Cliente interesado, solicita más información sobre planes"
         fechaEnvio:
           type: string
-          format: date
-          description: Fecha de envío de la campaña
-          example: "2025-12-01"
+          format: date-time
+          description: Fecha y hora de envío de la campaña
+          example: "2025-12-01T10:30:00"
 
     VentaLeadResponse:
       type: object
