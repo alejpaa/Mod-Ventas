@@ -1185,12 +1185,21 @@ components:
           example: "juan.perez@email.com"
         phoneNumber:
           type: string
-          description: Número de teléfono (9 dígitos)
+          description: Número de teléfono celular (9 dígitos)
           example: "987654321"
+        telefonoFijo:
+          type: string
+          description: Número de teléfono fijo
+          example: "555-1001"
         address:
           type: string
           description: Dirección del cliente
           example: "Av. Principal 123"
+        fechaNacimiento:
+          type: string
+          format: date
+          description: Fecha de nacimiento (usada para verificación de identidad)
+          example: "1985-01-15"
 
     ModificacionClienteRequest:
       type: object

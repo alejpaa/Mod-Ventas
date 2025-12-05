@@ -70,7 +70,9 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
+                .telefonoFijo(request.getTelefonoFijo())
                 .address(request.getAddress())
+                .fechaNacimiento(request.getFechaNacimiento())
                 .registrationDate(LocalDate.now())
                 .estado(EstadoClienteEnum.ACTIVO)
                 .categoria("Estándar") // Categoría inicial
@@ -86,7 +88,18 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
     public ClienteResponse actualizarCliente(Long clienteId, ModificacionClienteRequest request) {
         Cliente cliente = findClienteEntityById(clienteId);
 
-        // Actualizar campos permitidos
+        // Actualizar campos permitidos (todos excepto clienteId que es la identidad)
+        if (request.getDni() != null) {
+            // Validar que el DNI no esté en uso por otro cliente
+            if (clienteRepositorio.existsByDni(request.getDni()) 
+                    && !cliente.getDni().equals(request.getDni())) {
+                throw new RegistroClienteException("Ya existe un cliente con el DNI: " + request.getDni());
+            }
+            cliente.setDni(request.getDni());
+        }
+        if (request.getFirstName() != null) {
+            cliente.setFirstName(request.getFirstName());
+        }
         if (request.getLastName() != null) {
             cliente.setLastName(request.getLastName());
         }
@@ -101,8 +114,14 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
         if (request.getPhoneNumber() != null) {
             cliente.setPhoneNumber(request.getPhoneNumber());
         }
+        if (request.getTelefonoFijo() != null) {
+            cliente.setTelefonoFijo(request.getTelefonoFijo());
+        }
         if (request.getAddress() != null) {
             cliente.setAddress(request.getAddress());
+        }
+        if (request.getFechaNacimiento() != null) {
+            cliente.setFechaNacimiento(request.getFechaNacimiento());
         }
         if (request.getEstado() != null) {
             cliente.changeStatus(request.getEstado());
@@ -138,6 +157,8 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
+                .telefonoFijo(request.getTelefonoFijo())
+                .fechaNacimiento(request.getFechaNacimiento())
                 .registrationDate(LocalDate.now())
                 .estado(EstadoClienteEnum.ACTIVO)
                 .categoria("Estándar")

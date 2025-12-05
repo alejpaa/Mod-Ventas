@@ -11,9 +11,9 @@ export function ConfirmCancelModal({ isOpen, onClose, onConfirm }: ConfirmCancel
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={onClose}>
-      <div 
-        className="bg-white rounded-lg shadow-xl w-full max-w-sm overflow-hidden animate-fade-in-up"
-        onClick={(e) => e.stopPropagation()} 
+      <div
+        className="bg-white rounded-lg shadow-xl w-full max-w-sm min-w-[400px] overflow-hidden animate-fade-in-up"
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6 text-center">
           {/* Icono de Alerta */}
@@ -24,20 +24,20 @@ export function ConfirmCancelModal({ isOpen, onClose, onConfirm }: ConfirmCancel
           </div>
 
           <h3 className="text-lg font-bold text-gray-900 mb-2">¿Cancelar venta?</h3>
-          
+
           {/* TEXTO ACTUALIZADO */}
           <p className="text-sm text-gray-500 mb-6">
             La venta con estado borrador pasará a ser cancelada. ¿Estás seguro?
           </p>
 
           <div className="flex justify-center gap-3">
-            <button 
+            <button
               onClick={onClose}
               className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors"
             >
               No, regresar
             </button>
-            <button 
+            <button
               onClick={onConfirm}
               className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition-colors shadow-sm"
             >

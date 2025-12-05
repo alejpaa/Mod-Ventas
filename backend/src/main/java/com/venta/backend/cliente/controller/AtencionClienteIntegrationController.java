@@ -34,9 +34,10 @@ public class AtencionClienteIntegrationController {
     /**
      * PATCH /api/clientes/integracion/atencion-cliente/{idCliente}
      * Actualiza parcialmente los datos de un cliente
+     * Permite modificar todos los campos excepto clienteId (que es la identidad)
      */
     @PatchMapping("/{idCliente}")
-    @Operation(summary = "Actualizar Cliente", description = "Actualiza parcialmente los datos del cliente.")
+    @Operation(summary = "Actualizar Cliente", description = "Actualiza parcialmente los datos del cliente. Permite modificar todos los campos excepto clienteId (que es la identidad).")
     public ResponseEntity<ClienteResponse> actualizarCliente(
             @PathVariable Long idCliente,
             @RequestBody ModificacionClienteRequest request) {
