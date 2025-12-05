@@ -1,6 +1,0 @@
-projectKey=COBERTURA-DE-GEMINI
-serverUrl=http://localhost:9000
-serverVersion=25.9.0.112764
-dashboardUrl=http://localhost:9000/dashboard?id=COBERTURA-DE-GEMINI
-ceTaskId=61d2fd77-c9af-4ac7-8913-5d59819f1b44
-ceTaskUrl=http://localhost:9000/api/ce/task?id=61d2fd77-c9af-4ac7-8913-5d59819f1b44
