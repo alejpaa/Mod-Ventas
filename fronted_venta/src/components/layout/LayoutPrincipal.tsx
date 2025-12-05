@@ -17,6 +17,7 @@ export function LayoutPrincipal() {
   const vendedorNav = [
     { to: '/', label: 'Venta', icon: ShoppingCartIcon },
     { to: '/pagina-cotizacion', label: 'Cotización', icon: QuoteIcon },
+    { to: '/pagina-cliente', label: 'Clientes', icon: UsersIcon },
   ];
 
   const defaultNav = [{ to: '/', label: 'Venta', icon: ShoppingCartIcon }];
