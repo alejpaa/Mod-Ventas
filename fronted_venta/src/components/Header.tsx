@@ -1,16 +1,11 @@
-import { BellIcon, CalendarIcon } from './Icons';
+import { BellIcon } from './Icons';
 import { UserAvatar } from './UserAvatar';
-import { useRole } from '../contexts/RoleContext';
 
 interface HeaderProps {
   title: string;
 }
 
-export function Header({ title }: HeaderProps) {
-  const { role } = useRole();
-
-  // Capitalize role for display
-  const displayRole = role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Usuario';
+export function Header({ }: HeaderProps) {
 
   return (
     <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between shadow-sm">

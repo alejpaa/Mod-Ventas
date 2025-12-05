@@ -49,9 +49,9 @@ public class VentaLeadService {
         
         Venta ventaGuardada = ventaRepositorio.save(venta);
         
-        // 4. Crear registro en VentaLead
+        // 4. Guardar información del lead
         VentaLead ventaLead = VentaLead.builder()
-                .venta(ventaGuardada)
+                .idVenta(ventaGuardada.getId())
                 .idLeadMarketing(request.getIdLeadMarketing())
                 .canalOrigen(request.getCanalOrigen())
                 .idCampaniaMarketing(request.getIdCampaniaMarketing())
