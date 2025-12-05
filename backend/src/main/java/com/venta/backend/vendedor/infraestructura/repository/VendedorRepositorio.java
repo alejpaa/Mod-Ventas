@@ -44,4 +44,11 @@ public interface VendedorRepositorio extends JpaRepository<Vendedor, Long>, JpaS
      */
     Optional<Vendedor> findByEmployeeRrhhId(Long employeeRrhhId);
 
+    /**
+     * Verifica si ya existe un vendedor con un RUC específico.
+     * @param ruc El RUC a verificar.
+     * @return true si el RUC ya existe, false de lo contrario.
+     */
+    boolean existsByRuc(String ruc);
+
 }

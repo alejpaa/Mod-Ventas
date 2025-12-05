@@ -39,11 +39,8 @@ public class RegistroExternoStrategyImpl implements IRegistroVendedorStrategy {
             throw new RegistroVendedorException("El DNI ya se encuentra registrado.");
         }
 
-        if (request.getRuc() != null && !request.getRuc().isBlank()) {
-            // Podrías agregar un método en el repo: existsByRuc
-            // if (vendedorRepositorio.existsByRuc(request.getRuc())) {
-            //     throw new RegistroVendedorException("El RUC ya se encuentra registrado.");
-            // }
+        if (request.getRuc() != null && !request.getRuc().isBlank() && vendedorRepositorio.existsByRuc(request.getRuc())) {
+            throw new RegistroVendedorException("El RUC ya se encuentra registrado.");
         }
     }
 
