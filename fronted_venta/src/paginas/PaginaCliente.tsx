@@ -7,11 +7,6 @@ import { filtrarClientes, actualizarCliente } from '../modules/clientes/services
 
 type EstadoFiltro = 'TODOS' | 'ACTIVO' | 'INACTIVO';
 
-const estadoLabel: Record<string, string> = {
-  ACTIVO: 'Activo',
-  INACTIVO: 'Inactivo',
-};
-
 export function PaginaCliente() {
   const [clientes, setClientes] = useState<ClienteResponse[]>([]);
   const [search, setSearch] = useState('');
@@ -70,9 +65,12 @@ export function PaginaCliente() {
     setIsHistorialOpen(true);
   };
 
-  const handleCambiarEstado = async (cliente: ClienteResponse, nuevoEstado: 'ACTIVO' | 'INACTIVO') => {
+  const handleCambiarEstado = async (
+    cliente: ClienteResponse,
+    nuevoEstado: 'ACTIVO' | 'INACTIVO'
+  ) => {
     if (cliente.estado === nuevoEstado) return;
-    
+
     const confirmar = confirm(
       `¿${nuevoEstado === 'ACTIVO' ? 'Activar' : 'Desactivar'} al cliente ${cliente.fullName}?`
     );
@@ -82,12 +80,13 @@ export function PaginaCliente() {
       await actualizarCliente(cliente.clienteId, { estado: nuevoEstado });
       // Actualizar el estado local
       setClientes((prev) =>
-        prev.map((c) =>
-          c.clienteId === cliente.clienteId ? { ...c, estado: nuevoEstado } : c
-        )
+        prev.map((c) => (c.clienteId === cliente.clienteId ? { ...c, estado: nuevoEstado } : c))
       );
     } catch (err: any) {
-      setError(err?.message || `No se pudo ${nuevoEstado === 'ACTIVO' ? 'activar' : 'desactivar'} el cliente`);
+      setError(
+        err?.message ||
+          `No se pudo ${nuevoEstado === 'ACTIVO' ? 'activar' : 'desactivar'} el cliente`
+      );
     }
   };
 
@@ -138,11 +137,7 @@ export function PaginaCliente() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {estadoBtn === 'TODOS'
-                  ? 'Todos'
-                  : estadoBtn === 'ACTIVO'
-                  ? 'Activos'
-                  : 'Inactivos'}
+                {estadoBtn === 'TODOS' ? 'Todos' : estadoBtn === 'ACTIVO' ? 'Activos' : 'Inactivos'}
               </button>
             ))}
           </div>
@@ -166,9 +161,7 @@ export function PaginaCliente() {
           </div>
 
           <div className="divide-y divide-gray-100 bg-white">
-            {loading && (
-              <div className="py-10 text-center text-gray-500">Cargando clientes...</div>
-            )}
+            {loading && <div className="py-10 text-center text-gray-500">Cargando clientes...</div>}
             {!loading && clientes.length === 0 && (
               <div className="py-10 text-center text-gray-500">No hay clientes para mostrar.</div>
             )}
@@ -181,14 +174,18 @@ export function PaginaCliente() {
                   </div>
                   <div className="col-span-2 text-gray-700">{cliente.dni || '—'}</div>
                   <div className="col-span-2 text-gray-700 truncate">{cliente.email || '—'}</div>
-                  <div className="col-span-1 text-gray-700 truncate">{cliente.phoneNumber || '—'}</div>
+                  <div className="col-span-1 text-gray-700 truncate">
+                    {cliente.phoneNumber || '—'}
+                  </div>
                   <div className="col-span-2 text-gray-900 font-medium">
                     {cliente.ultimaCompra || '—'}
                   </div>
                   <div className="col-span-1">
                     <select
                       value={cliente.estado || 'ACTIVO'}
-                      onChange={(e) => handleCambiarEstado(cliente, e.target.value as 'ACTIVO' | 'INACTIVO')}
+                      onChange={(e) =>
+                        handleCambiarEstado(cliente, e.target.value as 'ACTIVO' | 'INACTIVO')
+                      }
                       className={`px-3 py-1 rounded-full text-xs font-semibold border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none ${getEstadoBadge(
                         cliente.estado
                       )}`}
@@ -226,7 +223,7 @@ export function PaginaCliente() {
                       📊
                     </button>
                     <button
-                      onClick={() => handleDesactivar(cliente)}
+                      onClick={() => handleCambiarEstado(cliente, 'INACTIVO')}
                       className="text-red-600 hover:text-red-700"
                       title="Desactivar"
                     >

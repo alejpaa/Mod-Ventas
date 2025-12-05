@@ -1,12 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-<<<<<<< HEAD
-import {
-  obtenerClientePorId,
-  actualizarCliente,
-} from '../services/cliente.service';
-=======
 import { obtenerClientePorId, actualizarCliente } from '../services/cliente.service';
->>>>>>> 78ec802ee2fdeb4aa50f1ddf2c475883d1884dac
 import type { ModificacionClienteRequest } from '../types/cliente.types';
 
 type Paso = 1 | 2 | 3;
