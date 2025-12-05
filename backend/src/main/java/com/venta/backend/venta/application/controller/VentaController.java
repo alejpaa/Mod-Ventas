@@ -8,10 +8,12 @@ import com.venta.backend.venta.application.dto.response.VentaListadoResponse;
 import com.venta.backend.venta.application.dto.response.VentaLeadResponse;
 import com.venta.backend.venta.application.dto.response.VentaLeadPendienteResponse;
 import com.venta.backend.venta.application.dto.response.VentaLeadDetalleResponse;
+import com.venta.backend.venta.application.dto.response.BoletaResponse;
 import com.venta.backend.venta.application.servicios.IVentaCarritoService;
 import com.venta.backend.venta.application.servicios.IVentaConsultaService;
 import com.venta.backend.venta.application.servicios.VentaLeadService;
 import com.venta.backend.venta.application.servicios.VentaLeadConsultaService;
+import com.venta.backend.venta.application.servicios.BoletaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,6 +28,7 @@ public class VentaController {
     private final IVentaConsultaService ventaConsultaService;
     private final VentaLeadService ventaLeadService;
     private final VentaLeadConsultaService ventaLeadConsultaService;
+    private final BoletaService boletaService;
 
     @GetMapping
     public java.util.List<VentaListadoResponse> listarVentas() {
@@ -65,5 +68,10 @@ public class VentaController {
     @GetMapping("/leads/{ventaId}")
     public VentaLeadDetalleResponse obtenerDetalleVentaLead(@PathVariable Long ventaId) {
         return ventaLeadConsultaService.obtenerDetalleVentaLead(ventaId);
+    }
+
+    @GetMapping("/boletas/empleado/{employeeRrhhId}")
+    public java.util.List<BoletaResponse> obtenerBoletasPorEmpleado(@PathVariable Long employeeRrhhId) {
+        return boletaService.obtenerBoletasPorEmpleado(employeeRrhhId);
     }
 }
