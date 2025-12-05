@@ -3,7 +3,7 @@ package com.venta.backend.vendedor.application.adaptadores;
 import com.venta.backend.vendedor.entities.Vendedor;
 import com.venta.backend.vendedor.infraestructura.clientes.dto.EmpleadoRRHHDTO;
 
-public interface IAdaptadorEmpleado {
+public interface IEmpleadoAdapter {
     /**
      * Adapta los datos de RRHH a una entidad Vendedor (parcial)
      * lista para el registro.

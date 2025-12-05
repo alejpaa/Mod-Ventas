@@ -53,7 +53,7 @@ public class Vendedor {
     private SellerStatus sellerStatus;
 
 
-    @Column(name = "employee_rrhh_id")
+    @Column(name = "employee_rrhh_id", unique = true)
     private Long employeeRrhhId; // ID del trabajador en el módulo de RRHH
 
     // Para vendedores EXTERNOS que tienen RUC (persona jurídica)

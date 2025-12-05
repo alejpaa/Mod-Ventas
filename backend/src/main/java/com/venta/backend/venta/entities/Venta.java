@@ -41,6 +41,12 @@ public class Venta {
     @Column(name = "fecha_venta_completada")
     private LocalDate fechaVentaCompletada;
 
+    @Column(name = "cliente_id")
+    private Long clienteId;
+
+    @Column(name = "id_vendedor")
+    private Long idVendedor;
+
     @Column(nullable = false)
     private BigDecimal subtotal;
 

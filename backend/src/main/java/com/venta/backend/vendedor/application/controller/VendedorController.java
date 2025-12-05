@@ -3,11 +3,13 @@ package com.venta.backend.vendedor.application.controller;
 import com.venta.backend.vendedor.application.dto.request.ModificacionVendedorRequest;
 import com.venta.backend.vendedor.application.dto.request.RegistroVendedorRequest;
 import com.venta.backend.vendedor.application.dto.response.VendedorResponse;
-import com.venta.backend.vendedor.application.servicios.IVendedorAdminServicio;
-import com.venta.backend.vendedor.application.servicios.IVendedorConsultaServicio;
+import com.venta.backend.vendedor.application.servicios.IVendedorAdminService;
+import com.venta.backend.vendedor.application.servicios.IVendedorConsultaService;
 import com.venta.backend.vendedor.enums.SellerStatus;
 import com.venta.backend.vendedor.enums.SellerType;
+import com.venta.backend.vendedor.infraestructura.clientes.dto.EmpleadoRRHHDTO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,10 +23,10 @@ import java.util.List;
 @RequestMapping("/api/vendedores")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*") // Permite CORS para desarrollo
-
+@Slf4j
 public class VendedorController {
-    private final IVendedorAdminServicio adminServicio;
-    private final IVendedorConsultaServicio consultaServicio;
+    private final IVendedorAdminService adminServicio;
+    private final IVendedorConsultaService consultaServicio;
 
     /**
      * POST /api/vendedores
@@ -32,7 +34,11 @@ public class VendedorController {
      */
     @PostMapping
     public ResponseEntity<VendedorResponse> createSeller(@RequestBody RegistroVendedorRequest request) {
+        // Registrar el inicio de la operación y el tipo de vendedor
+        log.info("REST: Solicitud de creación de Vendedor de tipo: {}", request.getSellerType());
         VendedorResponse response = adminServicio.createSeller(request);
+        // Registrar el inicio de la operación y el tipo de vendedor
+        log.info("Vendedor {} creado con ID: {}", response.getFullName(), response.getSellerId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -74,7 +80,9 @@ public class VendedorController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<VendedorResponse> getSellerById(@PathVariable Long id) {
+        log.debug("REST: Búsqueda de vendedor por ID: {}", id);
         VendedorResponse response = consultaServicio.findSellerById(id);
+        log.debug("Vendedor encontrado: {}", response.getSellerId());
         return ResponseEntity.ok(response);
     }
 
@@ -91,7 +99,6 @@ public class VendedorController {
     /**
      * GET /api/vendedores
      * Busca vendedores con filtros y paginación
-     *
      * Ejemplos:
      * - GET /api/vendedores?page=0&size=10
      * - GET /api/vendedores?sellerType=INTERNAL&page=0&size=20
@@ -122,6 +129,16 @@ public class VendedorController {
     @GetMapping("/activos")
     public ResponseEntity<List<VendedorResponse>> listActiveSellers() {
         List<VendedorResponse> response = consultaServicio.listActiveSellers();
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * GET /api/vendedores/rrhh-employee/{dni}
+     * Busca los datos de un empleado en RRHH para autocompletar el formulario.
+     */
+    @GetMapping("/rrhh-employee/{dni}")
+    public ResponseEntity<EmpleadoRRHHDTO> getRrhhEmployeeData(@PathVariable String dni) {
+        EmpleadoRRHHDTO response = consultaServicio.fetchRrhhEmployee(dni);
         return ResponseEntity.ok(response);
     }
 }

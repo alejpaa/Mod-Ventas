@@ -1,7 +1,7 @@
 package com.venta.backend.vendedor.application.impl;
 
 import com.venta.backend.vendedor.application.dto.request.RegistroVendedorRequest;
-import com.venta.backend.vendedor.application.estrategias.IRegistroVendedorStrategia;
+import com.venta.backend.vendedor.application.estrategias.IRegistroVendedorStrategy;
 import com.venta.backend.vendedor.application.exceptions.RegistroVendedorException;
 import com.venta.backend.vendedor.enums.DocumentType;
 import com.venta.backend.vendedor.enums.SellerStatus;
@@ -15,7 +15,7 @@ import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
-public class RegistroExternoStrategiaImpl implements IRegistroVendedorStrategia {
+public class RegistroExternoStrategyImpl implements IRegistroVendedorStrategy {
 
     // Inyección de dependencias (el constructor lo pone Lombok)
     private final VendedorRepositorio vendedorRepositorio;

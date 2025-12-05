@@ -6,12 +6,14 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class EmpleadoRRHHDTO {
-    private String dni;
-    private String firstName;
-    private String lastName;
-    private String email;
-    private String phoneNumber;
-    private String address;
+    private Long idEmpleado;
 
-    private Long employeeId;
+    // Mapeo directo a los nombres del JSON de RRHH
+    private String documentoIdentidad;
+    private String nombres;
+    private String apellidoPaterno;
+    private String apellidoMaterno; // Lo usaremos para el fullName
+    private String direccion;
+    private String telefono;
+    private String email;
 }

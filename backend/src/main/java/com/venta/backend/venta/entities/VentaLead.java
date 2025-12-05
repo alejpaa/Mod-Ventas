@@ -3,7 +3,7 @@ package com.venta.backend.venta.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * Entidad que representa información adicional de una venta originada desde un Lead.
@@ -27,6 +27,9 @@ public class VentaLead {
     @JoinColumn(name = "id_venta")
     private Venta venta;
 
+    @Column(name = "id_lead_marketing")
+    private Integer idLeadMarketing;
+
     @Column(name = "canal_origen", length = 100)
     private String canalOrigen;
 
@@ -46,5 +49,5 @@ public class VentaLead {
     private String notasLlamada;
 
     @Column(name = "fecha_envio")
-    private LocalDate fechaEnvio;
+    private LocalDateTime fechaEnvio;
 }
