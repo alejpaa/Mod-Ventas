@@ -48,12 +48,13 @@ public class VendedorServicioImpl implements IVendedorAdminService, IVendedorCon
     public VendedorResponse createSeller(RegistroVendedorRequest request) {
         IRegistroVendedorStrategy strategia = fabricaStrategia.getRegistrationStrategy(request.getSellerType());
 
-        strategia.validateData(request);
-
         if (request.getSellerBranchId() == null) {
             throw new RegistroVendedorException("Debe asignar una Sede de Venta.");
         }
+
         Sede sedeAsignada = findSedeEntityById(request.getSellerBranchId());
+
+        strategia.validateData(request, sedeAsignada);
 
         validateBranchCapacity(sedeAsignada);
 
@@ -62,7 +63,7 @@ public class VendedorServicioImpl implements IVendedorAdminService, IVendedorCon
 
         Vendedor savedVendedor = vendedorRepositorio.save(newVendedor);
 
-        return vendedorMapeador.toVendedorResponse(savedVendedor);
+        return vendedorMapeador.toVendedorResponse(savedVendedor); // Devolver dto en vez de la entidad
     }
 
     @Override

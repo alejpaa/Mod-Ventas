@@ -4,6 +4,7 @@ import com.venta.backend.vendedor.application.dto.request.RegistroVendedorReques
 import com.venta.backend.vendedor.application.estrategias.IRegistroVendedorStrategy;
 import com.venta.backend.vendedor.application.exceptions.RegistroVendedorException;
 import com.venta.backend.vendedor.application.servicios.ISellerOnboardingService;
+import com.venta.backend.vendedor.entities.Sede;
 import com.venta.backend.vendedor.enums.DocumentType;
 import com.venta.backend.vendedor.enums.SellerStatus;
 import com.venta.backend.vendedor.entities.Vendedor;
@@ -23,7 +24,7 @@ public class RegistroExternoStrategyImpl implements IRegistroVendedorStrategy {
     private final ISellerOnboardingService sellerOnboardingService;
 
     @Override
-    public void validateData(RegistroVendedorRequest request) {
+    public void validateData(RegistroVendedorRequest request, Sede sedeAsignada) {
         if (request.getDni() == null || request.getDni().isBlank()) {
             throw new RegistroVendedorException("El campo DNI es obligatorio.");
         }
@@ -67,7 +68,7 @@ public class RegistroExternoStrategyImpl implements IRegistroVendedorStrategy {
         // OnboardingService se encargará de enviar el email de bienvenida
         sellerOnboardingService.onboardSeller(newVendeor);
 
-        
+
 
         return newVendeor;
     }

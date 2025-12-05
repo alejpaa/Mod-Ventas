@@ -1,6 +1,7 @@
 package com.venta.backend.vendedor.application.estrategias;
 
 import com.venta.backend.vendedor.application.dto.request.RegistroVendedorRequest;
+import com.venta.backend.vendedor.entities.Sede;
 import com.venta.backend.vendedor.entities.Vendedor;
 
 public interface IRegistroVendedorStrategy {
@@ -12,7 +13,7 @@ public interface IRegistroVendedorStrategy {
      *
      * @param request El DTO de registro.
      */
-    void validateData(RegistroVendedorRequest request);
+    void validateData(RegistroVendedorRequest request, Sede sede);
 
     /**
      * Crea la entidad Vendedor (sin guardar) basada en la lógica de esta estrategia.
