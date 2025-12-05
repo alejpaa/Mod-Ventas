@@ -27,6 +27,9 @@ public class VentaLead {
     @JoinColumn(name = "id_venta")
     private Venta venta;
 
+    @Column(name = "id_lead_marketing")
+    private Integer idLeadMarketing;
+
     @Column(name = "canal_origen", length = 100)
     private String canalOrigen;
 
