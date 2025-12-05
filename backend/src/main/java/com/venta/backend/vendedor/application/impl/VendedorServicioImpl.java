@@ -23,6 +23,7 @@ import com.venta.backend.vendedor.infraestructura.clientes.dto.EmpleadoRRHHDTO;
 import com.venta.backend.vendedor.infraestructura.repository.SedeRepositorio;
 import com.venta.backend.vendedor.infraestructura.repository.VendedorRepositorio;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -33,6 +34,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class VendedorServicioImpl implements IVendedorAdminService, IVendedorConsultaService {
     private final VendedorRepositorio vendedorRepositorio;
     private final SedeRepositorio sedeRepositorio;
@@ -88,15 +90,17 @@ public class VendedorServicioImpl implements IVendedorAdminService, IVendedorCon
     @Override
     @Transactional
     public void deactivateSeller(Long sellerId) {
+        log.info("Iniciando desactivación de vendedor ID: {}", sellerId);
         Vendedor vendedor = findSellerEntityById(sellerId);
 
         if (clienteCotizacion.hasPendingQuotations(sellerId)) {
+            log.warn("Bloqueo de Baja: Vendedor ID {} tiene cotizaciones pendientes. Operación cancelada.", sellerId);
             throw new RegistroVendedorException("Acción bloqueada: El vendedor tiene cotizaciones pendientes.");
         }
 
         vendedor.changeStatus(SellerStatus.INACTIVE);
-
         vendedorRepositorio.save(vendedor);
+        log.info("Vendedor ID {} dado de baja lógicamente (INACTIVE).", sellerId);
     }
 
     @Override
@@ -170,12 +174,16 @@ public class VendedorServicioImpl implements IVendedorAdminService, IVendedorCon
 
     private void validateBranchCapacity(Sede sede) {
         if (sede.getBranchType() == BranchType.CALL_CENTER) {
+            log.debug("Sede {} es CALL_CENTER, omitiendo chequeo de capacidad.", sede.getName());
             return;
         }
 
         Long currentSellers = vendedorRepositorio.countActiveSellersByBranch(sede.getBranchId());
+        log.debug("Sede ID {}: Vendedores Activos Actuales: {} / Capacidad Máxima: {}",
+                sede.getBranchId(), currentSellers, sede.getMaxCapacity());
 
         if (sede.getMaxCapacity() != null && currentSellers >= sede.getMaxCapacity()) {
+            log.warn("Bloqueo de Capacidad: Sede ID {} ({}) ha alcanzado su límite.", sede.getBranchId(), sede.getName());
             throw new RegistroVendedorException(
                     "La sede ha alcanzado su capacidad máxima de vendedores ("
                             + sede.getMaxCapacity() + ")"

@@ -9,6 +9,7 @@ import com.venta.backend.vendedor.enums.SellerStatus;
 import com.venta.backend.vendedor.enums.SellerType;
 import com.venta.backend.vendedor.infraestructura.clientes.dto.EmpleadoRRHHDTO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,7 +23,7 @@ import java.util.List;
 @RequestMapping("/api/vendedores")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*") // Permite CORS para desarrollo
-
+@Slf4j
 public class VendedorController {
     private final IVendedorAdminService adminServicio;
     private final IVendedorConsultaService consultaServicio;
@@ -33,7 +34,11 @@ public class VendedorController {
      */
     @PostMapping
     public ResponseEntity<VendedorResponse> createSeller(@RequestBody RegistroVendedorRequest request) {
+        // Registrar el inicio de la operación y el tipo de vendedor
+        log.info("REST: Solicitud de creación de Vendedor de tipo: {}", request.getSellerType());
         VendedorResponse response = adminServicio.createSeller(request);
+        // Registrar el inicio de la operación y el tipo de vendedor
+        log.info("Vendedor {} creado con ID: {}", response.getFullName(), response.getSellerId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -75,7 +80,9 @@ public class VendedorController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<VendedorResponse> getSellerById(@PathVariable Long id) {
+        log.debug("REST: Búsqueda de vendedor por ID: {}", id);
         VendedorResponse response = consultaServicio.findSellerById(id);
+        log.debug("Vendedor encontrado: {}", response.getSellerId());
         return ResponseEntity.ok(response);
     }
 
