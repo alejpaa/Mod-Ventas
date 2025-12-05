@@ -1,199 +1,274 @@
-import { useState, useEffect, useCallback } from 'react';
-import { ClienteTable } from '../modules/clientes/components/ClienteTable';
-import { ModalAgregarCliente } from '../modules/clientes/components/ModalAgregarCliente';
-import type { ClienteResponse, EstadoClienteFilter } from '../modules/clientes/types/cliente.types';
-import {
-  filtrarClientes,
-  obtenerGastoTotalCliente,
-} from '../modules/clientes/services/cliente.service';
+import { useEffect, useMemo, useState } from 'react';
+import { ModalActualizarCliente } from '../modules/clientes/components/ModalActualizarCliente';
+import { ModalCrearCliente } from '../modules/clientes/components/ModalCrearCliente';
+import { ModalHistorialCompras } from '../modules/clientes/components/ModalHistorialCompras';
+import { ClienteResponse } from '../modules/clientes/types/cliente.types';
+import { filtrarClientes } from '../modules/clientes/services/cliente.service';
+
+type EstadoFiltro = 'TODOS' | 'ACTIVO' | 'INACTIVO';
+
+const estadoLabel: Record<string, string> = {
+  ACTIVO: 'Activo',
+  INACTIVO: 'Inactivo',
+};
 
 export function PaginaCliente() {
   const [clientes, setClientes] = useState<ClienteResponse[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [estado, setEstado] = useState<EstadoFiltro>('TODOS');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [estadoFilter, setEstadoFilter] = useState<EstadoClienteFilter>('TODOS');
-  const [isModalAgregarOpen, setIsModalAgregarOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
-  const pageSize = 10;
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isHistorialOpen, setIsHistorialOpen] = useState(false);
+  const [selectedClienteId, setSelectedClienteId] = useState<number | null>(null);
+  const [selectedCliente, setSelectedCliente] = useState<ClienteResponse | null>(null);
 
-  const fetchClientes = useCallback(async () => {
-    setIsLoading(true);
+  const filtroEstado = useMemo(() => (estado === 'TODOS' ? undefined : estado), [estado]);
+
+  const cargarClientes = async () => {
+    setLoading(true);
     setError(null);
-
     try {
-      const response = await filtrarClientes(
-        searchTerm || undefined,
-        estadoFilter,
-        currentPage,
-        pageSize
-      );
-
-      // Obtener el gasto total para cada cliente
-      const clientesConGasto = await Promise.all(
-        response.clientes.map(async (cliente) => {
-          const gastoTotal = await obtenerGastoTotalCliente(cliente.clienteId);
-          return { ...cliente, gastoTotal };
-        })
-      );
-
-      setClientes(clientesConGasto);
-      setTotalPages(response.totalPages);
-      setTotalElements(response.totalElements);
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al cargar los clientes';
-      setError(errorMessage);
+      const data = await filtrarClientes(search.trim() || undefined, filtroEstado);
+      setClientes(data.clientes || []);
+    } catch (err: any) {
+      setError(err?.message || 'No se pudo cargar la lista de clientes');
       setClientes([]);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [searchTerm, estadoFilter, currentPage]);
+  };
 
   useEffect(() => {
-    fetchClientes();
-  }, [fetchClientes]);
+    cargarClientes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [estado]);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(0); // Resetear a la primera página al buscar
+  const handleBuscar = () => {
+    cargarClientes();
   };
 
-  const handleFilterChange = (filter: EstadoClienteFilter) => {
-    setEstadoFilter(filter);
-    setCurrentPage(0); // Resetear a la primera página al cambiar filtro
+  const handleOpenEditar = (clienteId: number) => {
+    setSelectedClienteId(clienteId);
+    setIsEditOpen(true);
   };
 
-  const handlePageChange = (newPage: number) => {
-    if (newPage >= 0 && newPage < totalPages) {
-      setCurrentPage(newPage);
-    }
+  const handleCloseEditar = () => {
+    setIsEditOpen(false);
+    setSelectedClienteId(null);
+    cargarClientes();
   };
 
-  const handleCloseModal = () => {
-    setIsModalAgregarOpen(false);
+  const handleCreado = () => {
+    setIsCreateOpen(false);
+    cargarClientes();
   };
 
-  const handleSaveSuccess = () => {
-    setIsModalAgregarOpen(false);
-    fetchClientes(); // Refrescar la lista
+  const handleOpenHistorial = (cliente: ClienteResponse) => {
+    setSelectedCliente(cliente);
+    setIsHistorialOpen(true);
+  };
+
+  const handleDesactivar = (cliente: ClienteResponse) => {
+    const confirmar = confirm(`¿Desactivar al cliente ${cliente.fullName}?`);
+    if (!confirmar) return;
+    setClientes((prev) =>
+      prev.map((c) =>
+        c.clienteId === cliente.clienteId ? { ...c, estado: 'INACTIVO' } : c
+      )
+    );
+  };
+
+  const handleEstadisticas = () => {
+    alert('Aquí iría el panel de estadísticas del cliente.');
+  };
+
+  const getEstadoBadge = (value?: string) => {
+    if (value === 'INACTIVO') return 'bg-gray-100 text-gray-700';
+    return 'bg-green-100 text-green-700';
   };
 
   return (
-    <div className="w-full">
-      {/* Título y Subtítulo */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestión de Clientes</h1>
-        <p className="text-gray-600">Busca, filtra y administra tus clientes.</p>
-      </div>
-
-      {/* Barra de búsqueda y Botón Agregar */}
-      <div className="mb-6 flex gap-4 items-center">
-        <div className="flex-1">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            placeholder="Buscar por nombre o RUC..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+    <div className="space-y-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold text-gray-900">Gestión de Clientes</h2>
+            <p className="text-gray-500 text-sm">Busca, filtra y administra tus clientes.</p>
+          </div>
+          <button
+            onClick={() => setIsCreateOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 transition-colors"
+          >
+            <span className="text-lg">+</span>
+            Agregar Cliente
+          </button>
         </div>
-        <button
-          onClick={() => setIsModalAgregarOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
-        >
-          <span className="text-xl">+</span>
-          Agregar Cliente
-        </button>
-      </div>
 
-      {/* Tabs de Filtro */}
-      <div className="mb-6 border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
+        <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center">
+          <div className="relative flex-1">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
+              placeholder="Buscar por nombre o RUC..."
+              className="w-full pl-4 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            {(['TODOS', 'ACTIVO', 'INACTIVO'] as EstadoFiltro[]).map((estadoBtn) => (
+              <button
+                key={estadoBtn}
+                onClick={() => setEstado(estadoBtn)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  estado === estadoBtn
+                    ? 'bg-primary-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {estadoBtn === 'TODOS'
+                  ? 'Todos'
+                  : estadoBtn === 'ACTIVO'
+                  ? 'Activos'
+                  : 'Inactivos'}
+              </button>
+            ))}
+          </div>
           <button
-            onClick={() => handleFilterChange('TODOS')}
-            className={`${
-              estadoFilter === 'TODOS'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm transition-colors`}
+            onClick={handleBuscar}
+            className="px-4 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
           >
-            Todos
+            Buscar
           </button>
-          <button
-            onClick={() => handleFilterChange('ACTIVO')}
-            className={`${
-              estadoFilter === 'ACTIVO'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm transition-colors`}
-          >
-            Activos
-          </button>
-          <button
-            onClick={() => handleFilterChange('INACTIVO')}
-            className={`${
-              estadoFilter === 'INACTIVO'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm transition-colors`}
-          >
-            Inactivos
-          </button>
-        </nav>
-      </div>
-
-      {/* Mensaje de Error */}
-      {error && (
-        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-          {error}
         </div>
+
+        <div className="mt-6 border border-gray-100 rounded-lg overflow-hidden shadow-sm">
+          <div className="grid grid-cols-12 bg-gray-50 text-xs font-semibold text-gray-600 uppercase tracking-wide px-6 py-3">
+            <div className="col-span-3">Nombre</div>
+            <div className="col-span-2">RUC/DNI</div>
+            <div className="col-span-2">Email</div>
+            <div className="col-span-1">Teléfono</div>
+            <div className="col-span-2">Última compra</div>
+            <div className="col-span-1">Estado</div>
+            <div className="col-span-1 text-right">Acciones</div>
+          </div>
+
+          <div className="divide-y divide-gray-100 bg-white">
+            {loading && (
+              <div className="py-10 text-center text-gray-500">Cargando clientes...</div>
+            )}
+            {!loading && clientes.length === 0 && (
+              <div className="py-10 text-center text-gray-500">No hay clientes para mostrar.</div>
+            )}
+            {!loading &&
+              clientes.map((cliente) => (
+                <div key={cliente.clienteId} className="grid grid-cols-12 px-6 py-4 items-center">
+                  <div className="col-span-3">
+                    <p className="font-medium text-gray-900">{cliente.fullName}</p>
+                    <p className="text-xs text-gray-500">ID: {cliente.clienteId}</p>
+                  </div>
+                  <div className="col-span-2 text-gray-700">{cliente.dni || '—'}</div>
+                  <div className="col-span-2 text-gray-700 truncate">{cliente.email || '—'}</div>
+                  <div className="col-span-1 text-gray-700 truncate">{cliente.phoneNumber || '—'}</div>
+                  <div className="col-span-2 text-gray-900 font-medium">
+                    {cliente.ultimaCompra || '—'}
+                  </div>
+                  <div className="col-span-1">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${getEstadoBadge(
+                        cliente.estado
+                      )}`}
+                    >
+                      {estadoLabel[cliente.estado] || 'Activo'}
+                    </span>
+                  </div>
+                  <div className="col-span-1 flex justify-end gap-2 text-sm">
+                    <button
+                      onClick={() => handleOpenEditar(cliente.clienteId)}
+                      className="text-blue-600 hover:text-blue-700"
+                      title="Ver/Editar"
+                    >
+                      👁️
+                    </button>
+                    <button
+                      onClick={() => handleOpenHistorial(cliente)}
+                      className="text-emerald-600 hover:text-emerald-700"
+                      title="Historial de compras"
+                    >
+                      💰
+                    </button>
+                    <button
+                      onClick={handleEstadisticas}
+                      className="text-purple-600 hover:text-purple-700"
+                      title="Estadísticas"
+                    >
+                      📊
+                    </button>
+                    <button
+                      onClick={() => handleDesactivar(cliente)}
+                      className="text-red-600 hover:text-red-700"
+                      title="Desactivar"
+                    >
+                      ⏸️
+                    </button>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+        {error && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded">
+            {error}
+          </div>
+        )}
+      </div>
+
+      {isCreateOpen && (
+        <ModalCrearCliente onClose={() => setIsCreateOpen(false)} onSuccess={handleCreado} />
       )}
 
-      {/* Tabla de Clientes */}
-      {isLoading ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-          <p className="text-gray-500 text-lg">Cargando clientes...</p>
-        </div>
-      ) : (
-        <>
-          <ClienteTable clientes={clientes} onRefresh={fetchClientes} />
-
-          {/* Paginación */}
-          {totalPages > 1 && (
-            <div className="mt-6 flex items-center justify-between">
-              <div className="text-sm text-gray-700">
-                Mostrando {currentPage * pageSize + 1} a{' '}
-                {Math.min((currentPage + 1) * pageSize, totalElements)} de {totalElements} clientes
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 0}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Anterior
-                </button>
-                <span className="px-4 py-2 text-sm text-gray-700">
-                  Página {currentPage + 1} de {totalPages}
-                </span>
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage >= totalPages - 1}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Siguiente
-                </button>
-              </div>
-            </div>
-          )}
-        </>
+      {isEditOpen && selectedClienteId !== null && (
+        <ModalActualizarCliente
+          clienteId={selectedClienteId}
+          onClose={handleCloseEditar}
+          onSuccess={handleCloseEditar}
+        />
       )}
 
-      {/* Modal Agregar Cliente */}
-      {isModalAgregarOpen && (
-        <ModalAgregarCliente onClose={handleCloseModal} onSaveSuccess={handleSaveSuccess} />
+      {isHistorialOpen && selectedCliente && (
+        <ModalHistorialCompras
+          cliente={selectedCliente}
+          compras={[
+            {
+              codigo: 'PED-001',
+              fecha: '2024-03-15',
+              monto: 450,
+              productos: 3,
+              estadoPago: 'Pagado',
+              items: [
+                { nombre: 'Producto A', cantidad: 1, precio: 150 },
+                { nombre: 'Producto B', cantidad: 1, precio: 200 },
+                { nombre: 'Producto C', cantidad: 1, precio: 100 },
+              ],
+              metodoPago: 'Tarjeta',
+              fechaPago: '2024-03-15',
+            },
+            {
+              codigo: 'PED-002',
+              fecha: '2024-03-22',
+              monto: 1200,
+              productos: 5,
+              estadoPago: 'Pendiente',
+              items: [
+                { nombre: 'Producto X', cantidad: 2, precio: 200 },
+                { nombre: 'Producto Y', cantidad: 3, precio: 266.67 },
+              ],
+              metodoPago: 'Transferencia',
+            },
+          ]}
+          onClose={() => setIsHistorialOpen(false)}
+        />
       )}
     </div>
   );

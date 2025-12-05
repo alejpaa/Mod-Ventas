@@ -1,4 +1,9 @@
-import { type ClienteResponse, type ModificacionClienteRequest, type PageClienteResponse, type EstadoClienteFilter } from '../types/cliente.types';
+import {
+  ClienteResponse,
+  ModificacionClienteRequest,
+  PageClienteResponse,
+  RegistroClienteRequest,
+} from '../types/cliente.types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
@@ -40,46 +45,56 @@ export async function actualizarCliente(
 }
 
 /**
- * Filtra y obtiene clientes con paginación
+ * Lista clientes con filtros y paginación básica
  */
 export async function filtrarClientes(
   filtro?: string,
-  estado?: EstadoClienteFilter,
-  page: number = 0,
-  size: number = 10
+  estado?: string,
+  page = 0,
+  size = 20
 ): Promise<PageClienteResponse> {
   const params = new URLSearchParams();
   if (filtro) params.append('filtro', filtro);
-  if (estado && estado !== 'TODOS') params.append('estado', estado);
+  if (estado) params.append('estado', estado);
   params.append('page', page.toString());
   params.append('size', size.toString());
 
   const response = await fetch(`${API_BASE_URL}/clientes/filtroClientes?${params.toString()}`);
-  
+
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || `Error ${response.status}: No se pudo obtener la lista de clientes`);
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Error ${response.status}: No se pudo obtener la lista`);
   }
-  
+
   return await response.json();
 }
 
 /**
- * Obtiene el historial de compras de un cliente para calcular el gasto total
+ * Registra un nuevo cliente
  */
-export async function obtenerGastoTotalCliente(idCliente: number): Promise<number> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/clientes/HistorialCompras/${idCliente}`);
-    
-    if (!response.ok) {
-      return 0; // Si no hay historial, retornar 0
-    }
-    
-    const data = await response.json();
-    // El HistorialComprasResponse tiene un campo totalCompras (BigDecimal)
-    return data.totalCompras ? Number(data.totalCompras) : 0;
-  } catch {
-    return 0;
+export async function registrarCliente(datos: RegistroClienteRequest): Promise<ClienteResponse> {
+  const payload: RegistroClienteRequest = {
+    dni: datos.dni,
+    firstName: datos.firstName,
+    lastName: datos.lastName,
+    email: datos.email,
+    phoneNumber: datos.phoneNumber,
+    address: datos.address,
+  };
+
+  const response = await fetch(`${API_BASE_URL}/clientes/registroClientes`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Error ${response.status}: No se pudo registrar el cliente`);
   }
+
+  return await response.json();
 }
 

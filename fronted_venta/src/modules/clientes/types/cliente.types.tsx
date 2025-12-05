@@ -12,7 +12,9 @@ export interface ClienteResponse {
   registrationDate: string;
   estado: string;
   categoria?: string;
-  gastoTotal?: number; // Total de gastos del cliente
+  gastoTotal?: number;
+  ultimaCompra?: string;
+  totalTransacciones?: number;
 }
 
 export interface ModificacionClienteRequest {
@@ -28,30 +30,12 @@ export interface ModificacionClienteRequest {
 }
 
 export interface RegistroClienteRequest {
-  // Datos Personales
   dni: string;
-  estado: string;
   firstName: string;
   lastName: string;
-  fechaNacimiento?: string;
-  genero?: string;
-  edad?: number;
-  nivelEducativo?: string;
-  ocupacion?: string;
-  // Datos de Contacto
   email?: string;
   phoneNumber: string;
-  telefonoFijo?: string;
-  direccionCompleta?: string;
-  departamento?: string;
-  provincia?: string;
-  distrito?: string;
-  referencia?: string;
-  // Preferencias
-  idiomaPreferido?: string;
-  canalContactoFavorito?: string;
-  intereses?: string;
-  aceptaPublicidad?: boolean;
+  address?: string;
 }
 
 export interface PageClienteResponse {
@@ -61,6 +45,3 @@ export interface PageClienteResponse {
   totalElements: number;
   pageSize: number;
 }
-
-export type EstadoClienteFilter = 'ACTIVO' | 'INACTIVO' | 'TODOS';
-
