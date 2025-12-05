@@ -36,7 +36,12 @@ public class Cliente {
     @Column(length = 15)
     private String phoneNumber;
 
+    @Column(length = 15)
+    private String telefonoFijo;
+
     private String address;
+
+    private LocalDate fechaNacimiento;
 
     @Column(nullable = false, updatable = false)
     private LocalDate registrationDate;

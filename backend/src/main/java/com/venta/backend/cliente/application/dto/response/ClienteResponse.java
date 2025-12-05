@@ -20,7 +20,9 @@ public class ClienteResponse {
     private String fullName;
     private String email;
     private String phoneNumber;
+    private String telefonoFijo;
     private String address;
+    private LocalDate fechaNacimiento;
     private LocalDate registrationDate;
     private String estado;
     private String categoria;
