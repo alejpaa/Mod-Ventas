@@ -3,7 +3,7 @@ import {
   obtenerClientePorId,
   actualizarCliente,
 } from '../services/cliente.service';
-import type { ClienteResponse, ModificacionClienteRequest } from '../types/cliente.types';
+import type { ModificacionClienteRequest } from '../types/cliente.types';
 
 type Paso = 1 | 2 | 3;
 

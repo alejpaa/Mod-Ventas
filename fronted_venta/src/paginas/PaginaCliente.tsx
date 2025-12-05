@@ -3,7 +3,7 @@ import { ModalActualizarCliente } from '../modules/clientes/components/ModalActu
 import { ModalCrearCliente } from '../modules/clientes/components/ModalCrearCliente';
 import { ModalHistorialCompras } from '../modules/clientes/components/ModalHistorialCompras';
 import type { ClienteResponse } from '../modules/clientes/types/cliente.types';
-import { filtrarClientes } from '../modules/clientes/services/cliente.service';
+import { filtrarClientes, actualizarCliente } from '../modules/clientes/services/cliente.service';
 
 type EstadoFiltro = 'TODOS' | 'ACTIVO' | 'INACTIVO';
 
@@ -70,14 +70,25 @@ export function PaginaCliente() {
     setIsHistorialOpen(true);
   };
 
-  const handleDesactivar = (cliente: ClienteResponse) => {
-    const confirmar = confirm(`¿Desactivar al cliente ${cliente.fullName}?`);
-    if (!confirmar) return;
-    setClientes((prev) =>
-      prev.map((c) =>
-        c.clienteId === cliente.clienteId ? { ...c, estado: 'INACTIVO' } : c
-      )
+  const handleCambiarEstado = async (cliente: ClienteResponse, nuevoEstado: 'ACTIVO' | 'INACTIVO') => {
+    if (cliente.estado === nuevoEstado) return;
+    
+    const confirmar = confirm(
+      `¿${nuevoEstado === 'ACTIVO' ? 'Activar' : 'Desactivar'} al cliente ${cliente.fullName}?`
     );
+    if (!confirmar) return;
+
+    try {
+      await actualizarCliente(cliente.clienteId, { estado: nuevoEstado });
+      // Actualizar el estado local
+      setClientes((prev) =>
+        prev.map((c) =>
+          c.clienteId === cliente.clienteId ? { ...c, estado: nuevoEstado } : c
+        )
+      );
+    } catch (err: any) {
+      setError(err?.message || `No se pudo ${nuevoEstado === 'ACTIVO' ? 'activar' : 'desactivar'} el cliente`);
+    }
   };
 
   const handleEstadisticas = () => {
@@ -175,13 +186,22 @@ export function PaginaCliente() {
                     {cliente.ultimaCompra || '—'}
                   </div>
                   <div className="col-span-1">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${getEstadoBadge(
+                    <select
+                      value={cliente.estado || 'ACTIVO'}
+                      onChange={(e) => handleCambiarEstado(cliente, e.target.value as 'ACTIVO' | 'INACTIVO')}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none ${getEstadoBadge(
                         cliente.estado
                       )}`}
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 8px center',
+                        paddingRight: '28px',
+                      }}
                     >
-                      {estadoLabel[cliente.estado] || 'Activo'}
-                    </span>
+                      <option value="ACTIVO">Activo</option>
+                      <option value="INACTIVO">Inactivo</option>
+                    </select>
                   </div>
                   <div className="col-span-1 flex justify-end gap-2 text-sm">
                     <button
