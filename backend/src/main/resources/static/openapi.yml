@@ -203,6 +203,48 @@ paths:
         '500':
           description: Error interno del servidor
 
+
+  /api/venta/boletas/empleado/{employeeRrhhId}:
+    get:
+      tags:
+        - Ventas
+      summary: Obtener boletas por empleado
+      description: Obtiene todas las boletas de un vendedor usando su employee_rrhh_id. Realiza un INNER JOIN entre Boleta y Vendedor.
+      operationId: obtenerBoletasPorEmpleado
+      parameters:
+        - name: employeeRrhhId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID del empleado en el sistema de RRHH
+      responses:
+        '200':
+          description: Lista de boletas obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BoletaResponse'
+              example:
+                - idBoleta: 1
+                  idVendedor: 10
+                  idVenta: 100
+                  numVenta: "VTA-DIR-000001"
+                  fechaGeneracion: "2025-12-05"
+                  montoVendido: 1500.50
+                - idBoleta: 2
+                  idVendedor: 10
+                  idVenta: 101
+                  numVenta: "VTA-DIR-000002"
+                  fechaGeneracion: "2025-12-06"
+                  montoVendido: 2300.75
+        '404':
+          description: No se encontraron boletas para el empleado especificado
+        '500':
+          description: Error interno del servidor
   /api/cotizaciones:
     get:
       tags:
@@ -1791,3 +1833,36 @@ components:
           type: string
           format: date-time
           example: "2025-12-01T10:30:00"
+    BoletaResponse:
+      type: object
+      properties:
+        idBoleta:
+          type: integer
+          format: int64
+          description: ID de la boleta
+          example: 1
+        idVendedor:
+          type: integer
+          format: int64
+          description: ID del vendedor
+          example: 10
+        idVenta:
+          type: integer
+          format: int64
+          description: ID de la venta asociada
+          example: 100
+        numVenta:
+          type: string
+          description: Número de venta
+          example: "VTA-DIR-000001"
+        fechaGeneracion:
+          type: string
+          format: date
+          description: Fecha de generación de la boleta
+          example: "2025-12-05"
+        montoVendido:
+          type: number
+          format: decimal
+          description: Monto vendido en la boleta
+          example: 1500.50
+
