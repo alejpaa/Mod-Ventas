@@ -3,11 +3,11 @@ package com.venta.backend.vendedor.application.impl;
 import com.venta.backend.vendedor.application.dto.request.ModificacionVendedorRequest;
 import com.venta.backend.vendedor.application.dto.request.RegistroVendedorRequest;
 import com.venta.backend.vendedor.application.dto.response.VendedorResponse;
-import com.venta.backend.vendedor.application.estrategias.IEdicionVendedorStrategia;
-import com.venta.backend.vendedor.application.estrategias.IRegistroVendedorStrategia;
+import com.venta.backend.vendedor.application.estrategias.IEdicionVendedorStrategy;
+import com.venta.backend.vendedor.application.estrategias.IRegistroVendedorStrategy;
 import com.venta.backend.vendedor.application.exceptions.RecursoNoEncontradoException;
 import com.venta.backend.vendedor.application.exceptions.RegistroVendedorException;
-import com.venta.backend.vendedor.application.fabricas.IFabricaStrategia;
+import com.venta.backend.vendedor.application.fabricas.IStrategyFactory;
 import com.venta.backend.vendedor.application.mappers.IVendedorMapeador;
 import com.venta.backend.vendedor.application.servicios.IVendedorAdminService;
 import com.venta.backend.vendedor.application.servicios.IVendedorConsultaService;
@@ -36,7 +36,7 @@ import java.util.List;
 public class VendedorServicioImpl implements IVendedorAdminService, IVendedorConsultaService {
     private final VendedorRepositorio vendedorRepositorio;
     private final SedeRepositorio sedeRepositorio;
-    private final IFabricaStrategia fabricaStrategia;
+    private final IStrategyFactory fabricaStrategia;
     private final IVendedorMapeador vendedorMapeador;
     private final IClienteCotizacion clienteCotizacion;
     private final IClienteRRHH clienteRRHH;
@@ -44,7 +44,7 @@ public class VendedorServicioImpl implements IVendedorAdminService, IVendedorCon
     @Override
     @Transactional
     public VendedorResponse createSeller(RegistroVendedorRequest request) {
-        IRegistroVendedorStrategia strategia = fabricaStrategia.getRegistrationStrategy(request.getSellerType());
+        IRegistroVendedorStrategy strategia = fabricaStrategia.getRegistrationStrategy(request.getSellerType());
 
         strategia.validateData(request);
 
@@ -68,7 +68,7 @@ public class VendedorServicioImpl implements IVendedorAdminService, IVendedorCon
     public VendedorResponse updateSeller(Long sellerId, ModificacionVendedorRequest request) {
         Vendedor vendedorToUpdate = findSellerEntityById(sellerId);
 
-        IEdicionVendedorStrategia strategia = fabricaStrategia.getEditionStrategy(vendedorToUpdate.getSellerType());
+        IEdicionVendedorStrategy strategia = fabricaStrategia.getEditionStrategy(vendedorToUpdate.getSellerType());
 
         Sede newSede = null;
         Long newBranchId = request.getSellerBranchId();

@@ -4,7 +4,7 @@ import com.venta.backend.vendedor.application.dto.request.ModificacionVendedorRe
 import com.venta.backend.vendedor.entities.Sede;
 import com.venta.backend.vendedor.entities.Vendedor;
 
-public interface IEdicionVendedorStrategia {
+public interface IEdicionVendedorStrategy {
 
     /**
      * Aplica los cambios permitidos del DTO a la entidad Vendedor.

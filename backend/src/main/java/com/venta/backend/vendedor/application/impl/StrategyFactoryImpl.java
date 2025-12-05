@@ -1,8 +1,8 @@
 package com.venta.backend.vendedor.application.impl;
 
-import com.venta.backend.vendedor.application.estrategias.IEdicionVendedorStrategia;
-import com.venta.backend.vendedor.application.estrategias.IRegistroVendedorStrategia;
-import com.venta.backend.vendedor.application.fabricas.IFabricaStrategia;
+import com.venta.backend.vendedor.application.estrategias.IEdicionVendedorStrategy;
+import com.venta.backend.vendedor.application.estrategias.IRegistroVendedorStrategy;
+import com.venta.backend.vendedor.application.fabricas.IStrategyFactory;
 import com.venta.backend.vendedor.enums.SellerType;
 import org.springframework.stereotype.Component;
 
@@ -10,12 +10,12 @@ import java.util.EnumMap;
 import java.util.Map;
 
 @Component
-public class FabricaStrategiaImpl implements IFabricaStrategia {
+public class StrategyFactoryImpl implements IStrategyFactory {
 
     // Mapas privados para almacenar las estrategias.
     // Usamos EnumMap porque es la implementación más eficiente para llaves Enum.
-    private final Map<SellerType, IRegistroVendedorStrategia> registrationStrategies;
-    private final Map<SellerType, IEdicionVendedorStrategia> editionStrategies;
+    private final Map<SellerType, IRegistroVendedorStrategy> registrationStrategies;
+    private final Map<SellerType, IEdicionVendedorStrategy> editionStrategies;
 
     /**
      * Constructor de la Fábrica.
@@ -24,12 +24,12 @@ public class FabricaStrategiaImpl implements IFabricaStrategia {
      * @param internoEdicionImpl    Implementación de edición interna.
      * @param externoEdicionImpl    Implementación de edición externa.
      */
-    public FabricaStrategiaImpl(
+    public StrategyFactoryImpl(
             // Spring busca los Beans que coinciden con estos tipos
-            RegistroInternoStrategiaImpl internoRegistroImpl,
-            RegistroExternoStrategiaImpl externoRegistroImpl,
-            EdicionInternaStrategiaImpl internoEdicionImpl,
-            EdicionExternaStrategiaImpl externoEdicionImpl
+            RegistroInternoStrategyImpl internoRegistroImpl,
+            RegistroExternoStrategyImpl externoRegistroImpl,
+            EdicionInternaStrategyImpl internoEdicionImpl,
+            EdicionExternaStrategyImpl externoEdicionImpl
     ) {
         // 1. Inicializa los mapas
         registrationStrategies = new EnumMap<>(SellerType.class);
@@ -45,8 +45,8 @@ public class FabricaStrategiaImpl implements IFabricaStrategia {
     }
 
     @Override
-    public IRegistroVendedorStrategia getRegistrationStrategy(SellerType sellerType) {
-        IRegistroVendedorStrategia strategy = registrationStrategies.get(sellerType);
+    public IRegistroVendedorStrategy getRegistrationStrategy(SellerType sellerType) {
+        IRegistroVendedorStrategy strategy = registrationStrategies.get(sellerType);
 
         if (strategy == null) {
             throw new IllegalArgumentException("No se encontró estrategia de registro para el tipo: " + sellerType);
@@ -55,8 +55,8 @@ public class FabricaStrategiaImpl implements IFabricaStrategia {
     }
 
     @Override
-    public IEdicionVendedorStrategia getEditionStrategy(SellerType sellerType) {
-        IEdicionVendedorStrategia strategy = editionStrategies.get(sellerType);
+    public IEdicionVendedorStrategy getEditionStrategy(SellerType sellerType) {
+        IEdicionVendedorStrategy strategy = editionStrategies.get(sellerType);
 
         if (strategy == null) {
             throw new IllegalArgumentException("No se encontró estrategia de edición para el tipo: " + sellerType);

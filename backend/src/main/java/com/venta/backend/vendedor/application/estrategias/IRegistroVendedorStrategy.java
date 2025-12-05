@@ -3,7 +3,7 @@ package com.venta.backend.vendedor.application.estrategias;
 import com.venta.backend.vendedor.application.dto.request.RegistroVendedorRequest;
 import com.venta.backend.vendedor.entities.Vendedor;
 
-public interface IRegistroVendedorStrategia {
+public interface IRegistroVendedorStrategy {
 
     /**
      * Valida los datos de entrada específicos de esta estrategia.
