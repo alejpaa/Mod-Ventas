@@ -11,7 +11,7 @@ export function LayoutPrincipal() {
 
   // Navigation configuration with icons
   const adminNav = [
-    { to: '/pagina-cliente', label: 'Cliente', icon: UsersIcon },
+    { to: '/pagina-cliente', label: 'Clientes', icon: UsersIcon },
     { to: '/pagina-vendedor', label: 'Vendedor', icon: UserIcon },
   ];
 
@@ -26,6 +26,7 @@ export function LayoutPrincipal() {
 
   // Get page title based on current route
   const getPageTitle = () => {
+    if (location.pathname === '/pagina-cliente') return 'Clientes';
     const route = nav.find((item) => item.to === location.pathname);
     if (route) return route.label;
     if (location.pathname === '/registrar-venta') return 'Registrar Venta';

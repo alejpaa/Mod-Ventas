@@ -135,24 +135,26 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
     @Override
     @Transactional
     public ClienteIdResponse crearClienteSimple(CrearClienteSimpleRequest request) {
-        // Validar que el DNI no exista
-        if (clienteRepositorio.existsByDni(request.getDni())) {
-            Cliente clienteExistente = clienteRepositorio.findByDni(request.getDni())
-                    .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado"));
-            return ClienteIdResponse.builder()
-                    .clienteId(clienteExistente.getClienteId())
-                    .build();
-        }
+        // Validar que el DNI no exista (solo si se proporciona DNI)
+        if (request.getDni() != null && !request.getDni().isBlank()) {
+            if (clienteRepositorio.existsByDni(request.getDni())) {
+                Cliente clienteExistente = clienteRepositorio.findByDni(request.getDni())
+                        .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado"));
+                return ClienteIdResponse.builder()
+                        .clienteId(clienteExistente.getClienteId())
+                        .build();
+            }
 
-        // Validar elegibilidad básica
-        if (!clienteValidacion.esClienteApto(request.getDni())) {
-            String motivo = clienteValidacion.obtenerMotivoRestriccion(request.getDni());
-            throw new ClienteNoAptoException(motivo);
+            // Validar elegibilidad básica (solo si se proporciona DNI)
+            if (!clienteValidacion.esClienteApto(request.getDni())) {
+                String motivo = clienteValidacion.obtenerMotivoRestriccion(request.getDni());
+                throw new ClienteNoAptoException(motivo);
+            }
         }
 
         // Crear cliente simplificado
         Cliente nuevoCliente = Cliente.builder()
-                .dni(request.getDni())
+                .dni(request.getDni() != null && !request.getDni().isBlank() ? request.getDni() : null)
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .email(request.getEmail())

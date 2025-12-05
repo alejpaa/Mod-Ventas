@@ -14,20 +14,18 @@ export function Header({ title }: HeaderProps) {
 
   return (
     <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between shadow-sm">
-      <div className="flex-1">
-        <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
-        <p className="text-sm text-gray-500 mt-1">Administra tus casos asignados</p>
+      <div className="flex items-center gap-4 flex-1">
+        <span className="text-xl font-semibold text-gray-900">Frame</span>
+        <div className="flex-1 max-w-md">
+          <input
+            type="text"
+            placeholder="Q Buscar cotización, cliente, producto..."
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          />
+        </div>
       </div>
 
       <div className="flex items-center gap-6">
-        {/* Calendar Icon */}
-        <button
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-          aria-label="Calendario"
-        >
-          <CalendarIcon size={20} color="#6b7280" />
-        </button>
-
         {/* Notification Bell with Badge */}
         <button
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200 relative"
@@ -39,11 +37,18 @@ export function Header({ title }: HeaderProps) {
 
         {/* User Avatar */}
         <div className="flex items-center gap-3">
-          <div className="text-right">
-            <p className="text-sm font-medium text-gray-900">Agente</p>
-            <p className="text-xs text-gray-500">{displayRole}</p>
+          <UserAvatar name="Admin" />
+          <div className="text-left">
+            <p className="text-sm font-medium text-gray-900">Admin</p>
           </div>
-          <UserAvatar name="Agente" />
+          <svg
+            className="w-4 h-4 text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
       </div>
     </header>

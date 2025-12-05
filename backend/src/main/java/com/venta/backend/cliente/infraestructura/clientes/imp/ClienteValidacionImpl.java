@@ -18,6 +18,11 @@ public class ClienteValidacionImpl implements IClienteValidacion {
         
         // Ejemplo: GET http://validacion-service/api/validar/{dni}
         
+        // Si el DNI es null o vacío, no se puede validar, pero se considera apto
+        if (dni == null || dni.isBlank()) {
+            return true;
+        }
+        
         // Según los requisitos, el DNI "87654321" tiene restricciones
         if (dni.equals("87654321")) {
             return false;

@@ -1481,13 +1481,13 @@ components:
     CrearClienteSimpleRequest:
       type: object
       required:
-        - dni
         - firstName
         - lastName
       properties:
         dni:
           type: string
-          description: DNI del cliente
+          nullable: true
+          description: DNI del cliente (opcional para ventas)
           example: "12345678"
         firstName:
           type: string
