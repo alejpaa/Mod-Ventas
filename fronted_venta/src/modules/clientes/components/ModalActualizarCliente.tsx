@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-  obtenerClientePorId,
-  actualizarCliente,
-} from '../services/cliente.service';
-import type { ClienteResponse, ModificacionClienteRequest } from '../types/cliente.types';
+import { obtenerClientePorId, actualizarCliente } from '../services/cliente.service';
+import type { ModificacionClienteRequest } from '../types/cliente.types';
 
 type Paso = 1 | 2 | 3;
 
@@ -24,20 +21,22 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState<ModificacionClienteRequest & {
-    genero?: string;
-    nivelEducativo?: string;
-    ocupacion?: string;
-    departamento?: string;
-    provincia?: string;
-    distrito?: string;
-    referencia?: string;
-    idioma?: string;
-    canalContacto?: string;
-    intereses?: string;
-    aceptaPublicidad?: boolean;
-    edad?: number;
-  }>({});
+  const [formData, setFormData] = useState<
+    ModificacionClienteRequest & {
+      genero?: string;
+      nivelEducativo?: string;
+      ocupacion?: string;
+      departamento?: string;
+      provincia?: string;
+      distrito?: string;
+      referencia?: string;
+      idioma?: string;
+      canalContacto?: string;
+      intereses?: string;
+      aceptaPublicidad?: boolean;
+      edad?: number;
+    }
+  >({});
 
   useEffect(() => {
     const load = async () => {
@@ -138,7 +137,9 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
   }
 
   const PasoBadge = ({ num, label }: { num: number; label: string }) => (
-    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${paso === num ? 'bg-blue-50 text-blue-700' : 'text-gray-600'}`}>
+    <div
+      className={`flex items-center gap-2 px-3 py-2 rounded-lg ${paso === num ? 'bg-blue-50 text-blue-700' : 'text-gray-600'}`}
+    >
       <span className="w-6 h-6 rounded-full border flex items-center justify-center text-sm font-semibold">
         {num}
       </span>
@@ -151,7 +152,9 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
       <div className="bg-white w-full max-w-5xl rounded-2xl shadow-xl overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <h2 className="text-2xl font-semibold text-gray-900">Actualizar Cliente</h2>
-          <button className="text-gray-500 text-xl font-bold" onClick={onClose}>×</button>
+          <button className="text-gray-500 text-xl font-bold" onClick={onClose}>
+            ×
+          </button>
         </div>
 
         <div className="flex gap-4 px-6 pt-4 pb-2 border-b bg-gray-50">
@@ -189,7 +192,9 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
                   >
                     {opcionesEstado.map((opt) => (
-                      <option key={opt} value={opt}>{opt === 'ACTIVO' ? 'Activo' : 'Inactivo'}</option>
+                      <option key={opt} value={opt}>
+                        {opt === 'ACTIVO' ? 'Activo' : 'Inactivo'}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -239,7 +244,11 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Seleccione...</option>
-                    {opcionesGenero.map((g) => <option key={g} value={g}>{g}</option>)}
+                    {opcionesGenero.map((g) => (
+                      <option key={g} value={g}>
+                        {g}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -251,7 +260,11 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Seleccione...</option>
-                    {opcionesNivelEducativo.map((g) => <option key={g} value={g}>{g}</option>)}
+                    {opcionesNivelEducativo.map((g) => (
+                      <option key={g} value={g}>
+                        {g}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -362,11 +375,17 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
                     onChange={handleChange}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
                   >
-                    {opcionesIdioma.map((g) => <option key={g} value={g}>{g}</option>)}
+                    {opcionesIdioma.map((g) => (
+                      <option key={g} value={g}>
+                        {g}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
-                  <label className="text-sm text-gray-700 mb-1 block">Canal de contacto favorito</label>
+                  <label className="text-sm text-gray-700 mb-1 block">
+                    Canal de contacto favorito
+                  </label>
                   <select
                     name="canalContacto"
                     value={formData.canalContacto || ''}
@@ -374,7 +393,11 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Seleccione...</option>
-                    {opcionesCanal.map((g) => <option key={g} value={g}>{g}</option>)}
+                    {opcionesCanal.map((g) => (
+                      <option key={g} value={g}>
+                        {g}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
