@@ -707,7 +707,7 @@ export function ModalAgregarCliente({ onClose, onSaveSuccess }: ModalAgregarClie
             {/* Botones de acción */}
             <div className="flex justify-between items-center pt-6 border-t border-gray-200">
               <div className="flex gap-2">
-                {tabs.map((tab, index) => (
+                {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     type="button"
