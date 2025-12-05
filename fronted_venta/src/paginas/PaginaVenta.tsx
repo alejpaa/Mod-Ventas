@@ -1,28 +1,23 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PendingLeadSalesModal } from '../components/PendingLeadSalesModal';
+import { listarVentasPaginadas, type VentaListado } from '../services/venta.service';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mod-ventas.onrender.com/api';
+
 // --- Tipos para Ventas ---
 type EstadoVenta = 'Aprobada' | 'Cancelada' | 'En Borrador';
 
-interface VentaListadoApi {
-  id: number;
-  numVenta: string | null;
-  origenVenta: 'DIRECTA' | 'LEAD' | 'COTIZACION';
-  estado: 'BORRADOR' | 'CONFIRMADA' | 'CANCELADA';
-  fechaVentaCreada: string | null;
-  nombreCliente: string | null;
-}
-
 interface Venta {
-  ventaId: number;   // id numérico de la BD
-  id: string;        // código visible (numVenta)
+  ventaId: number;
+  id: string;
   cliente: string;
   estado: EstadoVenta;
   origen: string;
   fecha: string;
 }
+
+type SortField = 'id' | 'cliente' | 'estado' | 'origen' | 'fecha';
 
 // --- Componentes Auxiliares ---
 const VentaStatusPill = ({ estado }: { estado: EstadoVenta }) => {
@@ -48,10 +43,21 @@ const ViewIcon = () => (
   </svg>
 );
 
+const SortIcon = ({ active, direction }: { active: boolean; direction: 'asc' | 'desc' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"
+    className={`w-4 h-4 inline ml-1 ${active ? 'text-blue-600' : 'text-gray-400'}`}>
+    {direction === 'asc' ? (
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+    ) : (
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+    )}
+  </svg>
+);
+
 // --- COMPONENTE PRINCIPAL ---
 export function PaginaVenta() {
   const navigate = useNavigate();
-  
+
   const [ventas, setVentas] = useState<Venta[]>([]);
   const [filtros, setFiltros] = useState({
     cliente: '',
@@ -61,88 +67,104 @@ export function PaginaVenta() {
     origen: ''
   });
 
+  // Estados de paginación
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [sortBy, setSortBy] = useState<SortField>('id');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
   const [showLeadsModal, setShowLeadsModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
-    const fetchVentas = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await fetch(`${API_BASE_URL}/venta`);
-        if (!response.ok) {
-          throw new Error('No se pudo obtener la lista de ventas');
+  const fetchVentas = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const data = await listarVentasPaginadas(currentPage, 20, sortBy, sortDir);
+
+      const mapped: Venta[] = data.content.map((v: VentaListado) => {
+        let estado: EstadoVenta;
+        switch (v.estado) {
+          case 'CONFIRMADA':
+            estado = 'Aprobada';
+            break;
+          case 'CANCELADA':
+            estado = 'Cancelada';
+            break;
+          default:
+            estado = 'En Borrador';
         }
-        const data: VentaListadoApi[] = await response.json();
 
-        const mapped: Venta[] = data.map(v => {
-          let estado: EstadoVenta;
-          switch (v.estado) {
-            case 'CONFIRMADA':
-              estado = 'Aprobada';
-              break;
-            case 'CANCELADA':
-              estado = 'Cancelada';
-              break;
-            default:
-              estado = 'En Borrador';
-          }
+        const fecha = v.fechaVentaCreada
+          ? new Date(v.fechaVentaCreada).toLocaleDateString('es-PE')
+          : '';
 
-          const fecha = v.fechaVentaCreada
-            ? new Date(v.fechaVentaCreada).toLocaleDateString('es-PE')
-            : '';
+        return {
+          ventaId: v.id,
+          id: v.numVenta ?? `VENTA-${v.id}`,
+          cliente: v.nombreCliente ?? 'Sin cliente',
+          estado,
+          origen: v.origenVenta,
+          fecha,
+        };
+      });
 
-          return {
-            ventaId: v.id,
-            id: v.numVenta ?? `VENTA-${v.id}`,
-            cliente: v.nombreCliente ?? 'Sin cliente',
-            estado,
-            origen: v.origenVenta,
-            fecha,
-          };
-        });
+      setVentas(mapped);
+      setTotalPages(data.totalPages);
+      setTotalElements(data.totalElements);
+    } catch (err) {
+      console.error(err);
+      setError('Ocurrió un error al cargar las ventas.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        setVentas(mapped);
-      } catch (err) {
-        console.error(err);
-        setError('Ocurrió un error al cargar las ventas.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
+  useEffect(() => {
     fetchVentas();
-  }, []);
+  }, [currentPage, sortBy, sortDir]);
 
   const handleCrearOrdenVenta = async () => {
-  try {
-    setCreating(true);
-    const response = await fetch(`${API_BASE_URL}/venta/directa/borrador`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ usuarioCreador: 'frontend' }),
-    });
+    try {
+      setCreating(true);
+      const response = await fetch(`${API_BASE_URL}/venta/directa/borrador`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ usuarioCreador: 'frontend' }),
+      });
 
-    if (!response.ok) {
-      throw new Error('No se pudo crear la orden de venta');
+      if (!response.ok) {
+        throw new Error('No se pudo crear la orden de venta');
+      }
+
+      const data: { ventaId: number } = await response.json();
+      navigate(`/registrar-venta?ventaId=${data.ventaId}`);
+    } catch (e) {
+      console.error(e);
+      alert('Ocurrió un error al crear la orden de venta.');
+    } finally {
+      setCreating(false);
     }
-
-    const data: { ventaId: number } = await response.json();
-    navigate(`/registrar-venta?ventaId=${data.ventaId}`);
-  } catch (e) {
-    console.error(e);
-    alert('Ocurrió un error al crear la orden de venta.');
-  } finally {
-    setCreating(false);
-  }
-};
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFiltros({ ...filtros, [e.target.name]: e.target.value });
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortBy === field) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortDir('desc');
+    }
+    setCurrentPage(0); // Reset a primera página al ordenar
   };
 
   const filteredVentas = useMemo(() => {
@@ -164,98 +186,102 @@ export function PaginaVenta() {
     navigate(`/registrar-venta?ventaId=${venta.ventaId}`);
   };
 
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 0 && newPage < totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
-      
+
       {/* --- SECCIÓN DE FILTROS --- */}
       <div className="mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-            
-            {/* Fila 1 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Cliente</label>
-              <input 
-                type="text" 
-                name="cliente"
-                placeholder="Buscar cliente..."
-                className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                onChange={handleChange}
-                value={filtros.cliente}
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Estado</label>
-              <select 
-                name="estado"
-                className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                onChange={handleChange}
-                value={filtros.estado}
-              >
-                <option value="">Todos</option>
-                <option value="Aprobada">Aprobada</option>
-                <option value="En Borrador">En Borrador</option>
-                <option value="Cancelada">Cancelada</option>
-              </select>
-            </div>
 
-             <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Fecha de venta</label>
-              <input 
-                type="date" 
-                name="fecha"
-                className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                onChange={handleChange}
-                value={filtros.fecha}
-              />
-            </div>
+          {/* Fila 1 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Cliente</label>
+            <input
+              type="text"
+              name="cliente"
+              placeholder="Buscar cliente..."
+              className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              onChange={handleChange}
+              value={filtros.cliente}
+            />
+          </div>
 
-            {/* Fila 2 */}
-             <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">ID Venta</label>
-                <input 
-                  type="text" 
-                  name="id"
-                  placeholder="ID Venta..."
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  onChange={handleChange}
-                  value={filtros.id}
-                />
-            </div>
-             <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">Origen</label>
-                <input 
-                  type="text" 
-                  name="origen"
-                  placeholder="Origen..."
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  onChange={handleChange}
-                  value={filtros.origen}
-                />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Estado</label>
+            <select
+              name="estado"
+              className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              onChange={handleChange}
+              value={filtros.estado}
+            >
+              <option value="">Todos</option>
+              <option value="Aprobada">Aprobada</option>
+              <option value="En Borrador">En Borrador</option>
+              <option value="Cancelada">Cancelada</option>
+            </select>
+          </div>
 
-            {/* BOTONES DE ACCIÓN */}
-            <div className="flex items-end justify-end gap-3">
-              
-              {/* Botón Naranja */}
-              <button 
-                onClick={() => setShowLeadsModal(true)}
-                // Usamos h-10 y px-4 py-2 para igualar dimensiones
-                className="h-10 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors text-sm font-medium shadow-sm whitespace-nowrap cursor-pointer flex items-center justify-center"
-              >
-                Ventas por Leads
-              </button>
+          <div>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Fecha de venta</label>
+            <input
+              type="date"
+              name="fecha"
+              className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              onChange={handleChange}
+              value={filtros.fecha}
+            />
+          </div>
 
-              {/* Botón Azul */}
-              <button 
-                onClick={handleCrearOrdenVenta}
-                // Usamos h-10 y px-4 py-2 para igualar dimensiones
-                className="h-10 px-4 py-2 bg-[#3C83F6] text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm whitespace-nowrap cursor-pointer flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
-                disabled={creating}
-              >
-                <span className="mr-2 text-lg">+</span> Crear orden de venta
-              </button>
-            </div>
+          {/* Fila 2 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-500 mb-1">ID Venta</label>
+            <input
+              type="text"
+              name="id"
+              placeholder="ID Venta..."
+              className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              onChange={handleChange}
+              value={filtros.id}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Origen</label>
+            <input
+              type="text"
+              name="origen"
+              placeholder="Origen..."
+              className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              onChange={handleChange}
+              value={filtros.origen}
+            />
+          </div>
+
+          {/* BOTONES DE ACCIÓN */}
+          <div className="flex items-end justify-end gap-3">
+
+            {/* Botón Naranja */}
+            <button
+              onClick={() => setShowLeadsModal(true)}
+              className="h-10 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors text-sm font-medium shadow-sm whitespace-nowrap cursor-pointer flex items-center justify-center"
+            >
+              Ventas por Leads
+            </button>
+
+            {/* Botón Azul */}
+            <button
+              onClick={handleCrearOrdenVenta}
+              className="h-10 px-4 py-2 bg-[#3C83F6] text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm whitespace-nowrap cursor-pointer flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+              disabled={creating}
+            >
+              <span className="mr-2 text-lg">+</span> Crear orden de venta
+            </button>
+          </div>
 
         </div>
       </div>
@@ -273,11 +299,41 @@ export function PaginaVenta() {
         <table className="min-w-full divide-y divide-gray-100">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Origen</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de venta</th>
+              <th
+                onClick={() => handleSort('cliente')}
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+              >
+                Cliente
+                <SortIcon active={sortBy === 'cliente'} direction={sortDir} />
+              </th>
+              <th
+                onClick={() => handleSort('estado')}
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+              >
+                Estado
+                <SortIcon active={sortBy === 'estado'} direction={sortDir} />
+              </th>
+              <th
+                onClick={() => handleSort('origen')}
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+              >
+                Origen
+                <SortIcon active={sortBy === 'origen'} direction={sortDir} />
+              </th>
+              <th
+                onClick={() => handleSort('id')}
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+              >
+                ID
+                <SortIcon active={sortBy === 'id'} direction={sortDir} />
+              </th>
+              <th
+                onClick={() => handleSort('fecha')}
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+              >
+                Fecha de venta
+                <SortIcon active={sortBy === 'fecha'} direction={sortDir} />
+              </th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
@@ -317,6 +373,34 @@ export function PaginaVenta() {
           </tbody>
         </table>
       </div>
+
+      {/* --- PAGINACIÓN --- */}
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between">
+          <div className="text-sm text-gray-600">
+            Mostrando {currentPage * 20 + 1} - {Math.min((currentPage + 1) * 20, totalElements)} de {totalElements} ventas
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 0}
+              className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+            >
+              Anterior
+            </button>
+            <span className="px-3 py-1 text-sm text-gray-600">
+              Página {currentPage + 1} de {totalPages}
+            </span>
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages - 1}
+              className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      )}
 
       {showLeadsModal && <PendingLeadSalesModal onClose={() => setShowLeadsModal(false)} />}
 
