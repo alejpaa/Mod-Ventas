@@ -25,7 +25,7 @@ public interface IClienteMapeador {
      * @return El DTO ClienteResponse para la API.
      */
     @Mapping(source = "fullName", target = "fullName")
-    @Mapping(source = "estado", target = "estado")
+    @Mapping(source = "estado.name", target = "estado")
     ClienteResponse toClienteResponse(Cliente cliente);
 
     /**

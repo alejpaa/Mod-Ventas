@@ -395,6 +395,63 @@ paths:
         '400':
           description: Cliente tiene deudas o equipos pendientes
 
+  # ==================== ENDPOINTS DE INTEGRACIÓN ATENCIÓN AL CLIENTE ====================
+  /api/clientes/integracion/atencion-cliente/{idCliente}:
+    get:
+      tags:
+        - Clientes
+      summary: Obtener Cliente por ID (Integración)
+      description: Devuelve la información completa del cliente para el módulo de Atención al Cliente
+      operationId: obtenerClientePorIdIntegracion
+      parameters:
+        - name: idCliente
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID del cliente a consultar
+      responses:
+        '200':
+          description: Cliente encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteResponse'
+        '404':
+          description: Cliente no encontrado
+    patch:
+      tags:
+        - Clientes
+      summary: Actualizar Cliente (Integración Atención al Cliente)
+      description: Actualiza parcialmente los datos del cliente. Permite modificar todos los campos excepto clienteId (que es la identidad)
+      operationId: actualizarClienteIntegracion
+      parameters:
+        - name: idCliente
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID del cliente a actualizar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModificacionClienteRequest'
+      responses:
+        '200':
+          description: Cliente actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteResponse'
+        '404':
+          description: Cliente no encontrado
+        '409':
+          description: Email ya existe para otro cliente
+
   # ==================== ENDPOINTS DE DESCUENTOS ====================
   /api/descuentos/aplicar-mejor-descuento:
     post:
@@ -1064,7 +1121,16 @@ components:
 
     ModificacionClienteRequest:
       type: object
+      description: Permite modificar todos los campos excepto clienteId (que es la identidad)
       properties:
+        dni:
+          type: string
+          description: DNI del cliente (8 dígitos)
+          example: "12345678"
+        firstName:
+          type: string
+          description: Nombre del cliente
+          example: "Juan"
         lastName:
           type: string
           description: Apellido del cliente
@@ -1076,12 +1142,21 @@ components:
           example: "nuevo.email@email.com"
         phoneNumber:
           type: string
-          description: Número de teléfono (9 dígitos)
+          description: Número de teléfono celular (9 dígitos)
           example: "987654321"
+        telefonoFijo:
+          type: string
+          description: Número de teléfono fijo
+          example: "555-1001"
         address:
           type: string
           description: Dirección del cliente
           example: "Calle Nueva 456"
+        fechaNacimiento:
+          type: string
+          format: date
+          description: Fecha de nacimiento (usada para verificación de identidad)
+          example: "1985-01-15"
         estado:
           $ref: '#/components/schemas/EstadoClienteEnum'
 
@@ -1111,9 +1186,18 @@ components:
         phoneNumber:
           type: string
           example: "987654321"
+        telefonoFijo:
+          type: string
+          description: Número de teléfono fijo
+          example: "555-1001"
         address:
           type: string
           example: "Av. Principal 123"
+        fechaNacimiento:
+          type: string
+          format: date
+          description: Fecha de nacimiento (usada para verificación de identidad)
+          example: "1985-01-15"
         registrationDate:
           type: string
           format: date
