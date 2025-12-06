@@ -1,21 +1,21 @@
 export const SellerStatus = {
-  Activo: 'Activo',
-  Inactivo: 'Inactivo',
-} as const;
-export type SellerStatus = (typeof SellerStatus)[keyof typeof SellerStatus];
+  Activo: 'Activo',
+  Inactivo: 'Inactivo',
+} as const
+export type SellerStatus = typeof SellerStatus[keyof typeof SellerStatus]
 
 export const SellerType = {
-  Interno: 'Interno',
-  Externo: 'Externo',
-} as const;
-export type SellerType = (typeof SellerType)[keyof typeof SellerType];
+  Interno: 'Interno',
+  Externo: 'Externo',
+} as const
+export type SellerType = typeof SellerType[keyof typeof SellerType]
 
 // 🚀 NUEVA INTERFAZ: Definición del objeto Sede (basada en Sede.java)
 export interface Sede {
-  id: string;
-  name: string; // Este campo es el que contiene el nombre legible.
-  branchType?: string; // Asumiendo que existe el tipo de sucursal.
-  // ... otras propiedades si las hay
+    id: string; 
+    name: string; // Este campo es el que contiene el nombre legible.
+    branchType?: string; // Asumiendo que existe el tipo de sucursal.
+    // ... otras propiedades si las hay
 }
 
 export interface Seller {
@@ -33,18 +33,16 @@ export interface SellerTableProps {
   onDeactivate: (id: number) => void;
   onActivate: (id: number) => void;
   onEdit: (id: number) => void;
-}
-
-export interface TypePillProps {
-  type: SellerType;
+}export interface TypePillProps {
+  type: SellerType;
 }
 
 export interface StatusPillProps {
-  status: SellerStatus;
+  status: SellerStatus;
 }
 
 export interface SellerToolbarProps {
   onNewSellerClick: () => void;
-  onCreateComboClick?: () => void;
+  onFilterChange: (name: string, value: string) => void;
   isAdmin?: boolean;
 }

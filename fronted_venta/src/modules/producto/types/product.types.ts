@@ -9,6 +9,7 @@ export interface ProductoDTO {
   tipo: TipoProducto;
   precioBase: number;
   precioFinal: number;
+  stock?: number; // Stock disponible del producto
   informacionAdicional: string;
   descuentoTotal?: number;
   componentes?: ProductoDTO[];

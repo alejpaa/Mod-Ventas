@@ -14,7 +14,9 @@ export interface ProductoDisponible {
   codigo: string;
   nombre: string;
   tipo: string;
-  precio: number;
+  precioBase: number;
+  precioFinal: number;
+  stock?: number;
   imagenUrl: string | null;
 }
 
