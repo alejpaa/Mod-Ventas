@@ -1,7 +1,8 @@
 package com.venta.backend.descuento.infraestructura.controller;
 
 import com.venta.backend.descuento.aplicacion.CuponAdminService;
-import com.venta.backend.descuento.DTO.CrearCuponLoteRequest;
+import com.venta.backend.descuento.DTO.CrearCuponLoteRequest; // Importar el nuevo DTO de lote
+import com.venta.backend.descuento.DTO.CrearCuponRequest;
 import com.venta.backend.descuento.DTO.CuponResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,15 +20,20 @@ public class CuponAdminController {
     private final CuponAdminService cuponAdminService;
 
     // CRUD ENDPOINTS
+    // MODIFICADO: Ahora recibe CrearCuponLoteRequest y devuelve List<CuponResponse>
     @PostMapping
     public ResponseEntity<List<CuponResponse>> crearCuponesEnLote(@RequestBody CrearCuponLoteRequest request) {
         try {
-            // El status 201 Created es apropiado para la creación exitosa de recursos.
-            return new ResponseEntity<>(cuponAdminService.crearCuponesEnLote(request), HttpStatus.CREATED); 
+            return new ResponseEntity<>(cuponAdminService.crearCuponesEnLote(request), HttpStatus.CREATED);
         } catch (RuntimeException e) {
-            // En caso de error de validación o código existente
+            // Si el código existe o falla la validación del DTO
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build(); 
         }
+    }
+
+    @GetMapping
+    public ResponseEntity<List<CuponResponse>> listarCupones() {
+        return ResponseEntity.ok(cuponAdminService.listarTodos());
     }
 
     /**
@@ -40,7 +46,7 @@ public class CuponAdminController {
             CuponResponse response = cuponAdminService.obtenerPorId(id);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            // Si no se encuentra el recurso, se retorna 404 NOT FOUND (asumiendo que el servicio lanza una excepción)
+            // Si no se encuentra el recurso, se retorna 404 NOT FOUND
             return ResponseEntity.notFound().build(); 
         }
     }
@@ -56,7 +62,6 @@ public class CuponAdminController {
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             // Si el cupón no existe, 404 NOT FOUND. Si es un error de validación, 400 BAD REQUEST.
-            // Para simplificar, devolvemos 404 si el recurso no es encontrado.
             if (e.getMessage() != null && e.getMessage().contains("no encontrado")) {
                  return ResponseEntity.notFound().build();
             }

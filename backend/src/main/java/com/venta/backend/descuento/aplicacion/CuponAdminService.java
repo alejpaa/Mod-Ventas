@@ -1,19 +1,17 @@
 package com.venta.backend.descuento.aplicacion;
 
-import com.venta.backend.descuento.DTO.CrearCuponRequest;
+import com.venta.backend.descuento.DTO.CrearCuponLoteRequest; // Importar DTO de lote
+import com.venta.backend.descuento.DTO.CrearCuponRequest; // Se mantiene para actualizarCupon
 import com.venta.backend.descuento.DTO.CuponResponse;
 import com.venta.backend.descuento.dominio.entidades.Cupon;
 import com.venta.backend.descuento.infraestructura.repository.CuponRepositorio;
-import com.venta.backend.descuento.DTO.CrearCuponLoteRequest;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.security.SecureRandom;
-import java.util.ArrayList; // Importación necesaria para generar códigos
 
 /**
  * Servicio para la gestión de la administración (CRUD) de Cupones.
@@ -24,76 +22,48 @@ public class CuponAdminService {
 
     private final CuponRepositorio cuponRepositorio;
 
-    // --- UTILERÍAS DE GENERACIÓN DE CÓDIGO ---
-    private static final String CARACTERES_PERMITIDOS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    private static final int LONGITUD_CODIGO = 10;
-    private static final SecureRandom random = new SecureRandom();
-
-    /**
-     * Genera un código aleatorio de 10 caracteres y verifica que no exista en la DB.
-     * @return Código único no repetido.
-     */
-    private String generarCodigoUnico() {
-        String nuevoCodigo;
-        Optional<Cupon> cuponExistente;
-
-        // Se repite hasta encontrar un código no existente en la DB
-        do {
-            StringBuilder sb = new StringBuilder(LONGITUD_CODIGO);
-            for (int i = 0; i < LONGITUD_CODIGO; i++) {
-                int indice = random.nextInt(CARACTERES_PERMITIDOS.length());
-                sb.append(CARACTERES_PERMITIDOS.charAt(indice));
-            }
-            nuevoCodigo = sb.toString();
-
-            // Usamos el repositorio para verificar la unicidad
-            cuponExistente = cuponRepositorio.findByCodigo(nuevoCodigo);
-        } while (cuponExistente.isPresent());
-
-        return nuevoCodigo;
-    }
-    // -------------------------------------------
-
-
     // -------------------------------------------------------------------------
-    // C R E A R C U P O N E S (Lote) - NUEVO MÉTODO CENTRAL DE CREACIÓN
+    // C R E A R C U P O N E S (Lote) - NUEVA IMPLEMENTACIÓN
     // -------------------------------------------------------------------------
     public List<CuponResponse> crearCuponesEnLote(CrearCuponLoteRequest request) {
         
         String prefijo = request.getNombreCampana().toUpperCase().trim();
         int cantidad = request.getCantidadCupones();
-        int longitudSecuencia = String.valueOf(cantidad).length(); // Para NAVIDAD25001, longitud es 3 (si es hasta 100)
+        
+        // Determina la longitud de la parte secuencial (ej: 100 cupones -> 3 dígitos)
+        int longitudSecuencia = String.valueOf(cantidad).length(); 
         
         List<Cupon> nuevosCupones = new ArrayList<>();
         
-        // 1. Generar y validar todos los cupones antes de guardar.
+        // 1. Bucle para generar y preparar todos los cupones
         for (int i = 1; i <= cantidad; i++) {
-            // Formato secuencial (ej: 001, 002, 010, 100)
+            // Formato secuencial (ej: %03d para 3 dígitos, rellena con ceros)
             String sufijo = String.format("%0" + longitudSecuencia + "d", i);
             String codigoGenerado = prefijo + sufijo;
             
-            // 2. Verificar unicidad (es crucial aquí)
+            // 2. Verificar unicidad. Detiene todo si el código ya existe.
             if (cuponRepositorio.findByCodigo(codigoGenerado).isPresent()) {
-                 // Si se encuentra, lanza una excepción para detener todo el lote.
-                 throw new RuntimeException("El código de cupón " + codigoGenerado + " ya existe en la base de datos. No se creó ningún cupón.");
+                 throw new RuntimeException("El código de cupón " + codigoGenerado + " ya existe en la base de datos. No se creó ningún cupón del lote.");
             }
             
+            // 3. Mapear y configurar el cupón
             Cupon nuevoCupon = new Cupon();
-            nuevoCupon.setCodigo(codigoGenerado); // Código secuencial
+            nuevoCupon.setCodigo(codigoGenerado); 
             
-            // 3. Mapear datos comunes y forzar la restricción anterior de uso único (si aplica)
             nuevoCupon.setTipoDescuento(request.getTipoDescuento());
             nuevoCupon.setValor(request.getValor());
             nuevoCupon.setFechaExpiracion(request.getFechaExpiracion());
             
-            nuevoCupon.setUsosMaximos(1); // <--- REQUISITO ANTERIOR: Uso único
+            // REQUISITO: Forzar el uso a 1 (si no es null, es 1, si es null, se usa el predeterminado)
+            // Ya que el requisito anterior era uso único, lo forzamos a 1.
+            nuevoCupon.setUsosMaximos(1); 
             
             nuevoCupon.setMontoMinimoRequerido(request.getMontoMinimoRequerido());
             
             nuevosCupones.add(nuevoCupon);
         }
 
-        // 4. Guardar todos los cupones en la base de datos (se usa saveAll para eficiencia)
+        // 4. Guardar todos los cupones de forma eficiente
         List<Cupon> cuponesGuardados = cuponRepositorio.saveAll(nuevosCupones);
         
         // 5. Mapear a respuesta
@@ -102,6 +72,9 @@ public class CuponAdminService {
                 .collect(Collectors.toList());
     }
 
+    // El método 'crearCupon(CrearCuponRequest request)' anterior fue ELIMINADO
+    // si desea mantener la edición.
+    
     // -------------------------------------------------------------------------
     // L E E R - Todos
     // -------------------------------------------------------------------------
@@ -110,10 +83,9 @@ public class CuponAdminService {
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
+    
+    // ... (El resto de métodos: obtenerPorId, actualizarCupon, eliminarCupon) ...
 
-    // -------------------------------------------------------------------------
-    // L E E R - Por ID (Método Faltante 1)
-    // -------------------------------------------------------------------------
     public CuponResponse obtenerPorId(Long id) {
         Cupon cupon = cuponRepositorio.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cupón no encontrado con ID: " + id));
@@ -121,9 +93,6 @@ public class CuponAdminService {
         return mapToResponse(cupon);
     }
 
-    // -------------------------------------------------------------------------
-    // A C T U A L I Z A R (Método Faltante 2)
-    // -------------------------------------------------------------------------
     public CuponResponse actualizarCupon(Long id, CrearCuponRequest request) {
         // 1. Verificar si el cupón existe
         Cupon cuponExistente = cuponRepositorio.findById(id)
@@ -150,9 +119,6 @@ public class CuponAdminService {
         return mapToResponse(cuponActualizado);
     }
 
-    // -------------------------------------------------------------------------
-    // E L I M I N A R (Método Faltante 3)
-    // -------------------------------------------------------------------------
     public void eliminarCupon(Long id) {
         // Verificamos que exista para lanzar 404 en el controlador
         if (!cuponRepositorio.existsById(id)) {
@@ -160,21 +126,13 @@ public class CuponAdminService {
         }
         cuponRepositorio.deleteById(id);
     }
-
+    
     // -------------------------------------------------------------------------
-    // M A P E A D O R E S (Modificado: se elimina la asignación de 'codigo' y 'usosMaximos' del request)
+    // M A P E A D O R E S (Sin cambios, se usan los DTO y la Entidad)
     // -------------------------------------------------------------------------
-    private Cupon mapFromRequest(CrearCuponRequest request) {
-        Cupon cupon = new Cupon();
-        // Eliminado: cupon.setCodigo(request.getCodigo());
-        cupon.setTipoDescuento(request.getTipoDescuento());
-        cupon.setValor(request.getValor());
-        cupon.setFechaExpiracion(request.getFechaExpiracion());
-        // Eliminado: cupon.setUsosMaximos(request.getUsosMaximos());
-        cupon.setMontoMinimoRequerido(request.getMontoMinimoRequerido() != null ? request.getMontoMinimoRequerido() : new java.math.BigDecimal("0.00"));
-        return cupon;
-    }
-
+    // Nota: El 'mapFromRequest' anterior fue eliminado/no se usa,
+    // ya que la creación ahora es manual dentro del nuevo método de lote.
+    
     private CuponResponse mapToResponse(Cupon cupon) {
         CuponResponse response = new CuponResponse();
         response.setId(cupon.getId());
