@@ -29,6 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import com.venta.backend.venta.pdf.VentaPdfTemplate;
+import com.venta.backend.cotizacion.infraestructura.pdf.IPdfGenerator;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +42,8 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
     private final VendedorRepositorio vendedorRepositorio;
     private final CotizacionRepository cotizacionRepository;
     private final ClienteRepositorio clienteRepositorio;
+    private final VentaPdfTemplate ventaPdfTemplate;
+    private final IPdfGenerator pdfGenerator;
     @Qualifier("IVentaMapper")
     private final IVentaMapper ventaMapper;
 
@@ -361,6 +365,32 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
                     return prefijo + String.format("%06d", numero + 1);
                 })
                 .orElse(prefijo + "000001");
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] generarPdfVenta(Long ventaId) {
+        // 1. Obtener venta
+        Venta venta = ventaRepositorio.findById(ventaId)
+                .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
+        
+        // 2. Obtener cliente
+        com.venta.backend.cliente.entities.Cliente cliente = null;
+        if (venta.getClienteId() != null) {
+            cliente = clienteRepositorio.findById(venta.getClienteId()).orElse(null);
+        }
+        
+        // 3. Obtener vendedor
+        com.venta.backend.vendedor.entities.Vendedor vendedor = null;
+        if (venta.getIdVendedor() != null) {
+            vendedor = vendedorRepositorio.findById(venta.getIdVendedor()).orElse(null);
+        }
+        
+        // 4. Generar HTML
+        String htmlContent = ventaPdfTemplate.generateHtml(venta, cliente, vendedor);
+        
+        // 5. Generar PDF
+        return pdfGenerator.generatePdf(htmlContent);
     }
 }
 

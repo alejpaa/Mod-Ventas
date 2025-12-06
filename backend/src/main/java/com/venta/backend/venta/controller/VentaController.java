@@ -216,6 +216,21 @@ public class VentaController {
         ventaCarritoService.confirmarVenta(ventaId);
     }
     
+    @Operation(summary = "Descargar PDF de venta", description = "Genera y descarga un PDF con el detalle completo de la venta")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "PDF generado exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Venta no encontrada")
+    })
+    @GetMapping("/{ventaId}/pdf")
+    public ResponseEntity<byte[]> descargarPdfVenta(@Parameter(description = "ID de la venta") @PathVariable Long ventaId) {
+        byte[] pdfBytes = ventaCarritoService.generarPdfVenta(ventaId);
+        
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/pdf")
+                .header("Content-Disposition", "attachment; filename=Venta_" + ventaId + ".pdf")
+                .body(pdfBytes);
+    }
+    
     @Operation(summary = "Obtener ventas agregadas por canal (Físico vs. Llamada)")
     @GetMapping("/analisis/ventas-por-canal")
     public ResponseEntity<List<VentasPorCanalResponse>> obtenerVentasPorCanal() {

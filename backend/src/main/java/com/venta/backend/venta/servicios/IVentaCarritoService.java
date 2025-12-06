@@ -27,5 +27,7 @@ public interface IVentaCarritoService {
     void actualizarMetodoPago(Long ventaId, String metodoPago);
     
     void confirmarVenta(Long ventaId);
+    
+    byte[] generarPdfVenta(Long ventaId);
 }
 

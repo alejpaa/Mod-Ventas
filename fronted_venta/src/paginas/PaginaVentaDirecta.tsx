@@ -263,21 +263,31 @@ export function PaginaVentaDirecta() {
     if (!ventaId || !resumen) return;
 
     try {
-      // Convertir items del resumen al formato esperado por el backend
-      const productos = resumen.items.map(item => ({
-        idProducto: item.itemProductoId,
-        nombreProducto: item.nombreProducto,
-        precioUnitario: item.precioUnitario,
-        cantidad: item.cantidad
+      // Convertir productos del estado local al formato esperado por el backend
+      const productosParaGuardar = productos.map(prod => ({
+        idProducto: Number(prod.codigo),
+        nombreProducto: prod.nombre,
+        precioUnitario: prod.precioUnitario,
+        cantidad: prod.cantidad
       }));
 
-      await guardarProductosVenta(Number(ventaId), productos);
+      await guardarProductosVenta(Number(ventaId), productosParaGuardar);
       alert('Productos guardados exitosamente');
 
-      // Recargar totales
+      // Recargar totales y productos desde el backend
       const totales = await obtenerTotalesVenta(Number(ventaId));
       setDescuentoApi(totales.descuentoTotal);
       setResumen(totales);
+
+      // Actualizar productos desde el backend para sincronizar IDs
+      const mappedProductos: ProductoVenta[] = totales.items.map((item) => ({
+        id: String(item.detalleId ?? item.itemProductoId),
+        codigo: String(item.itemProductoId),
+        nombre: item.nombreProducto,
+        precioUnitario: item.precioUnitario,
+        cantidad: item.cantidad,
+      }));
+      setProductos(mappedProductos);
     } catch (error) {
       console.error('Error al guardar productos:', error);
       alert('Error al guardar productos');
