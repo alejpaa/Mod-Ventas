@@ -79,10 +79,10 @@ export function ModalHistorialCompras({ cliente, compras, onClose }: Props) {
           <div className="flex items-center gap-2">
             {cliente.categoria && (
               <span className={`px-3 py-1 rounded-full text-xs font-semibold ${cliente.categoria === 'PLATINO'
-                  ? 'bg-purple-100 text-purple-700'
-                  : cliente.categoria === 'VIP'
-                    ? 'bg-amber-100 text-amber-700'
-                    : 'bg-blue-100 text-blue-700'
+                ? 'bg-purple-100 text-purple-700'
+                : cliente.categoria === 'VIP'
+                  ? 'bg-amber-100 text-amber-700'
+                  : 'bg-blue-100 text-blue-700'
                 }`}>
                 {cliente.categoria}
               </span>
@@ -131,7 +131,6 @@ export function ModalHistorialCompras({ cliente, compras, onClose }: Props) {
           <div className="flex gap-2 ml-auto">
             <button
               className="px-3 py-2 bg-gray-100 rounded-lg text-gray-700"
-              onClick={() => { setBusqueda(''); setFiltroFecha(''); }}
             >
               Limpiar
             </button>

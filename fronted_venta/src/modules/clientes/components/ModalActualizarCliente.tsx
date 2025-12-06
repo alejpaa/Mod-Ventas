@@ -157,19 +157,10 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
           </button>
         </div>
 
-        <div className="flex gap-4 px-6 pt-4 pb-2 border-b bg-gray-50 items-center justify-between">
-          <div className="flex gap-4">
-            <PasoBadge num={1} label="Datos Personales" />
-            <PasoBadge num={2} label="Datos de Contacto" />
-            <PasoBadge num={3} label="Preferencias" />
-          </div>
-          <button
-            className="px-4 py-1.5 rounded-lg bg-red-100 text-red-700 border border-red-200 text-sm font-medium hover:bg-red-200"
-            onClick={handleDesactivar}
-            type="button"
-          >
-            Desactivar Cliente
-          </button>
+        <div className="flex gap-4 px-6 pt-4 pb-2 border-b bg-gray-50">
+          <PasoBadge num={1} label="Datos Personales" />
+          <PasoBadge num={2} label="Datos de Contacto" />
+          <PasoBadge num={3} label="Preferencias" />
         </div>
 
         {error && (
@@ -452,11 +443,18 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
               Cancelar
             </button>
             <button
+              className="px-5 py-2 rounded-lg bg-red-100 text-red-700 border border-red-200"
+              onClick={handleDesactivar}
+              type="button"
+            >
+              Desactivar Cliente
+            </button>
+            <button
               className="px-5 py-2 rounded-lg bg-blue-500 text-white"
-              onClick={paso < 3 ? () => setPaso((prev) => (prev + 1) as Paso) : handleGuardar}
+              onClick={handleGuardar}
               disabled={saving}
             >
-              {paso < 3 ? 'Siguiente' : saving ? 'Guardando...' : 'Guardar Cambios'}
+              {saving ? 'Guardando...' : 'Guardar Cambios'}
             </button>
           </div>
         </div>
