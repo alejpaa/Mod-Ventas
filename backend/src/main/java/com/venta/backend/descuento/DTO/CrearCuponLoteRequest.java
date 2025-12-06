@@ -1,10 +1,10 @@
 package com.venta.backend.descuento.DTO;
 
 import com.venta.backend.descuento.dominio.enums.TipoDescuento;
-import lombok.Data;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @Data
 public class CrearCuponLoteRequest {
     
-    // --- NUEVOS CAMPOS DE LA CAMPAÑA ---
+    // --- CAMPOS DE LA CAMPAÑA/LOTE ---
     @NotBlank(message = "El nombre de la campaña es obligatorio.")
     private String nombreCampana; // Prefijo del código del cupón (ej: NAVIDAD25)
     
@@ -20,7 +20,7 @@ public class CrearCuponLoteRequest {
     @Min(value = 1, message = "La cantidad a crear debe ser al menos 1.")
     private Integer cantidadCupones; // Cuántos cupones crear (ej: 100)
 
-    // --- CAMPOS COMUNES DEL CUPÓN (para el lote) ---
+    // --- CAMPOS COMUNES DEL CUPÓN ---
     @NotNull
     private TipoDescuento tipoDescuento;
     
@@ -31,8 +31,5 @@ public class CrearCuponLoteRequest {
     @NotNull(message = "La fecha de expiración es obligatoria.")
     private LocalDate fechaExpiracion;
     
-    // Estos campos serán forzados en el servicio
-    // private Integer usosMaximos; // Forzado a 1 por la lógica anterior
-    // private BigDecimal montoMinimoRequerido; // Se puede mantener si se desea
     private BigDecimal montoMinimoRequerido = BigDecimal.ZERO; 
 }
