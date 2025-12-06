@@ -12,6 +12,7 @@ export function LayoutPrincipal() {
   const adminNav = [
     { to: '/pagina-cliente', label: 'Clientes', icon: UsersIcon },
     { to: '/pagina-vendedor', label: 'Vendedor', icon: UserIcon },
+    { to: '/admin/cupones', label: 'Gestión Cupones', icon: BoxIcon },
   ];
 
   const vendedorNav = [
