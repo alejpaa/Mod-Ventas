@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Ventas", description = "API para gestión de ventas directas y desde leads")
@@ -168,5 +169,40 @@ public class VentaController {
     public java.util.List<BoletaClienteResponse> obtenerBoletasPorCliente(
             @Parameter(description = "ID del cliente") @PathVariable Long clienteId) {
         return boletaService.obtenerBoletasPorCliente(clienteId);
+    }
+    
+    @Operation(summary = "Guardar productos de la venta", description = "Recalcula y guarda los totales basados en los productos agregados")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Productos guardados exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Venta no encontrada")
+    })
+    @PostMapping("/{ventaId}/guardar-productos")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void guardarProductos(@Parameter(description = "ID de la venta") @PathVariable Long ventaId) {
+        ventaCarritoService.guardarProductos(ventaId);
+    }
+    
+    @Operation(summary = "Calcular totales de la venta", description = "Obtiene subtotal, descuento y total calculados en tiempo real")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Totales calculados exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Venta no encontrada")
+    })
+    @GetMapping("/{ventaId}/totales")
+    public ResponseEntity<VentaResumenResponse> calcularTotales(@Parameter(description = "ID de la venta") @PathVariable Long ventaId) {
+        return ResponseEntity.ok(ventaCarritoService.calcularTotales(ventaId));
+    }
+    
+    @Operation(summary = "Actualizar método de pago", description = "Actualiza el método de pago de la venta (EFECTIVO o TARJETA)")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Método de pago actualizado exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Método de pago inválido"),
+        @ApiResponse(responseCode = "404", description = "Venta no encontrada")
+    })
+    @PutMapping("/{ventaId}/metodo-pago")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void actualizarMetodoPago(
+            @Parameter(description = "ID de la venta") @PathVariable Long ventaId,
+            @Parameter(description = "Método de pago (EFECTIVO o TARJETA)") @RequestParam String metodoPago) {
+        ventaCarritoService.actualizarMetodoPago(ventaId, metodoPago);
     }
 }

@@ -19,5 +19,11 @@ public interface IVentaCarritoService {
     VentaResumenResponse crearVentaDesdeCotizacion(Long cotizacionId);
     
     void asignarCliente(Long ventaId, Long clienteId);
+    
+    void guardarProductos(Long ventaId);
+    
+    VentaResumenResponse calcularTotales(Long ventaId);
+    
+    void actualizarMetodoPago(Long ventaId, String metodoPago);
 }
 

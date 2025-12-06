@@ -220,6 +220,48 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
         venta.setClienteId(clienteId);
         ventaRepositorio.save(venta);
     }
+    
+    @Override
+    @Transactional
+    public void guardarProductos(Long ventaId) {
+        // Los productos ya se guardan al agregarlos, este método recalcula totales
+        Venta venta = ventaRepositorio.findById(ventaId)
+                .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
+        
+        BigDecimal subtotal = BigDecimal.ZERO;
+        BigDecimal descuentoTotal = BigDecimal.ZERO;
+        
+        for (DetalleVenta detalle : venta.getDetalles()) {
+            subtotal = subtotal.add(detalle.getSubtotal());
+            descuentoTotal = descuentoTotal.add(detalle.getDescuentoMonto());
+        }
+        
+        venta.setSubtotal(subtotal);
+        venta.setDescuentoTotal(descuentoTotal);
+        venta.setTotal(subtotal.subtract(descuentoTotal));
+        
+        ventaRepositorio.save(venta);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public VentaResumenResponse calcularTotales(Long ventaId) {
+        return obtenerResumen(ventaId);
+    }
+    
+    @Override
+    @Transactional
+    public void actualizarMetodoPago(Long ventaId, String metodoPago) {
+        Venta venta = ventaRepositorio.findById(ventaId)
+                .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
+        
+        try {
+            venta.setMetodoPago(com.venta.backend.venta.enums.MetodoPago.valueOf(metodoPago.toUpperCase()));
+            ventaRepositorio.save(venta);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Método de pago inválido: " + metodoPago);
+        }
+    }
 
     private String generarCodigoVenta(OrigenVenta origenVenta) {
         String prefijoTipo;
