@@ -462,43 +462,31 @@ export function ModalCrearCliente({ onClose, onSuccess }: ModalCrearClienteProps
     >
       <div className="bg-white p-8 rounded-lg shadow-xl z-50 w-full max-w-4xl flex flex-col" style={{ height: '85vh' }} onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Registrar Nuevo Cliente</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Registrar nuevo cliente</h2>
           <button onClick={onClose} className="text-gray-500 text-3xl">
             &times;
           </button>
         </div>
 
-        <div className="flex items-center gap-6 px-6 pt-4 pb-2 border-b bg-gray-50 justify-between">
-          <div className="flex gap-6">
-            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${paso === 1 ? 'bg-primary-100 text-primary-700' : 'text-gray-600'}`}>
-              <span className="w-6 h-6 rounded-full border flex items-center justify-center text-sm font-semibold">
-                1
-              </span>
-              <span className="text-sm font-medium">Datos Personales</span>
-            </div>
-            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${paso === 2 ? 'bg-primary-100 text-primary-700' : 'text-gray-600'}`}>
-              <span className="w-6 h-6 rounded-full border flex items-center justify-center text-sm font-semibold">
-                2
-              </span>
-              <span className="text-sm font-medium">Datos de Contacto</span>
-            </div>
-            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${paso === 3 ? 'bg-primary-100 text-primary-700' : 'text-gray-600'}`}>
-              <span className="w-6 h-6 rounded-full border flex items-center justify-center text-sm font-semibold">
-                3
-              </span>
-              <span className="text-sm font-medium">Preferencias</span>
-            </div>
+        <div className="flex items-center gap-6 px-6 pt-4 pb-2 border-b bg-gray-50">
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${paso === 1 ? 'bg-primary-100 text-primary-700' : 'text-gray-600'}`}>
+            <span className="w-6 h-6 rounded-full border flex items-center justify-center text-sm font-semibold">
+              1
+            </span>
+            <span className="text-sm font-medium">Datos Personales</span>
           </div>
-          {paso === 3 && (
-            <button
-              onClick={handleSubmit}
-              className="px-5 py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 transition-colors disabled:bg-gray-300"
-              disabled={isSaving}
-              type="button"
-            >
-              {isSaving ? 'Guardando...' : 'Agregar Nuevo Cliente'}
-            </button>
-          )}
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${paso === 2 ? 'bg-primary-100 text-primary-700' : 'text-gray-600'}`}>
+            <span className="w-6 h-6 rounded-full border flex items-center justify-center text-sm font-semibold">
+              2
+            </span>
+            <span className="text-sm font-medium">Datos de Contacto</span>
+          </div>
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${paso === 3 ? 'bg-primary-100 text-primary-700' : 'text-gray-600'}`}>
+            <span className="w-6 h-6 rounded-full border flex items-center justify-center text-sm font-semibold">
+              3
+            </span>
+            <span className="text-sm font-medium">Preferencias</span>
+          </div>
         </div>
 
         <div className="px-6 py-6 overflow-y-auto flex-1">
@@ -512,8 +500,31 @@ export function ModalCrearCliente({ onClose, onSuccess }: ModalCrearClienteProps
           {paso === 3 && renderPaso3()}
         </div>
 
-        <div className="px-6 py-4 border-t bg-gray-50 flex items-center justify-center">
+        <div className="px-6 py-4 border-t bg-gray-50 flex items-center justify-between">
           <StepIndicator />
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium transition-colors"
+              disabled={isSaving}
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => {
+                if (paso < 3) {
+                  setPaso((prev) => (prev + 1) as PasoFormulario);
+                } else {
+                  handleSubmit();
+                }
+              }}
+              className="px-5 py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 transition-colors disabled:bg-gray-300"
+              disabled={isSaving}
+              type="button"
+            >
+              {paso < 3 ? 'Siguiente' : isSaving ? 'Guardando...' : 'Registrar cliente'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

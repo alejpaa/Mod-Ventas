@@ -22,6 +22,7 @@ import com.venta.backend.cotizacion.repository.CotizacionRepository;
 import com.venta.backend.cotizacion.model.Cotizacion;
 import com.venta.backend.cotizacion.model.DetalleCotizacion;
 import com.venta.backend.cotizacion.exception.CotizacionNotFoundException;
+import com.venta.backend.cliente.infraestructura.repository.ClienteRepositorio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,7 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
     private final VentaFactoryResolver ventaFactoryResolver;
     private final VendedorRepositorio vendedorRepositorio;
     private final CotizacionRepository cotizacionRepository;
+    private final ClienteRepositorio clienteRepositorio;
     @Qualifier("IVentaMapper")
     private final IVentaMapper ventaMapper;
 
@@ -82,11 +84,32 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
         VentaResumenResponse resumen = ventaMapper.toResumen(venta);
         
         // Obtener nombre del vendedor si está asignado
+        String nombreVendedor = null;
         if (venta.getIdVendedor() != null) {
-            String nombreVendedor = vendedorRepositorio.findById(venta.getIdVendedor())
+            nombreVendedor = vendedorRepositorio.findById(venta.getIdVendedor())
                     .map(vendedor -> vendedor.getFirstName() + " " + vendedor.getLastName())
                     .orElse(null);
-            
+        }
+        
+        // Obtener nombre del cliente si está asignado
+        String nombreCliente = null;
+        String clienteDni = null;
+        String clienteEmail = null;
+        String clienteTelefono = null;
+        
+        if (venta.getClienteId() != null) {
+            var clienteOpt = clienteRepositorio.findById(venta.getClienteId());
+            if (clienteOpt.isPresent()) {
+                var cliente = clienteOpt.get();
+                nombreCliente = cliente.getFirstName() + " " + cliente.getLastName();
+                clienteDni = cliente.getDni();
+                clienteEmail = cliente.getEmail();
+                clienteTelefono = cliente.getPhoneNumber();
+            }
+        }
+        
+        // Si hay vendedor o cliente, reconstruir el response
+        if (nombreVendedor != null || nombreCliente != null) {
             return VentaResumenResponse.builder()
                     .ventaId(resumen.getVentaId())
                     .numVenta(resumen.getNumVenta())
@@ -97,6 +120,11 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
                     .total(resumen.getTotal())
                     .idVendedor(resumen.getIdVendedor())
                     .nombreVendedor(nombreVendedor)
+                    .clienteId(resumen.getClienteId())
+                    .nombreCliente(nombreCliente)
+                    .clienteDni(clienteDni)
+                    .clienteEmail(clienteEmail)
+                    .clienteTelefono(clienteTelefono)
                     .items(resumen.getItems())
                     .build();
         }
