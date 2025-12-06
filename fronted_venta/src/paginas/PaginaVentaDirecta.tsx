@@ -8,6 +8,7 @@ import type { Product } from '../components/ProductCatalogModal';
 import { BuscadorCliente } from '../components/BuscadorCliente';
 import type { Cliente } from '../services/cliente.service';
 import { asignarClienteAVenta } from '../services/cliente.service';
+import { guardarProductosVenta, obtenerTotalesVenta, actualizarMetodoPago } from '../services/venta-productos.service';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
@@ -56,7 +57,7 @@ interface LineaCarritoApi {
   subtotal: number;
 }
 
-interface VentaResumenApi {
+export interface VentaResumenApi {
   ventaId: number;
   numVenta?: string;
   origen: 'DIRECTA' | 'LEAD' | 'COTIZACION';
@@ -253,6 +254,34 @@ export function PaginaVentaDirecta() {
       alert('Ocurrió un error al asignar el vendedor.');
     } finally {
       setAsignandoVendedor(false);
+    }
+  };
+
+  const handleGuardarProductos = async () => {
+    if (!ventaId) return;
+
+    try {
+      await guardarProductosVenta(Number(ventaId));
+      alert('Productos guardados exitosamente');
+
+      // Recargar totales
+      const totales = await obtenerTotalesVenta(Number(ventaId));
+      setDescuentoApi(totales.descuentoTotal);
+    } catch (error) {
+      console.error('Error al guardar productos:', error);
+      alert('Error al guardar productos');
+    }
+  };
+
+  const handleActualizarMetodoPago = async (metodo: 'EFECTIVO' | 'TARJETA') => {
+    if (!ventaId) return;
+
+    try {
+      await actualizarMetodoPago(Number(ventaId), metodo);
+      alert(`Método de pago actualizado a ${metodo}`);
+    } catch (error) {
+      console.error('Error al actualizar método de pago:', error);
+      alert('Error al actualizar método de pago');
     }
   };
 
@@ -469,7 +498,11 @@ export function PaginaVentaDirecta() {
               <label className="block text-sm font-medium text-gray-700 mb-2">Método de Pago</label>
               <select
                 value={metodoPago}
-                onChange={(e) => setMetodoPago(e.target.value as 'EFECTIVO' | 'TARJETA')}
+                onChange={(e) => {
+                  const metodo = e.target.value as 'EFECTIVO' | 'TARJETA';
+                  setMetodoPago(metodo);
+                  handleActualizarMetodoPago(metodo);
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
                 <option value="EFECTIVO">Efectivo</option>
@@ -493,6 +526,16 @@ export function PaginaVentaDirecta() {
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col gap-3">
+            <button
+              onClick={handleGuardarProductos}
+              className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded shadow-sm flex justify-center items-center gap-2 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+              </svg>
+              Guardar Productos
+            </button>
+
             <button className="w-full py-3 bg-[#3C83F6] hover:bg-blue-600 text-white font-medium rounded shadow-sm flex justify-center items-center gap-2 transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />

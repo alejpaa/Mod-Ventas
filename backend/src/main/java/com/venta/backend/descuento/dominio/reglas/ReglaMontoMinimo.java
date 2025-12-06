@@ -6,6 +6,7 @@ import com.venta.backend.descuento.dominio.estrategias.IDescuentoStrategy;
 import com.venta.backend.venta.entities.Venta;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -26,7 +27,7 @@ public class ReglaMontoMinimo implements IReglaDescuento {
     public ReglaMontoMinimo(
             @Qualifier("fixedAmountStrategy") IDescuentoStrategy fixedAmountStrategy,
             // Inyectar desde propiedades (o un servicio que lea de DB)
-            @Value("${descuentos.montoMinimo.requerido:1000.00}") BigDecimal montoRequerido, 
+            @Value("${descuentos.montoMinimo.requerido:1000.00}") BigDecimal montoRequerido,
             @Value("${descuentos.montoMinimo.descuentoFijo:50.00}") BigDecimal valorDescuentoFijo
     ) {
         this.fixedAmountStrategy = fixedAmountStrategy;
