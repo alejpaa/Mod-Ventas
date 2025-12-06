@@ -16,11 +16,17 @@ import com.venta.backend.venta.servicios.IVentaConsultaService;
 import com.venta.backend.venta.servicios.VentaLeadService;
 import com.venta.backend.venta.servicios.VentaLeadConsultaService;
 import com.venta.backend.venta.servicios.BoletaService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Ventas", description = "API para gestión de ventas directas y desde leads")
 @RequestMapping("/api/venta")
 @RestController
 @RequiredArgsConstructor
@@ -32,69 +38,135 @@ public class VentaController {
     private final VentaLeadConsultaService ventaLeadConsultaService;
     private final BoletaService boletaService;
 
+    @Operation(summary = "Listar todas las ventas", description = "Obtiene un listado completo de todas las ventas sin paginación")
     @GetMapping
     public java.util.List<VentaListadoResponse> listarVentas() {
         return ventaConsultaService.listarVentas();
     }
 
+    @Operation(summary = "Listar ventas paginadas", description = "Obtiene un listado paginado y ordenado de ventas")
     @GetMapping("/paginadas")
     public VentaPaginadaResponse listarVentasPaginadas(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDir
+            @Parameter(description = "Número de página (inicia en 0)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Cantidad de elementos por página") @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Campo por el cual ordenar") @RequestParam(defaultValue = "id") String sortBy,
+            @Parameter(description = "Dirección del ordenamiento (asc/desc)") @RequestParam(defaultValue = "desc") String sortDir
     ) {
         return ventaConsultaService.listarVentasPaginadas(page, size, sortBy, sortDir);
     }
 
+    @Operation(summary = "Crear venta directa en borrador", description = "Crea una nueva venta directa en estado borrador")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Venta creada exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos")
+    })
     @PostMapping("/directa/borrador")
     @ResponseStatus(HttpStatus.CREATED)
     public VentaResumenResponse crearVentaDirectaBorrador(@Valid @RequestBody CrearVentaDirectaRequest request) {
         return ventaCarritoService.crearVentaDirectaBorrador(request);
     }
 
+    @Operation(summary = "Agregar producto al carrito", description = "Agrega un producto a una venta en borrador")
     @PostMapping("/{ventaId}/carrito/items")
     public VentaResumenResponse agregarItem(
-            @PathVariable Long ventaId,
+            @Parameter(description = "ID de la venta") @PathVariable Long ventaId,
             @Valid @RequestBody AgregarItemVentaRequest request
     ) {
         return ventaCarritoService.agregarItemALaVenta(ventaId, request);
     }
 
+    @Operation(summary = "Obtener resumen de venta", description = "Obtiene el resumen completo de una venta con sus productos y totales")
     @GetMapping("/{ventaId}/carrito")
-    public VentaResumenResponse obtenerResumen(@PathVariable Long ventaId) {
+    public VentaResumenResponse obtenerResumen(
+            @Parameter(description = "ID de la venta") @PathVariable Long ventaId) {
         return ventaCarritoService.obtenerResumen(ventaId);
     }
 
+    @Operation(summary = "Asignar vendedor a venta", description = "Asigna un vendedor a una venta existente")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Vendedor asignado exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Venta o vendedor no encontrado")
+    })
     @PutMapping("/{ventaId}/vendedor/{vendedorId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void asignarVendedor(@PathVariable Long ventaId, @PathVariable Long vendedorId) {
+    public void asignarVendedor(
+            @Parameter(description = "ID de la venta") @PathVariable Long ventaId, 
+            @Parameter(description = "ID del vendedor") @PathVariable Long vendedorId) {
         ventaCarritoService.asignarVendedor(ventaId, vendedorId);
     }
 
+    @Operation(summary = "Cancelar venta", description = "Cancela una venta cambiando su estado a CANCELADA")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Venta cancelada exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Venta no encontrada")
+    })
+    @PutMapping("/{ventaId}/cancelar")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void cancelarVenta(
+            @Parameter(description = "ID de la venta a cancelar") @PathVariable Long ventaId) {
+        ventaCarritoService.cancelarVenta(ventaId);
+    }
+
+    @Operation(summary = "Crear venta desde cotización", description = "Convierte una cotización en una venta confirmada, copiando productos y calculando totales")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Venta creada exitosamente desde cotización"),
+        @ApiResponse(responseCode = "404", description = "Cotización no encontrada")
+    })
+    @PostMapping("/desde-cotizacion/{cotizacionId}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public VentaResumenResponse crearVentaDesdeCotizacion(
+            @Parameter(description = "ID de la cotización a convertir en venta") @PathVariable Long cotizacionId) {
+        return ventaCarritoService.crearVentaDesdeCotizacion(cotizacionId);
+    }
+
+    @Operation(summary = "Asignar cliente a venta", description = "Asigna o reemplaza el cliente de una venta existente")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Cliente asignado exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Venta no encontrada")
+    })
+    @PutMapping("/{ventaId}/cliente/{clienteId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void asignarCliente(
+            @Parameter(description = "ID de la venta") @PathVariable Long ventaId,
+            @Parameter(description = "ID del cliente a asignar") @PathVariable Long clienteId) {
+        ventaCarritoService.asignarCliente(ventaId, clienteId);
+    }
+
+    @Operation(summary = "Crear venta desde lead de marketing", description = "Crea una nueva venta a partir de un lead generado por marketing")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Venta desde lead creada exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos")
+    })
     @PostMapping("/lead/desde-marketing")
     @ResponseStatus(HttpStatus.CREATED)
     public VentaLeadResponse crearVentaDesdeLeadMarketing(@Valid @RequestBody CrearVentaLeadRequest request) {
         return ventaLeadService.crearVentaDesdeLeadMarketing(request);
     }
 
+    @Operation(summary = "Listar leads pendientes", description = "Obtiene todas las ventas de tipo lead que están pendientes de atención")
     @GetMapping("/leads/pendientes")
     public java.util.List<VentaLeadPendienteResponse> listarVentasLeadPendientes() {
         return ventaLeadConsultaService.listarVentasLeadPendientes();
     }
 
+    @Operation(summary = "Obtener detalle de venta lead", description = "Obtiene el detalle completo de una venta generada desde un lead")
     @GetMapping("/leads/{ventaId}")
-    public VentaLeadDetalleResponse obtenerDetalleVentaLead(@PathVariable Long ventaId) {
+    public VentaLeadDetalleResponse obtenerDetalleVentaLead(
+            @Parameter(description = "ID de la venta lead") @PathVariable Long ventaId) {
         return ventaLeadConsultaService.obtenerDetalleVentaLead(ventaId);
     }
 
+    @Operation(summary = "Obtener boletas por empleado", description = "Obtiene todas las boletas de venta asociadas a un vendedor específico")
     @GetMapping("/boletas/empleado/{employeeRrhhId}")
-    public java.util.List<BoletaResponse> obtenerBoletasPorEmpleado(@PathVariable Long employeeRrhhId) {
+    public java.util.List<BoletaResponse> obtenerBoletasPorEmpleado(
+            @Parameter(description = "ID del empleado en RRHH") @PathVariable Long employeeRrhhId) {
         return boletaService.obtenerBoletasPorEmpleado(employeeRrhhId);
     }
 
+    @Operation(summary = "Obtener boletas por cliente", description = "Obtiene todas las boletas de venta asociadas a un cliente específico con información detallada")
     @GetMapping("/boletas/cliente/{clienteId}")
-    public java.util.List<BoletaClienteResponse> obtenerBoletasPorCliente(@PathVariable Long clienteId) {
+    public java.util.List<BoletaClienteResponse> obtenerBoletasPorCliente(
+            @Parameter(description = "ID del cliente") @PathVariable Long clienteId) {
         return boletaService.obtenerBoletasPorCliente(clienteId);
     }
 }
