@@ -9,6 +9,7 @@ import { useRole } from "./contexts/RoleContext"
 import { PaginaVendedor } from "./paginas/PaginaVendedor"
 import { PaginaVentaDirecta } from "./paginas/PaginaVentaDirecta"
 import { PaginaVentaLead } from "./paginas/PaginaVentaLead"
+import PaginaCuponesAdmin from './paginas/PaginaCuponesAdmin';
 
 function App() {
   const { role } = useRole();
@@ -25,6 +26,7 @@ function App() {
         <Route path="pagina-cotizacion" element={<PaginaCotizacion />} />
         <Route path="pagina-cliente" element={<PaginaCliente />} />
         <Route path="pagina-vendedor" element={<PaginaVendedor />} />
+        <Route path="/admin/cupones" element={<PaginaCuponesAdmin />} />
       </Route>
 
       <Route path="*" element={<PaginaNoEncontrada />}></Route>
