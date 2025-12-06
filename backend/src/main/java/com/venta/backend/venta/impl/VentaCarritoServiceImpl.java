@@ -14,6 +14,7 @@ import com.venta.backend.venta.entities.Venta;
 import com.venta.backend.venta.enums.OrigenVenta;
 import com.venta.backend.venta.repository.ItemProductoRepositorio;
 import com.venta.backend.venta.repository.VentaRepositorio;
+import com.venta.backend.vendedor.infraestructura.repository.VendedorRepositorio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
     private final VentaRepositorio ventaRepositorio;
     private final ItemProductoRepositorio itemProductoRepositorio;
     private final VentaFactoryResolver ventaFactoryResolver;
+    private final VendedorRepositorio vendedorRepositorio;
     @Qualifier("IVentaMapper")
     private final IVentaMapper ventaMapper;
 
@@ -65,7 +67,30 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
     public VentaResumenResponse obtenerResumen(Long ventaId) {
         Venta venta = ventaRepositorio.findById(ventaId)
                 .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
-        return ventaMapper.toResumen(venta);
+        
+        VentaResumenResponse resumen = ventaMapper.toResumen(venta);
+        
+        // Obtener nombre del vendedor si está asignado
+        if (venta.getIdVendedor() != null) {
+            String nombreVendedor = vendedorRepositorio.findById(venta.getIdVendedor())
+                    .map(vendedor -> vendedor.getFirstName() + " " + vendedor.getLastName())
+                    .orElse(null);
+            
+            return VentaResumenResponse.builder()
+                    .ventaId(resumen.getVentaId())
+                    .numVenta(resumen.getNumVenta())
+                    .origen(resumen.getOrigen())
+                    .estado(resumen.getEstado())
+                    .subtotal(resumen.getSubtotal())
+                    .descuentoTotal(resumen.getDescuentoTotal())
+                    .total(resumen.getTotal())
+                    .idVendedor(resumen.getIdVendedor())
+                    .nombreVendedor(nombreVendedor)
+                    .items(resumen.getItems())
+                    .build();
+        }
+        
+        return resumen;
     }
 
     @Override

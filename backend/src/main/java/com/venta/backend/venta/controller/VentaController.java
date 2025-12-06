@@ -9,6 +9,7 @@ import com.venta.backend.venta.dto.response.VentaLeadResponse;
 import com.venta.backend.venta.dto.response.VentaLeadPendienteResponse;
 import com.venta.backend.venta.dto.response.VentaLeadDetalleResponse;
 import com.venta.backend.venta.dto.response.BoletaResponse;
+import com.venta.backend.venta.dto.response.BoletaClienteResponse;
 import com.venta.backend.venta.dto.response.VentaPaginadaResponse;
 import com.venta.backend.venta.servicios.IVentaCarritoService;
 import com.venta.backend.venta.servicios.IVentaConsultaService;
@@ -90,5 +91,10 @@ public class VentaController {
     @GetMapping("/boletas/empleado/{employeeRrhhId}")
     public java.util.List<BoletaResponse> obtenerBoletasPorEmpleado(@PathVariable Long employeeRrhhId) {
         return boletaService.obtenerBoletasPorEmpleado(employeeRrhhId);
+    }
+
+    @GetMapping("/boletas/cliente/{clienteId}")
+    public java.util.List<BoletaClienteResponse> obtenerBoletasPorCliente(@PathVariable Long clienteId) {
+        return boletaService.obtenerBoletasPorCliente(clienteId);
     }
 }

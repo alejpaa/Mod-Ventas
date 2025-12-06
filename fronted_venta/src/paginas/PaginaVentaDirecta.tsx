@@ -66,6 +66,8 @@ interface VentaResumenApi {
   subtotal: number;
   descuentoTotal: number;
   total: number;
+  idVendedor?: number;
+  nombreVendedor?: string;
   items: LineaCarritoApi[];
 }
 
@@ -98,6 +100,7 @@ export function PaginaVentaDirecta() {
   const [metodoPago, setMetodoPago] = useState<'EFECTIVO' | 'TARJETA'>('EFECTIVO');
   const [numVenta, setNumVenta] = useState<string>('');
   const [asignandoVendedor, setAsignandoVendedor] = useState(false);
+  const [vendedorAsignado, setVendedorAsignado] = useState<{ id: number, nombre: string } | null>(null);
 
   // --- Carga Inicial de Datos ---
   useEffect(() => {
@@ -124,6 +127,15 @@ export function PaginaVentaDirecta() {
         setDescuentoApi(data.descuentoTotal);
         //setTotalApi(data.total);
         setNumVenta(data.numVenta || `VENTA-${data.ventaId}`);
+
+        // Cargar vendedor asignado si existe
+        if (data.idVendedor && data.nombreVendedor) {
+          setVendedorAsignado({
+            id: data.idVendedor,
+            nombre: data.nombreVendedor
+          });
+          setSellerIdInput(data.idVendedor);
+        }
       } catch (e) {
         console.error(e);
       }
@@ -214,6 +226,12 @@ export function PaginaVentaDirecta() {
       if (!response.ok) {
         throw new Error('No se pudo asignar el vendedor');
       }
+
+      // Actualizar estado del vendedor asignado
+      setVendedorAsignado({
+        id: validatedSeller.sellerId,
+        nombre: `${validatedSeller.firstName} ${validatedSeller.lastName}`
+      });
 
       alert('Vendedor asignado exitosamente');
     } catch (e) {
@@ -481,9 +499,20 @@ export function PaginaVentaDirecta() {
             <input
               type="text"
               placeholder="Codigo de Vendedor"
+              value={sellerIdInput || ''}
               onChange={(e) => setSellerIdInput(parseInt(e.target.value) || null)}
               className="w-full px-3 py-2 border border-gray-300 rounded text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
+
+            {/* Mostrar vendedor asignado si existe */}
+            {vendedorAsignado && (
+              <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded">
+                <p className="text-xs text-blue-600 font-medium mb-1">Vendedor Actualmente Asignado:</p>
+                <p className="text-sm font-bold text-blue-800">{vendedorAsignado.nombre}</p>
+                <p className="text-xs text-blue-500 mt-1">ID: {vendedorAsignado.id}</p>
+              </div>
+            )}
+
             {/* WIDGET DE VALIDACIÓN */}
             <div className="pt-3 border-t border-gray-100">
               <SellerDisplayWidget

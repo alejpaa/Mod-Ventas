@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PendingLeadSalesModal } from '../components/PendingLeadSalesModal';
 import { listarVentasPaginadas, type VentaListado } from '../services/venta.service';
+import { ModalVisualizarVenta } from '../components/ModalVisualizarVenta';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mod-ventas.onrender.com/api';
 
@@ -57,7 +58,7 @@ const SortIcon = ({ active, direction }: { active: boolean; direction: 'asc' | '
 // --- COMPONENTE PRINCIPAL ---
 export function PaginaVenta() {
   const navigate = useNavigate();
-
+  const [modalVisualizarOpen, setModalVisualizarOpen] = useState(false);
   const [ventas, setVentas] = useState<Venta[]>([]);
   const [filtros, setFiltros] = useState({
     cliente: '',
@@ -358,7 +359,13 @@ export function PaginaVenta() {
                       >
                         <EditIcon />
                       </button>
-                      <button className="text-gray-600 hover:text-gray-800 transition-colors p-1" title="Visualizar"><ViewIcon /></button>
+                      <button 
+                        onClick={() => setModalVisualizarOpen(true)}
+                        className="text-gray-600 hover:text-gray-800 transition-colors p-1" 
+                        title="Visualizar"
+                      >
+                        <ViewIcon />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -403,7 +410,12 @@ export function PaginaVenta() {
       )}
 
       {showLeadsModal && <PendingLeadSalesModal onClose={() => setShowLeadsModal(false)} />}
-
+      {/* Modal de Visualización */}
+      <ModalVisualizarVenta 
+        isOpen={modalVisualizarOpen}
+        onClose={() => setModalVisualizarOpen(false)}
+        tipoVenta="DIRECTA"
+      />
     </div>
   );
 }
