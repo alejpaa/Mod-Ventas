@@ -72,7 +72,7 @@ public class CotizacionPdfTemplate {
         
         for (DetalleCotizacion item : cotizacion.getItems()) {
             html.append("<tr>");
-            html.append("<td>Producto ID: ").append(item.getItemProductoId()).append("</td>");
+            html.append("<td>").append(item.getProducto().getNombre()).append("</td>");
             html.append("<td>").append(item.getCantidad()).append("</td>");
             html.append("<td>S/ ").append(formatMoney(item.getPrecioUnitario())).append("</td>");
             html.append("<td>S/ ").append(formatMoney(item.getSubtotal())).append("</td>");

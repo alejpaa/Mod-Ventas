@@ -3,28 +3,24 @@ import type { Quotation } from '../types/quotation.types';
 
 interface QuotationListProps {
   quotations: Quotation[];
-  searchTerm: string;
-  onSearchChange: (term: string) => void;
-  statusFilter: string;
-  onFilterChange: (status: string) => void;
   onDownloadPdf: (id: number) => void;
   onSendEmail: (quotation: Quotation) => void;
   onOpenAcceptDialog: (quotation: Quotation) => void;
   onConvertToSale: (id: number) => void;
+  onViewDetail: (id: number) => void;
   isLoading?: boolean;
+  isConverting?: boolean;
 }
 
 export function QuotationList({
   quotations,
-  searchTerm,
-  onSearchChange,
-  statusFilter,
-  onFilterChange,
   onDownloadPdf,
   onSendEmail,
   onOpenAcceptDialog,
   onConvertToSale,
+  onViewDetail,
   isLoading = false,
+  isConverting = false,
 }: QuotationListProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -42,52 +38,33 @@ export function QuotationList({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-      {/* Header */}
-      <div className="p-6 border-b border-gray-200 bg-gray-50">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-bold text-gray-800">Cotizaciones</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {quotations.length} cotización{quotations.length !== 1 ? 'es' : ''} en total
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="text"
-              placeholder="Buscar cotización..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-            />
-            <select
-              value={statusFilter}
-              onChange={(e) => onFilterChange(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-            >
-              <option value="ALL">Todos los estados</option>
-              <option value="BORRADOR">Borrador</option>
-              <option value="ENVIADA">Enviada</option>
-              <option value="ACEPTADA">Aceptada</option>
-              <option value="RECHAZADA">Rechazada</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-left">
-          <thead className="bg-gray-50 text-gray-600 font-medium text-sm uppercase tracking-wider">
+          <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-6 py-4">N° Cotización</th>
-              <th className="px-6 py-4">Cliente</th>
-              <th className="px-6 py-4">Fecha Creación</th>
-              <th className="px-6 py-4">Fecha Expiración</th>
-              <th className="px-6 py-4">Total</th>
-              <th className="px-6 py-4">Estado</th>
-              <th className="px-6 py-4 text-right">Acciones</th>
+              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                N° Cotización
+              </th>
+              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Cliente
+              </th>
+              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Fecha Creación
+              </th>
+              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Fecha Expiración
+              </th>
+              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Total
+              </th>
+              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Estado
+              </th>
+              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">
+                Acciones
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -99,7 +76,11 @@ export function QuotationList({
               </tr>
             ) : quotations.length > 0 ? (
               quotations.map((q) => (
-                <tr key={q.id} className="hover:bg-gray-50 transition-colors">
+                <tr
+                  key={q.id}
+                  onClick={() => onViewDetail(q.id)}
+                  className="hover:bg-gray-50 transition-colors cursor-pointer"
+                >
                   <td className="px-6 py-4 font-medium text-gray-900">{q.numCotizacion}</td>
                   <td className="px-6 py-4 text-gray-700">{q.clienteNombre}</td>
                   <td className="px-6 py-4 text-gray-500">
@@ -128,7 +109,10 @@ export function QuotationList({
                       style={{ minWidth: '320px' }}
                     >
                       <button
-                        onClick={() => onDownloadPdf(q.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDownloadPdf(q.id);
+                        }}
                         className="px-3 py-1.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all font-medium text-sm inline-flex items-center gap-1.5"
                         title="Descargar PDF"
                       >
@@ -136,7 +120,10 @@ export function QuotationList({
                         PDF
                       </button>
                       <button
-                        onClick={() => onSendEmail(q)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSendEmail(q);
+                        }}
                         className="px-3 py-1.5 text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-lg transition-all font-medium text-sm inline-flex items-center gap-1.5"
                         title="Enviar por Correo"
                       >
@@ -145,7 +132,10 @@ export function QuotationList({
                       </button>
                       {q.estado !== 'ACEPTADA' ? (
                         <button
-                          onClick={() => onOpenAcceptDialog(q)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onOpenAcceptDialog(q);
+                          }}
                           className="px-3 py-1.5 text-green-700 bg-green-100 hover:bg-green-200 rounded-lg transition-all font-medium text-sm inline-flex items-center gap-1.5"
                           style={{ minWidth: '110px' }}
                           title="Marcar como Aceptada"
@@ -155,13 +145,17 @@ export function QuotationList({
                         </button>
                       ) : (
                         <button
-                          onClick={() => onConvertToSale(q.id)}
-                          className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-medium text-sm inline-flex items-center gap-1.5"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onConvertToSale(q.id);
+                          }}
+                          disabled={isConverting}
+                          className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-medium text-sm inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                           style={{ minWidth: '110px' }}
                           title="Generar Venta"
                         >
                           <ShoppingCart size={16} />
-                          Venta
+                          {isConverting ? 'Generando...' : 'Venta'}
                         </button>
                       )}
                     </div>

@@ -73,3 +73,17 @@ export interface EnviarCotizacionRequest {
   cotizacionId: number;
   email: string;
 }
+
+// Complete quotation response with items
+export interface QuotationResponse {
+  id: number;
+  numCotizacion: string;
+  fechaCotizacion: string;
+  idCliente: number;
+  sellerCode: string;
+  idSede: number | null;
+  estado: 'BORRADOR' | 'ENVIADA' | 'ACEPTADA' | 'RECHAZADA';
+  validezDias: number;
+  totalCotizado: number;
+  items: QuotationItemResponse[];
+}

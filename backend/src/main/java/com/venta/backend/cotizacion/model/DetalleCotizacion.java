@@ -22,8 +22,9 @@ public class DetalleCotizacion {
     @JoinColumn(name = "cotizacion_id", nullable = false)
     private Cotizacion cotizacion;
 
-    @Column(name = "itemProducto_id", nullable = false)
-    private Long itemProductoId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "itemProducto_id", nullable = false)
+    private com.venta.backend.producto.entity.Producto producto;
 
     @Column(nullable = false)
     private Integer cantidad;

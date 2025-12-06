@@ -4,6 +4,7 @@ import type {
   QuotationItemFormData,
   QuotationFormData,
   CotizacionRequest,
+  QuotationResponse,
 } from '../types/quotation.types';
 import { cotizacionService } from '../services/cotizacionService';
 import { vendedorService, type VendedorResponse } from '../../vendedor/services/vendedorService';
@@ -13,7 +14,7 @@ import type { ApiError } from '../../../services/apiClient';
 
 export function useQuotation() {
   // View State
-  const [viewMode, setViewMode] = useState<'LIST' | 'CREATE'>('LIST');
+  const [viewMode, setViewMode] = useState<'LIST' | 'CREATE' | 'DETAIL'>('LIST');
 
   // Data State
   const [quotations, setQuotations] = useState<Quotation[]>([]);
@@ -26,6 +27,7 @@ export function useQuotation() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
 
   // Error States
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +59,15 @@ export function useQuotation() {
 
   // Product Catalog Modal State
   const [catalogModalOpen, setCatalogModalOpen] = useState(false);
+
+  // Create Client Modal State
+  const [createClientModalOpen, setCreateClientModalOpen] = useState(false);
+
+  // Detail View State
+  const [selectedQuotationDetail, setSelectedQuotationDetail] = useState<QuotationResponse | null>(
+    null
+  );
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
 
   // Load initial data
   useEffect(() => {
@@ -317,11 +328,6 @@ export function useQuotation() {
     }
   };
 
-  const handleConvertToSale = (id: number) => {
-    // TODO: Implement conversion to sale
-    alert(`Redirigiendo a generar venta para la cotización #${id}...`);
-  };
-
   const handleDownloadPdf = async (id: number) => {
     try {
       await cotizacionService.descargarPdf(id);
@@ -330,6 +336,59 @@ export function useQuotation() {
       setError(apiError.message || 'Error al descargar el PDF');
       console.error('Error downloading PDF:', err);
     }
+  };
+
+  const handleConvertToSale = async (id: number) => {
+    setIsConverting(true);
+    setError(null);
+    try {
+      // Call backend API to convert quotation to sale
+      const response = await fetch(`/api/venta/desde-cotizacion/${id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al convertir cotización a venta');
+      }
+
+      const ventaData = await response.json();
+
+      // Show success message
+      alert(`¡Venta creada exitosamente! Número: ${ventaData.numVenta}`);
+
+      // Redirect to sales module
+      window.location.href = '/ventas';
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.message || 'Error al convertir cotización a venta');
+      alert('Error al convertir cotización a venta. Por favor, intente nuevamente.');
+    } finally {
+      setIsConverting(false);
+    }
+  };
+
+  const handleViewDetail = async (id: number) => {
+    setIsLoadingDetail(true);
+    setError(null);
+    try {
+      const data = await cotizacionService.obtenerCotizacion(id);
+      setSelectedQuotationDetail(data);
+      setViewMode('DETAIL');
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.message || 'Error al cargar el detalle de la cotización');
+      console.error('Error loading quotation detail:', err);
+    } finally {
+      setIsLoadingDetail(false);
+    }
+  };
+
+  const handleBackToList = () => {
+    setViewMode('LIST');
+    setSelectedQuotationDetail(null);
   };
 
   return {
@@ -349,6 +408,7 @@ export function useQuotation() {
     isSubmitting,
     isSendingEmail,
     isAccepting,
+    isConverting,
 
     // Error State
     error,
@@ -380,6 +440,14 @@ export function useQuotation() {
     catalogModalOpen,
     setCatalogModalOpen,
 
+    // Create Client Modal State
+    createClientModalOpen,
+    setCreateClientModalOpen,
+
+    // Detail View State
+    selectedQuotationDetail,
+    isLoadingDetail,
+
     // Actions
     handleCreateQuotation,
     handleAddItem,
@@ -395,5 +463,7 @@ export function useQuotation() {
     handleAcceptQuotation,
     handleConvertToSale,
     handleDownloadPdf,
+    handleViewDetail,
+    handleBackToList,
   };
 }

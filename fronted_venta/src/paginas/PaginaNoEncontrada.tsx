@@ -1,6 +1,4 @@
-// src/pages/PaginaNoEncontrada.tsx
 import { Link } from 'react-router-dom';
-import SalesChannelDashboard from '../modules/venta/components/SalesChannelDashboard';
 
 export function PaginaNoEncontrada() {
   return (
@@ -12,7 +10,6 @@ export function PaginaNoEncontrada() {
       <p className="text-gray-500 mt-2">
         Lo sentimos, la página que buscas no existe.
       </p>
-      <SalesChannelDashboard />
       <Link
         to="/"
         className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"

@@ -15,6 +15,8 @@ import com.venta.backend.cotizacion.model.Cotizacion;
 import com.venta.backend.cotizacion.model.CotizacionEstado;
 import com.venta.backend.cotizacion.model.DetalleCotizacion;
 import com.venta.backend.cotizacion.repository.CotizacionRepository;
+import com.venta.backend.producto.entity.Producto;
+import com.venta.backend.producto.repository.ProductoRepository;
 import com.venta.backend.vendedor.entities.Vendedor;
 import com.venta.backend.vendedor.infraestructura.repository.VendedorRepositorio;
 import jakarta.transaction.Transactional;
@@ -32,6 +34,7 @@ public class CotizacionCommandService {
     private final CotizacionEmailService cotizacionEmailService;
     private final ClienteRepositorio clienteRepositorio;
     private final VendedorRepositorio vendedorRepositorio;
+    private final ProductoRepository productoRepository;
     private final IPdfGenerator pdfGenerator;
     private final CotizacionPdfTemplate pdfTemplate;
 
@@ -57,7 +60,15 @@ public class CotizacionCommandService {
         cotizacion.clearItems();
         
         request.getItems().forEach(itemRequest -> {
+            // Validate product exists
+            Producto producto = productoRepository.findById(itemRequest.getProductoId())
+                    .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado con ID: " + itemRequest.getProductoId()));
+            
             DetalleCotizacion item = cotizacionMapper.toEntity(itemRequest);
+            
+            // Set the producto relationship
+            item.setProducto(producto);
+            
             BigDecimal subtotal = item.getPrecioUnitario()
                 .multiply(BigDecimal.valueOf(item.getCantidad()))
                 .subtract(item.getDescuentoMonto() != null ? item.getDescuentoMonto() : BigDecimal.ZERO);

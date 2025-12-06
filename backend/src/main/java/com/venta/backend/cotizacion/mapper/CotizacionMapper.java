@@ -16,10 +16,10 @@ public interface CotizacionMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "cotizacion", ignore = true)
-    @Mapping(target = "itemProductoId", source = "productoId")
+    @Mapping(target = "producto", ignore = true)
     DetalleCotizacion toEntity(CotizacionItemRequest request);
 
-    @Mapping(target = "productoId", source = "itemProductoId")
+    @Mapping(target = "productoId", source = "producto.id")
     CotizacionItemResponse toDto(DetalleCotizacion item);
 
     @Mapping(target = "id", ignore = true)

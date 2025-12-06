@@ -1,4 +1,5 @@
 import { ShoppingCartIcon, UsersIcon } from '../../../components/Icons';
+import { UserPlus } from 'lucide-react';
 import type { QuotationFormData } from '../types/quotation.types';
 import type { Cliente } from '../../cliente/services/clienteService';
 import type { VendedorResponse } from '../../vendedor/services/vendedorService';
@@ -26,6 +27,7 @@ interface QuotationFormProps {
   onOpenCatalog: () => void;
   onCloseCatalog: () => void;
   onAddProductFromCatalog: (product: Product) => void;
+  onOpenCreateClient: () => void;
 }
 
 export function QuotationForm({
@@ -48,6 +50,7 @@ export function QuotationForm({
   onOpenCatalog,
   onCloseCatalog,
   onAddProductFromCatalog,
+  onOpenCreateClient,
 }: QuotationFormProps) {
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
@@ -74,18 +77,30 @@ export function QuotationForm({
               Información del Cliente
             </h3>
             <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
-              <SearchableSelect
-                options={clientes}
-                value={formData.clienteId}
-                onChange={(value) => onFormDataChange({ ...formData, clienteId: value })}
-                getOptionLabel={(cliente) =>
-                  `${cliente.nombre}${cliente.documento ? ` - ${cliente.documento}` : ''}`
-                }
-                getOptionValue={(cliente) => cliente.id}
-                label="Seleccionar Cliente"
-                placeholder="Buscar cliente..."
-                required
-              />
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <SearchableSelect
+                    options={clientes}
+                    value={formData.clienteId}
+                    onChange={(value) => onFormDataChange({ ...formData, clienteId: value })}
+                    getOptionLabel={(cliente) =>
+                      `${cliente.nombre}${cliente.documento ? ` - ${cliente.documento}` : ''}`
+                    }
+                    getOptionValue={(cliente) => cliente.id}
+                    label="Seleccionar Cliente"
+                    placeholder="Buscar cliente..."
+                    required
+                  />
+                </div>
+                <button
+                  onClick={onOpenCreateClient}
+                  className="mt-6 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2 shrink-0"
+                  title="Crear nuevo cliente"
+                >
+                  <UserPlus size={18} />
+                  Nuevo
+                </button>
+              </div>
             </div>
           </section>
 

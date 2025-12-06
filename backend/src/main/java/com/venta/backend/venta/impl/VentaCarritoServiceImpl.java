@@ -204,8 +204,8 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
         for (DetalleCotizacion detalle : cotizacion.getItems()) {
             DetalleVenta detalleVenta = DetalleVenta.builder()
                     .venta(ventaGuardada)
-                    .idProducto(detalle.getItemProductoId())
-                    .nombreProducto("Producto " + detalle.getItemProductoId()) // Placeholder - actualizar DetalleCotizacion para incluir nombre
+                    .idProducto(detalle.getProducto().getId())
+                    .nombreProducto(detalle.getProducto().getNombre())
                     .cantidad(detalle.getCantidad())
                     .precioUnitario(detalle.getPrecioUnitario())
                     .descuentoMonto(detalle.getDescuentoMonto())

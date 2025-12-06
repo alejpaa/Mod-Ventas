@@ -2,6 +2,7 @@ import type {
   Quotation,
   CotizacionRequest,
   EnviarCotizacionRequest,
+  QuotationResponse,
 } from '../types/quotation.types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
@@ -36,6 +37,17 @@ export const cotizacionService = {
       throw new Error('Error al crear la cotización');
     }
 
+    return response.json();
+  },
+
+  /**
+   * Get quotation by ID - USA LA API
+   */
+  async obtenerCotizacion(id: number): Promise<QuotationResponse> {
+    const response = await fetch(`${API_BASE_URL}/cotizaciones/${id}`);
+    if (!response.ok) {
+      throw new Error('Error al cargar la cotización');
+    }
     return response.json();
   },
 

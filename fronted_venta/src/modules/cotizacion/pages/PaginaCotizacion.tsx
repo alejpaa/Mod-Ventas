@@ -1,36 +1,37 @@
 import { useQuotation } from '../hooks/useQuotation';
 import { QuotationList } from '../components/QuotationList';
 import { QuotationForm } from '../components/QuotationForm';
+import { QuotationDetail } from '../components/QuotationDetail';
 import { EmailDialog } from '../components/EmailDialog';
 import { AcceptQuotationDialog } from '../components/AcceptQuotationDialog';
+import { ModalCrearCliente } from '../../clientes/components/ModalCrearCliente';
 
 export function PaginaCotizacion() {
   const hookData = useQuotation();
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
+    <div>
       {/* --- SECCIÓN DE FILTROS --- */}
       {hookData.viewMode === 'LIST' && (
-        <div className="mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-            {/* Fila 1 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Cliente</label>
+        <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
+          <div className="flex items-end gap-3 flex-wrap">
+            {/* Buscar Cliente */}
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Cliente</label>
               <input
                 type="text"
-                name="cliente"
                 placeholder="Buscar cliente..."
-                className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 onChange={(e) => hookData.setSearchTerm(e.target.value)}
                 value={hookData.searchTerm}
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Estado</label>
+            {/* Estado */}
+            <div className="w-48">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Estado</label>
               <select
-                name="estado"
-                className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 onChange={(e) => hookData.setStatusFilter(e.target.value)}
                 value={hookData.statusFilter}
               >
@@ -42,51 +43,18 @@ export function PaginaCotizacion() {
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Fecha</label>
-              <input
-                type="date"
-                name="fecha"
-                className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* Fila 2 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">ID Cotización</label>
-              <input
-                type="text"
-                name="id"
-                placeholder="ID Cotización..."
-                className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Vendedor</label>
-              <input
-                type="text"
-                name="vendedor"
-                placeholder="Vendedor..."
-                className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* BOTÓN DE ACCIÓN */}
-            <div className="flex items-end justify-end gap-3">
-              <button
-                onClick={hookData.handleCreateQuotation}
-                disabled={hookData.isSubmitting}
-                className="h-10 px-4 py-2 bg-[#3C83F6] text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm whitespace-nowrap cursor-pointer flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <span className="mr-2 text-lg">+</span> Nueva Cotización
-              </button>
-            </div>
+            {/* Botón Nueva Cotización */}
+            <button
+              onClick={hookData.handleCreateQuotation}
+              disabled={hookData.isSubmitting}
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <span className="text-lg">+</span>
+              Nueva Cotización
+            </button>
           </div>
         </div>
       )}
-
-      {hookData.viewMode === 'LIST' && <hr className="border-gray-200 mb-6" />}
 
       {/* Error Display */}
       {hookData.error && (
@@ -105,16 +73,45 @@ export function PaginaCotizacion() {
       {hookData.viewMode === 'LIST' ? (
         <QuotationList
           quotations={hookData.filteredQuotations}
-          searchTerm={hookData.searchTerm}
-          onSearchChange={hookData.setSearchTerm}
-          statusFilter={hookData.statusFilter}
-          onFilterChange={hookData.setStatusFilter}
           onDownloadPdf={hookData.handleDownloadPdf}
           onSendEmail={hookData.handleOpenEmailDialog}
           onOpenAcceptDialog={hookData.handleOpenAcceptDialog}
           onConvertToSale={hookData.handleConvertToSale}
+          onViewDetail={hookData.handleViewDetail}
           isLoading={hookData.isLoading}
+          isConverting={hookData.isConverting}
         />
+      ) : hookData.viewMode === 'DETAIL' ? (
+        hookData.selectedQuotationDetail && (
+          <QuotationDetail
+            quotation={hookData.selectedQuotationDetail}
+            clienteNombre={
+              hookData.clientes.find((c) => c.id === hookData.selectedQuotationDetail?.idCliente)
+                ?.nombre || 'Cliente no encontrado'
+            }
+            vendedorNombre={
+              hookData.vendedores.find(
+                (v) => v.sellerId.toString() === hookData.selectedQuotationDetail?.sellerCode
+              )?.fullName || 'Vendedor no encontrado'
+            }
+            fechaExpiracion={hookData.selectedQuotationDetail.fechaCotizacion}
+            onBack={hookData.handleBackToList}
+            onDownloadPdf={hookData.handleDownloadPdf}
+            onSendEmail={() =>
+              hookData.handleOpenEmailDialog(
+                hookData.quotations.find((q) => q.id === hookData.selectedQuotationDetail?.id)!
+              )
+            }
+            onAccept={() =>
+              hookData.handleOpenAcceptDialog(
+                hookData.quotations.find((q) => q.id === hookData.selectedQuotationDetail?.id)!
+              )
+            }
+            onConvertToSale={hookData.handleConvertToSale}
+            isLoading={hookData.isLoadingDetail}
+            isConverting={hookData.isConverting}
+          />
+        )
       ) : (
         <QuotationForm
           formData={hookData.formData}
@@ -136,6 +133,7 @@ export function PaginaCotizacion() {
           onOpenCatalog={() => hookData.setCatalogModalOpen(true)}
           onCloseCatalog={() => hookData.setCatalogModalOpen(false)}
           onAddProductFromCatalog={hookData.handleAddProductFromCatalog}
+          onOpenCreateClient={() => hookData.setCreateClientModalOpen(true)}
         />
       )}
 
@@ -156,6 +154,17 @@ export function PaginaCotizacion() {
         onCancel={() => hookData.setAcceptDialogOpen(false)}
         isLoading={hookData.isAccepting}
       />
+
+      {/* Create Client Modal */}
+      {hookData.createClientModalOpen && (
+        <ModalCrearCliente
+          onClose={() => hookData.setCreateClientModalOpen(false)}
+          onSuccess={() => {
+            // Reload clients list after creating new client
+            window.location.reload();
+          }}
+        />
+      )}
     </div>
   );
 }

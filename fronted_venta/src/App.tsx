@@ -11,6 +11,7 @@ import { PaginaVentaDirecta } from "./modules/venta/pages/PaginaVentaDirecta"
 import { PaginaVentaLead } from "./modules/venta/pages/PaginaVentaLead"
 import PaginaCuponesAdmin from './paginas/PaginaCuponesAdmin';
 import { PaginaCombos } from './paginas/PaginaCombos';
+import { PaginaDashboard } from './paginas/PaginaDashboard';
 
 function App() {
   const { role } = useRole();
@@ -29,6 +30,7 @@ function App() {
         <Route path="pagina-vendedor" element={<PaginaVendedor />} />
         <Route path="pagina-combos" element={<PaginaCombos />} />
         <Route path="/admin/cupones" element={<PaginaCuponesAdmin />} />
+        <Route path="/dashboard" element={<PaginaDashboard />} />
       </Route>
 
       <Route path="*" element={<PaginaNoEncontrada />}></Route>
