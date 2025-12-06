@@ -8,6 +8,8 @@ import com.venta.backend.cotizacion.dto.CotizacionResponse;
 import com.venta.backend.cotizacion.dto.EnviarCotizacionRequest;
 import com.venta.backend.cotizacion.exception.CotizacionNotFoundException;
 import com.venta.backend.cotizacion.exception.CotizacionStateException;
+import com.venta.backend.cotizacion.infraestructura.pdf.CotizacionPdfTemplate;
+import com.venta.backend.cotizacion.infraestructura.pdf.IPdfGenerator;
 import com.venta.backend.cotizacion.mapper.CotizacionMapper;
 import com.venta.backend.cotizacion.model.Cotizacion;
 import com.venta.backend.cotizacion.model.CotizacionEstado;
@@ -30,6 +32,8 @@ public class CotizacionCommandService {
     private final CotizacionEmailService cotizacionEmailService;
     private final ClienteRepositorio clienteRepositorio;
     private final VendedorRepositorio vendedorRepositorio;
+    private final IPdfGenerator pdfGenerator;
+    private final CotizacionPdfTemplate pdfTemplate;
 
     @Transactional
     public CotizacionResponse crearCotizacion(CotizacionRequest request) {
@@ -88,9 +92,16 @@ public class CotizacionCommandService {
         Cotizacion cotizacion = cotizacionRepository.findById(request.getCotizacionId())
                 .orElseThrow(() -> new CotizacionNotFoundException("Cotización no encontrada"));
         
+        // Generate HTML from quotation data
+        String htmlContent = pdfTemplate.generateHtml(cotizacion);
+        
+        // Generate PDF using the adapter
+        byte[] pdfBytes = pdfGenerator.generatePdf(htmlContent);
+        
+        // Update state and send email with PDF attachment
         cotizacion.setEstado(CotizacionEstado.ENVIADA);
         String enlace = "/cotizaciones/" + cotizacion.getId() + "/aceptacion";
-        cotizacionEmailService.enviarCotizacion(cotizacion, request.getEmail(), enlace);
+        cotizacionEmailService.enviarCotizacionConPdf(cotizacion, request.getEmail(), enlace, pdfBytes);
         cotizacionRepository.save(cotizacion);
     }
 }

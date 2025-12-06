@@ -59,5 +59,15 @@ public class CotizacionController {
         cotizacionCommandService.enviarCotizacion(request);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/cotizaciones/{id}/pdf")
+    public ResponseEntity<byte[]> descargarPdf(@PathVariable Integer id) {
+        byte[] pdfBytes = cotizacionQueryService.generarPdfCotizacion(id);
+        
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/pdf")
+                .header("Content-Disposition", "attachment; filename=Cotizacion_" + id + ".pdf")
+                .body(pdfBytes);
+    }
 }
 

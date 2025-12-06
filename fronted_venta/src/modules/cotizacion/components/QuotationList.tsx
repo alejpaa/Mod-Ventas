@@ -1,4 +1,4 @@
-import { BoxIcon, QuoteIcon, UsersIcon } from '../../../components/Icons';
+import { QuoteIcon, UsersIcon, Download } from 'lucide-react';
 import type { Quotation } from '../types/quotation.types';
 
 interface QuotationListProps {
@@ -7,9 +7,9 @@ interface QuotationListProps {
   onSearchChange: (term: string) => void;
   statusFilter: string;
   onFilterChange: (status: string) => void;
-  onGeneratePDF: (id: number) => void;
+  onDownloadPdf: (id: number) => void;
   onSendEmail: (quotation: Quotation) => void;
-  onAccept: (id: number) => void;
+  onOpenAcceptDialog: (quotation: Quotation) => void;
   onConvertToSale: (id: number) => void;
   isLoading?: boolean;
 }
@@ -20,9 +20,9 @@ export function QuotationList({
   onSearchChange,
   statusFilter,
   onFilterChange,
-  onGeneratePDF,
+  onDownloadPdf,
   onSendEmail,
-  onAccept,
+  onOpenAcceptDialog,
   onConvertToSale,
   isLoading = false,
 }: QuotationListProps) {
@@ -74,7 +74,8 @@ export function QuotationList({
             <tr>
               <th className="px-6 py-4">N° Cotización</th>
               <th className="px-6 py-4">Cliente</th>
-              <th className="px-6 py-4">Fecha</th>
+              <th className="px-6 py-4">Fecha Creación</th>
+              <th className="px-6 py-4">Fecha Expiración</th>
               <th className="px-6 py-4">Total</th>
               <th className="px-6 py-4">Estado</th>
               <th className="px-6 py-4 text-right">Acciones</th>
@@ -83,7 +84,7 @@ export function QuotationList({
           <tbody className="divide-y divide-gray-200">
             {isLoading ? (
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                   Cargando cotizaciones...
                 </td>
               </tr>
@@ -94,6 +95,11 @@ export function QuotationList({
                   <td className="px-6 py-4 text-gray-700">{q.clienteNombre}</td>
                   <td className="px-6 py-4 text-gray-500">
                     {new Date(q.fechaCotizacion).toLocaleDateString('es-PE')}
+                  </td>
+                  <td className="px-6 py-4 text-gray-500">
+                    {q.fechaExpiracion
+                      ? new Date(q.fechaExpiracion).toLocaleDateString('es-PE')
+                      : 'N/A'}
                   </td>
                   <td className="px-6 py-4 font-medium text-gray-900">
                     S/ {q.totalCotizado.toFixed(2)}
@@ -109,11 +115,11 @@ export function QuotationList({
                   </td>
                   <td className="px-6 py-4 text-right space-x-2">
                     <button
-                      onClick={() => onGeneratePDF(q.id)}
+                      onClick={() => onDownloadPdf(q.id)}
                       className="text-gray-500 hover:text-primary-600 p-1"
                       title="Descargar PDF"
                     >
-                      <BoxIcon size={18} />
+                      <Download size={18} />
                     </button>
                     <button
                       onClick={() => onSendEmail(q)}
@@ -124,7 +130,7 @@ export function QuotationList({
                     </button>
                     {q.estado !== 'ACEPTADA' && (
                       <button
-                        onClick={() => onAccept(q.id)}
+                        onClick={() => onOpenAcceptDialog(q)}
                         className="text-gray-500 hover:text-green-600 p-1"
                         title="Marcar como Aceptada"
                       >
@@ -144,8 +150,8 @@ export function QuotationList({
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                  No se encontraron cotizaciones
+                <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                  No hay cotizaciones que mostrar
                 </td>
               </tr>
             )}

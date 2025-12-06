@@ -79,5 +79,16 @@ public class Cotizacion {
         items.forEach(item -> item.setCotizacion(null));
         items.clear();
     }
+
+    /**
+     * Calcula la fecha de expiración basada en la fecha de cotización y los días de validez.
+     * @return Fecha de expiración de la cotización
+     */
+    public LocalDate getFechaExpiracion() {
+        if (fechaCotizacion == null || validezDias == null) {
+            return null;
+        }
+        return fechaCotizacion.plusDays(validezDias);
+    }
 }
 
