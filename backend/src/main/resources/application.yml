@@ -35,3 +35,6 @@ springdoc:
     # Usar especificación OpenAPI personalizada
     #url: /openapi.yml
   show-actuator: false
+sendgrid:
+  api:
+    key: ${SENDGRID_API_KEY}

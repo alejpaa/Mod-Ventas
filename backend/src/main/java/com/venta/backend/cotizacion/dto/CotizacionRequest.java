@@ -8,7 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -23,7 +22,7 @@ public class CotizacionRequest {
     @NotNull
     private Long vendedorId;
 
-    private LocalDate vigencia;
+    private Integer validezDias;  // Días de validez de la cotización
 
     @Valid
     @Size(min = 1)

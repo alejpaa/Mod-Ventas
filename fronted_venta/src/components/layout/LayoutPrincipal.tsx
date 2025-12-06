@@ -9,10 +9,10 @@ export function LayoutPrincipal() {
   const { role, logout } = useRole();
   const normalizedRole = role ? role.toLowerCase() : '';
 
-  // Navigation configuration with icons
   const adminNav = [
     { to: '/pagina-cliente', label: 'Clientes', icon: UsersIcon },
     { to: '/pagina-vendedor', label: 'Vendedor', icon: UserIcon },
+    { to: '/pagina-combos', label: 'Combos', icon: BoxIcon },
     { to: '/admin/cupones', label: 'Gestión Cupones', icon: BoxIcon },
   ];
 
@@ -53,10 +53,9 @@ export function LayoutPrincipal() {
                   <NavLink
                     to={item.to}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                        isActive
-                          ? 'bg-primary-500 text-white shadow-md'
-                          : 'text-primary-100 hover:bg-primary-500 hover:text-white'
+                      `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive
+                        ? 'bg-primary-500 text-white shadow-md'
+                        : 'text-primary-100 hover:bg-primary-500 hover:text-white'
                       }`
                     }
                   >

@@ -21,7 +21,9 @@ export interface Quotation {
   id: number;
   numCotizacion: string;
   clienteNombre: string;
-  fechaCotizacion: string;
+  fechaCotizacion: string; // Fecha de creación
+  fechaExpiracion: string; // Fecha de expiración
+  validezDias: number; // Días de validez
   totalCotizado: number;
   estado: 'BORRADOR' | 'ENVIADA' | 'ACEPTADA' | 'RECHAZADA';
 }
@@ -63,7 +65,7 @@ export interface CotizacionItemRequest {
 export interface CotizacionRequest {
   clienteId: number;
   vendedorId: number;
-  vigencia: string;
+  validezDias: number; // Días de validez
   items: CotizacionItemRequest[];
 }
 

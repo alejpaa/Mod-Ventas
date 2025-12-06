@@ -26,7 +26,7 @@ const getProductImage = (producto: ProductoDTO): string => {
     // Si es ruta relativa, asume que está en public/
     return producto.imagenUrl;
   }
-  
+
   // Caso contrario, usa imagen por defecto según tipo
   switch (producto.tipo) {
     case 'EQUIPO_MOVIL':
@@ -40,9 +40,9 @@ const getProductImage = (producto: ProductoDTO): string => {
   }
 };
 
-export const CreateComboModal: React.FC<CreateComboModalProps> = ({ 
-  isOpen, 
-  onClose, 
+export const CreateComboModal: React.FC<CreateComboModalProps> = ({
+  isOpen,
+  onClose,
   onSaveSuccess
 }) => {
   const [comboName, setComboName] = useState('');
@@ -68,7 +68,7 @@ export const CreateComboModal: React.FC<CreateComboModalProps> = ({
       const response = await fetch(`${API_BASE_URL}/disponibles`);
       if (!response.ok) throw new Error('Error al cargar productos');
       const data: ProductoDTO[] = await response.json();
-      
+
       // Validar que los productos tengan los campos necesarios
       const productosValidos = data.map(p => ({
         ...p,
@@ -76,9 +76,9 @@ export const CreateComboModal: React.FC<CreateComboModalProps> = ({
         precioBase: p.precioBase ?? 0,
         precioFinal: p.precioFinal ?? 0
       }));
-      
+
       setProductosDisponibles(productosValidos);
-      
+
       // Advertencia en consola si hay productos sin precio
       const sinPrecio = productosValidos.filter(p => p.precioBase === 0);
       if (sinPrecio.length > 0) {
@@ -100,12 +100,12 @@ export const CreateComboModal: React.FC<CreateComboModalProps> = ({
 
   const handleCrearCombo = async () => {
     const productosSeleccionados = productosDisponibles.filter(p => p.seleccionado);
-    
+
     if (productosSeleccionados.length === 0) {
       alert('Debe seleccionar al menos un producto para el combo.');
       return;
     }
-    
+
     if (!comboName.trim()) {
       alert('Debe asignar un nombre al combo.');
       return;
@@ -147,35 +147,35 @@ export const CreateComboModal: React.FC<CreateComboModalProps> = ({
   const filteredProducts = productosDisponibles.filter(p => {
     const idString = String(p.id);
     const codigoString = p.codigo || '';
-    const matchesSearch = p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          idString.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          codigoString.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      idString.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      codigoString.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory ? p.tipo === selectedCategory : true;
     // Solo mostrar productos individuales (no combos) - esto ya lo filtra el endpoint /disponibles
     const isNotCombo = p.tipo !== 'COMBO';
-    
+
     return matchesSearch && matchesCategory && isNotCombo;
   });
 
-const productosSeleccionados = productosDisponibles.filter(p => p.seleccionado);
+  const productosSeleccionados = productosDisponibles.filter(p => p.seleccionado);
 
-const precioTotalBase = productosSeleccionados.reduce((sum, p) => {
-  const precio = Number(p.precioBase ?? 0);
-  return sum + precio;
-}, 0);
+  const precioTotalBase = productosSeleccionados.reduce((sum, p) => {
+    const precio = Number(p.precioBase ?? 0);
+    return sum + precio;
+  }, 0);
 
-const precioTotalConDescuento = productosSeleccionados.reduce((sum, p) => {
-  const precio = Number(p.precioBase ?? 0);
-  const descuento = p.tipo === 'EQUIPO_MOVIL' ? 0.15 : 0.10;
-  return sum + (precio * (1 - descuento));
-}, 0);
+  const precioTotalConDescuento = productosSeleccionados.reduce((sum, p) => {
+    const precio = Number(p.precioBase ?? 0);
+    const descuento = p.tipo === 'EQUIPO_MOVIL' ? 0.15 : 0.10;
+    return sum + (precio * (1 - descuento));
+  }, 0);
 
-const ahorroTotal = precioTotalBase - precioTotalConDescuento;
+  const ahorroTotal = precioTotalBase - precioTotalConDescuento;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="w-full max-w-7xl h-[90vh] bg-white flex flex-col rounded-lg shadow-2xl overflow-hidden border border-gray-200">
-        
+
         {/* Header */}
         <div className="h-16 bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-between px-6 shrink-0">
           <div className="flex items-center gap-3">
@@ -189,7 +189,7 @@ const ahorroTotal = precioTotalBase - precioTotalConDescuento;
               <p className="text-xs text-blue-100">Configure productos y descuentos automáticos</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="text-white/80 hover:text-white hover:bg-white/20 p-2 rounded-full transition-all duration-200"
           >
@@ -198,10 +198,10 @@ const ahorroTotal = precioTotalBase - precioTotalConDescuento;
         </div>
 
         <div className="flex flex-1 overflow-hidden">
-          
+
           {/* SIDEBAR IZQUIERDO - Filtros y Productos Seleccionados */}
           <div className="w-80 bg-gray-50 p-5 overflow-y-auto border-r border-gray-200 shrink-0">
-            
+
             {/* Nombre del Combo */}
             <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
               <label className="text-xs font-bold text-gray-700 uppercase mb-2 block tracking-wider flex items-center gap-2">
@@ -240,7 +240,7 @@ const ahorroTotal = precioTotalBase - precioTotalConDescuento;
               </span>
               <div className="space-y-2">
                 {(['EQUIPO_MOVIL', 'SERVICIO_HOGAR', 'SERVICIO_MOVIL'] as TipoProducto[]).map((tipo) => (
-                  <div 
+                  <div
                     key={tipo}
                     onClick={() => setSelectedCategory(selectedCategory === tipo ? null : tipo)}
                     className={`flex items-center gap-3 cursor-pointer group p-2 rounded-md transition-all ${selectedCategory === tipo ? 'bg-blue-50 border border-blue-200' : 'hover:bg-gray-100 border border-transparent'}`}
@@ -251,9 +251,9 @@ const ahorroTotal = precioTotalBase - precioTotalConDescuento;
                       <Square size={18} className="text-gray-300 group-hover:text-gray-400" />
                     )}
                     <span className={`text-sm font-medium ${selectedCategory === tipo ? 'text-blue-700' : 'text-gray-600 group-hover:text-gray-900'}`}>
-                      {tipo === 'EQUIPO_MOVIL' ? 'Equipo Móvil (15%)' : 
-                       tipo === 'SERVICIO_HOGAR' ? 'Servicio Hogar (10%)' : 
-                       'Servicio Móvil (10%)'}
+                      {tipo === 'EQUIPO_MOVIL' ? 'Equipo Móvil (15%)' :
+                        tipo === 'SERVICIO_HOGAR' ? 'Servicio Hogar (10%)' :
+                          'Servicio Móvil (10%)'}
                     </span>
                   </div>
                 ))}
@@ -266,7 +266,7 @@ const ahorroTotal = precioTotalBase - precioTotalConDescuento;
                 <Package size={16} className="text-blue-600" />
                 Productos Seleccionados
               </h3>
-              
+
               {productosSeleccionados.length === 0 ? (
                 <p className="text-xs text-gray-500 italic">Ningún producto seleccionado</p>
               ) : (
@@ -284,7 +284,7 @@ const ahorroTotal = precioTotalBase - precioTotalConDescuento;
                       </div>
                     ))}
                   </div>
-                  
+
                   <div className="border-t border-blue-200 pt-3 space-y-1">
                     <div className="flex justify-between text-xs">
                       <span className="text-gray-600">Total Base:</span>
@@ -306,7 +306,7 @@ const ahorroTotal = precioTotalBase - precioTotalConDescuento;
 
           {/* CONTENIDO PRINCIPAL - Grid de Productos */}
           <div className="flex-1 bg-gray-50/50 p-6 overflow-y-auto">
-            
+
             {error && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                 {error}
@@ -319,7 +319,7 @@ const ahorroTotal = precioTotalBase - precioTotalConDescuento;
                 {filteredProducts.length} productos
               </span>
             </div>
-            
+
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
                 <p className="text-gray-500">Cargando productos...</p>
@@ -328,20 +328,19 @@ const ahorroTotal = precioTotalBase - precioTotalConDescuento;
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredProducts.map((producto) => {
                   const descuento = producto.tipo === 'EQUIPO_MOVIL' ? 15 : 10;
-                  
+
                   return (
-                    <div 
+                    <div
                       key={producto.id}
                       onClick={() => handleToggleProduct(producto.id)}
-                      className={`group bg-white rounded-lg border-2 cursor-pointer transition-all duration-200 overflow-hidden ${
-                        producto.seleccionado 
-                          ? 'border-blue-500 shadow-lg' 
+                      className={`group bg-white rounded-lg border-2 cursor-pointer transition-all duration-200 overflow-hidden ${producto.seleccionado
+                          ? 'border-blue-500 shadow-lg'
                           : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
-                      }`}
+                        }`}
                     >
                       {/* Imagen del Producto */}
                       <div className="relative aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
-                        <img 
+                        <img
                           src={getProductImage(producto)}
                           alt={producto.nombre}
                           onError={(e) => {
@@ -351,7 +350,7 @@ const ahorroTotal = precioTotalBase - precioTotalConDescuento;
                           loading="lazy"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
-                        
+
                         {/* Overlay con checkbox */}
                         <div className={`absolute top-3 left-3 ${producto.seleccionado ? 'bg-blue-600' : 'bg-white'} p-1.5 rounded-md shadow-md transition-colors`}>
                           {producto.seleccionado ? (
@@ -363,9 +362,8 @@ const ahorroTotal = precioTotalBase - precioTotalConDescuento;
 
                         {/* Badges en la imagen */}
                         <div className="absolute top-3 right-3 flex flex-col gap-1.5">
-                          <span className={`text-[10px] font-bold px-2 py-1 rounded shadow-md text-white ${
-                            producto.tipo === 'EQUIPO_MOVIL' ? 'bg-indigo-600' : 'bg-emerald-600'
-                          }`}>
+                          <span className={`text-[10px] font-bold px-2 py-1 rounded shadow-md text-white ${producto.tipo === 'EQUIPO_MOVIL' ? 'bg-indigo-600' : 'bg-emerald-600'
+                            }`}>
                             {producto.tipo === 'EQUIPO_MOVIL' ? 'Equipo' : 'Servicio'}
                           </span>
                           <span className="text-[10px] font-bold px-2 py-1 rounded shadow-md bg-orange-500 text-white">
@@ -384,11 +382,11 @@ const ahorroTotal = precioTotalBase - precioTotalConDescuento;
                         <h3 className="text-sm font-semibold text-gray-800 mb-2 line-clamp-2 min-h-[2.5rem]">
                           {producto.nombre}
                         </h3>
-                        
+
                         <p className="text-[10px] font-mono text-gray-400 mb-3">
                           {producto.codigo || `ID: ${producto.id}`}
                         </p>
-                        
+
                         <div className="border-t border-gray-200 pt-3">
                           <div className="flex justify-between items-baseline mb-1">
                             <span className="text-xs text-gray-500">Precio:</span>
@@ -396,10 +394,16 @@ const ahorroTotal = precioTotalBase - precioTotalConDescuento;
                               S/ {(producto.precioBase ?? 0).toFixed(2)}
                             </span>
                           </div>
-                          <div className="flex justify-between items-baseline">
+                          <div className="flex justify-between items-baseline mb-1">
                             <span className="text-xs text-gray-500">En combo:</span>
                             <span className="text-sm font-bold text-green-600">
                               S/ {((producto.precioBase ?? 0) * (1 - descuento / 100)).toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-baseline">
+                            <span className="text-xs text-gray-500">Stock:</span>
+                            <span className={`text-sm font-semibold ${(producto.stock ?? 0) > 0 ? 'text-blue-600' : 'text-red-500'}`}>
+                              {producto.stock ?? 0} unidades
                             </span>
                           </div>
                         </div>
@@ -427,7 +431,7 @@ const ahorroTotal = precioTotalBase - precioTotalConDescuento;
               <span>Seleccione productos para crear el combo</span>
             )}
           </div>
-          
+
           <div className="flex gap-3">
             <button
               onClick={onClose}

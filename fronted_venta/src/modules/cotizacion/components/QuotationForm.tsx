@@ -4,6 +4,7 @@ import type { Cliente } from '../../cliente/services/clienteService';
 import type { VendedorResponse } from '../../vendedor/services/vendedorService';
 import type { Producto } from '../../producto/services/productoService';
 import { ProductCatalogModal, type Product } from '../../../components/ProductCatalogModal';
+import { SearchableSelect } from '../../../components/SearchableSelect';
 
 interface QuotationFormProps {
   formData: QuotationFormData;
@@ -73,26 +74,18 @@ export function QuotationForm({
               Información del Cliente
             </h3>
             <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Seleccionar Cliente *
-              </label>
-              <select
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                value={formData.clienteId || ''}
-                onChange={(e) =>
-                  onFormDataChange({
-                    ...formData,
-                    clienteId: e.target.value ? Number(e.target.value) : null,
-                  })
+              <SearchableSelect
+                options={clientes}
+                value={formData.clienteId}
+                onChange={(value) => onFormDataChange({ ...formData, clienteId: value })}
+                getOptionLabel={(cliente) =>
+                  `${cliente.nombre}${cliente.documento ? ` - ${cliente.documento}` : ''}`
                 }
-              >
-                <option value="">Seleccione un cliente...</option>
-                {clientes.map((cliente) => (
-                  <option key={cliente.id} value={cliente.id}>
-                    {cliente.nombre} {cliente.documento ? `- ${cliente.documento}` : ''}
-                  </option>
-                ))}
-              </select>
+                getOptionValue={(cliente) => cliente.id}
+                label="Seleccionar Cliente"
+                placeholder="Buscar cliente..."
+                required
+              />
             </div>
           </section>
 
@@ -103,26 +96,16 @@ export function QuotationForm({
               Vendedor Asignado
             </h3>
             <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Seleccionar Vendedor *
-              </label>
-              <select
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                value={formData.vendedorId || ''}
-                onChange={(e) =>
-                  onFormDataChange({
-                    ...formData,
-                    vendedorId: e.target.value ? Number(e.target.value) : null,
-                  })
-                }
-              >
-                <option value="">Seleccione un vendedor...</option>
-                {vendedores.map((vendedor) => (
-                  <option key={vendedor.sellerId} value={vendedor.sellerId}>
-                    {vendedor.fullName} - {vendedor.sellerBranchName}
-                  </option>
-                ))}
-              </select>
+              <SearchableSelect
+                options={vendedores}
+                value={formData.vendedorId}
+                onChange={(value) => onFormDataChange({ ...formData, vendedorId: value })}
+                getOptionLabel={(vendedor) => `${vendedor.fullName} - ${vendedor.sellerBranchName}`}
+                getOptionValue={(vendedor) => vendedor.sellerId}
+                label="Seleccionar Vendedor"
+                placeholder="Buscar vendedor..."
+                required
+              />
             </div>
           </section>
 

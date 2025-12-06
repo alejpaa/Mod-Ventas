@@ -168,6 +168,13 @@ public class ProductoDBService {
                 .map(this::obtenerProductoPorId)
                 .collect(Collectors.toList());
 
+        // Validar que todos los productos tengan stock disponible
+        for (Producto producto : productosSeleccionados) {
+            if (producto.getStock() <= 0) {
+                throw new RuntimeException("El producto '" + producto.getNombre() + "' no tiene stock disponible");
+            }
+        }
+
         // Calcular precios
         BigDecimal precioBaseTotal = productosSeleccionados.stream()
                 .map(Producto::getPrecioBase)
@@ -189,8 +196,12 @@ public class ProductoDBService {
             precioFinalTotal = precioFinalTotal.add(precioConDescuento);
         }
 
+        // Generar código único para el combo
+        String codigoCombo = "COMBO-" + System.currentTimeMillis();
+
         // Crear el combo
         Producto combo = Producto.builder()
+                .codigo(codigoCombo)
                 .nombre(request.getNombre())
                 .tipo(TipoProducto.COMBO)
                 .precioBase(precioBaseTotal)
@@ -200,6 +211,12 @@ public class ProductoDBService {
                 .activo(true)
                 .stock(1)
                 .build();
+
+        // Descontar stock de los productos componentes
+        for (Producto producto : productosSeleccionados) {
+            producto.setStock(producto.getStock() - 1);
+            productoRepository.save(producto);
+        }
 
         // Guardar el combo con sus productos
         Producto comboGuardado = guardarCombo(combo, request.getProductosIds());
@@ -220,7 +237,7 @@ public class ProductoDBService {
                     return ProductoDBDTO.fromEntity(producto);
                 })
                 .collect(Collectors.toList());
-        
+
         // Construir el DTO con todos los campos incluyendo componentes
         return ProductoDBDTO.builder()
                 .id(combo.getId())
@@ -236,4 +253,3 @@ public class ProductoDBService {
                 .build();
     }
 }
-

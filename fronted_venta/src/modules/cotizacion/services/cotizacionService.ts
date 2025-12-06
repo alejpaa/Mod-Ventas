@@ -58,14 +58,46 @@ export const cotizacionService = {
 
   /**
    * Accept a quotation - USA LA API
+   * Endpoint: POST /api/cotizaciones/{id}/aceptacion
    */
   async aceptarCotizacion(id: number): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/cotizaciones/${id}/aceptar`, {
-      method: 'PUT',
+    const response = await fetch(`${API_BASE_URL}/cotizaciones/${id}/aceptacion`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({}), // Empty body as per AceptacionCotizacionRequest
     });
 
     if (!response.ok) {
       throw new Error('Error al aceptar la cotización');
     }
+  },
+
+  /**
+   * Download quotation PDF - USA LA API
+   * Endpoint: GET /api/cotizaciones/{id}/pdf
+   */
+  async descargarPdf(id: number): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/cotizaciones/${id}/pdf`);
+
+    if (!response.ok) {
+      throw new Error('Error al descargar el PDF');
+    }
+
+    // Create blob from response
+    const blob = await response.blob();
+
+    // Create download link
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Cotizacion_${id}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+
+    // Cleanup
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   },
 };
