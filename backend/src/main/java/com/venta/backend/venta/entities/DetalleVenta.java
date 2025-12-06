@@ -23,9 +23,11 @@ public class DetalleVenta {
     @JoinColumn(name = "id_venta", nullable = false)
     private Venta venta;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_item_producto", nullable = false)
-    private ItemProducto itemProducto;
+    @Column(name = "id_producto", nullable = false)
+    private Long idProducto;
+    
+    @Column(name = "nombre_producto", nullable = false)
+    private String nombreProducto;
 
     @Column(nullable = false)
     private Integer cantidad;
@@ -39,14 +41,16 @@ public class DetalleVenta {
     @Column(nullable = false)
     private BigDecimal subtotal;
 
-    public static DetalleVenta nuevoDetalle(Venta venta, ItemProducto item, int cantidad) {
+    public static DetalleVenta nuevoDetalle(Venta venta, Long idProducto, String nombreProducto, BigDecimal precioUnitario, int cantidad) {
+        BigDecimal subtotalCalculado = precioUnitario.multiply(BigDecimal.valueOf(cantidad));
         return DetalleVenta.builder()
                 .venta(venta)
-                .itemProducto(item)
+                .idProducto(idProducto)
+                .nombreProducto(nombreProducto)
                 .cantidad(cantidad)
-                .precioUnitario(item.getPrecioBase())
+                .precioUnitario(precioUnitario)
                 .descuentoMonto(BigDecimal.ZERO)
-                .subtotal(item.getPrecioBase().multiply(BigDecimal.valueOf(cantidad)))
+                .subtotal(subtotalCalculado)
                 .build();
     }
 

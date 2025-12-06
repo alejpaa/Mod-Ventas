@@ -79,14 +79,14 @@ public class Venta {
         return VentaEstado.BORRADOR.equals(estado);
     }
 
-    public void agregarOActualizarItem(ItemProducto producto, int cantidad) {
+    public void agregarOActualizarItem(Long idProducto, String nombreProducto, BigDecimal precioUnitario, int cantidad) {
         DetalleVenta existente = detalles.stream()
-                .filter(det -> det.getItemProducto().getId().equals(producto.getId()))
+                .filter(det -> det.getIdProducto().equals(idProducto))
                 .findFirst()
                 .orElse(null);
 
         if (existente == null) {
-            DetalleVenta nuevo = DetalleVenta.nuevoDetalle(this, producto, cantidad);
+            DetalleVenta nuevo = DetalleVenta.nuevoDetalle(this, idProducto, nombreProducto, precioUnitario, cantidad);
             detalles.add(nuevo);
         } else {
             existente.incrementarCantidad(cantidad);
@@ -106,7 +106,8 @@ public class Venta {
     }
 
     public BigDecimal calcularTotal() {
-        return BigDecimal.valueOf(1000.00); 
+        recalcularMontos();
+        return this.total;
     }
 }
 

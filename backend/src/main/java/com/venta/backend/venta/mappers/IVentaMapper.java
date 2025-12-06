@@ -26,8 +26,8 @@ public interface IVentaMapper {
 
 
     @Mapping(target = "detalleId", source = "id")
-    @Mapping(target = "itemProductoId", source = "itemProducto.id")
-    @Mapping(target = "nombreProducto", source = "itemProducto.nombre")
+    @Mapping(target = "itemProductoId", source = "idProducto")
+    @Mapping(target = "nombreProducto", source = "nombreProducto")
     LineaCarritoResponse toLinea(DetalleVenta detalle);
 
     @Mapping(target = "nombreCliente", ignore = true)

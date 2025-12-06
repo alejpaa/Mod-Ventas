@@ -3,18 +3,16 @@ package com.venta.backend.venta.impl;
 import com.venta.backend.venta.dto.request.AgregarItemVentaRequest;
 import com.venta.backend.venta.dto.request.CrearVentaDirectaRequest;
 import com.venta.backend.venta.dto.response.VentaResumenResponse;
-import com.venta.backend.venta.exceptions.ItemProductoNoEncontradoException;
 import com.venta.backend.venta.exceptions.VentaNoEncontradaException;
 import com.venta.backend.venta.exceptions.VentaOperacionNoPermitidaException;
 import com.venta.backend.venta.factory.VentaFactoryResolver;
 import com.venta.backend.venta.mappers.IVentaMapper;
 import com.venta.backend.venta.servicios.IVentaCarritoService;
-import com.venta.backend.venta.entities.ItemProducto;
 import com.venta.backend.venta.entities.Venta;
 import com.venta.backend.venta.entities.DetalleVenta;
 import com.venta.backend.venta.enums.OrigenVenta;
 import com.venta.backend.venta.enums.VentaEstado;
-import com.venta.backend.venta.repository.ItemProductoRepositorio;
+import com.venta.backend.venta.repository.VentaRepositorio;
 import com.venta.backend.venta.repository.VentaRepositorio;
 import com.venta.backend.venta.repository.DetalleVentaRepositorio;
 import com.venta.backend.vendedor.infraestructura.repository.VendedorRepositorio;
@@ -35,7 +33,6 @@ import java.math.BigDecimal;
 public class VentaCarritoServiceImpl implements IVentaCarritoService {
 
     private final VentaRepositorio ventaRepositorio;
-    private final ItemProductoRepositorio itemProductoRepositorio;
     private final DetalleVentaRepositorio detalleVentaRepositorio;
     private final VentaFactoryResolver ventaFactoryResolver;
     private final VendedorRepositorio vendedorRepositorio;
@@ -67,10 +64,13 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
             throw new VentaOperacionNoPermitidaException("Solo se puede modificar una venta en estado borrador.");
         }
 
-        ItemProducto producto = itemProductoRepositorio.findById(request.getItemProductoId())
-                .orElseThrow(() -> new ItemProductoNoEncontradoException(request.getItemProductoId()));
-
-        venta.agregarOActualizarItem(producto, request.getCantidad());
+        venta.agregarOActualizarItem(
+            request.getProductoId(), 
+            request.getNombreProducto(), 
+            request.getPrecioUnitario(), 
+            request.getCantidad()
+        );
+        
         Venta guardada = ventaRepositorio.save(venta);
         return ventaMapper.toResumen(guardada);
     }
@@ -180,15 +180,15 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
 
         Venta ventaGuardada = ventaRepositorio.save(venta);
 
-        // 3. Copiar productos de DetalleCotizacion a ItemProducto
+        // 3. Copiar productos de DetalleCotizacion a DetalleVenta
         BigDecimal subtotalCalculado = BigDecimal.ZERO;
         BigDecimal descuentoTotalCalculado = BigDecimal.ZERO;
 
         for (DetalleCotizacion detalle : cotizacion.getItems()) {
             DetalleVenta detalleVenta = DetalleVenta.builder()
                     .venta(ventaGuardada)
-                    .itemProducto(itemProductoRepositorio.findById(detalle.getItemProductoId())
-                            .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + detalle.getItemProductoId())))
+                    .idProducto(detalle.getItemProductoId())
+                    .nombreProducto("Producto " + detalle.getItemProductoId()) // Placeholder - actualizar DetalleCotizacion para incluir nombre
                     .cantidad(detalle.getCantidad())
                     .precioUnitario(detalle.getPrecioUnitario())
                     .descuentoMonto(detalle.getDescuentoMonto())
