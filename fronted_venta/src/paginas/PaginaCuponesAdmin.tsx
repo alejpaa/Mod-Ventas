@@ -4,30 +4,16 @@ import React, { useState, useEffect, useCallback } from 'react';
 import CrearCuponForm from '../modules/descuentos/components/CrearCuponForm';
 import { listarTodosLosCupones, eliminarCupon } from '../modules/descuentos/services/cupon.service';
 import type { CuponResponse } from '../modules/descuentos/types/cupon.types';
-import { Plus, Trash2, Edit, X } from 'lucide-react'; 
+import { Plus, Trash2, Edit } from 'lucide-react'; // <-- CORREGIDO: Se eliminó 'X'
 
 // -----------------------------------------------------
-// 1. Modal Componente (Asegurando el centrado y el overlay)
+// 1. Modal Componente (REMOVIDO: ya que CrearCuponForm usa Dialog de MUI)
 // -----------------------------------------------------
+/* // Se ha removido el componente Modal personalizado para evitar conflictos con el Dialog de Material UI
 const Modal: React.FC<{ children: React.ReactNode, title: string, onClose: () => void }> = ({ children, title, onClose }) => (
-  // Fondo oscuro que cubre toda la pantalla (overlay)
-  <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 sm:p-8">
-    {/* Contenedor principal del modal */}
-    <div className="relative bg-white rounded-xl max-w-4xl w-full mx-auto shadow-2xl">
-      {/* Header del Modal */}
-      <div className="p-6 border-b flex justify-between items-center">
-        <h3 className="text-2xl font-bold text-gray-800">{title}</h3>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition duration-150">
-          <X size={24} />
-        </button>
-      </div>
-      {/* Contenido del Modal (Aquí se renderiza el formulario) */}
-      <div className="p-6">
-        {children}
-      </div>
-    </div>
-  </div>
-);
+// ...
+); 
+*/
 
 
 // -----------------------------------------------------
@@ -44,7 +30,7 @@ const CuponTable: React.FC<CuponTableProps> = ({ cupones, onEdit, onDelete }) =>
     <table className="min-w-full divide-y divide-gray-200">
       <thead className="bg-gray-50">
         <tr>
-          {['ID', 'Código', 'Tipo', 'Valor', 'Expiración', 'Usos (Max)', 'Monto Mín.', 'Estado', 'Acciones'].map((header) => (
+          {['ID', 'Código', 'Tipo', 'Valor', 'Expiración', 'Usos (Actuales/Max)', 'Monto Mín.', 'Estado', 'Acciones'].map((header) => (
             <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               {header}
             </th>
@@ -58,7 +44,8 @@ const CuponTable: React.FC<CuponTableProps> = ({ cupones, onEdit, onDelete }) =>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">{cupon.codigo}</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cupon.tipoDescuento}</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {cupon.tipoDescuento === 'PORCENTAJE' ? `${(cupon.valor * 100).toFixed(0)}%` : `S/ ${cupon.valor.toFixed(2)}`}
+              {/* Ajuste en el formato: El valor ya es el monto final del descuento para MONTO_FIJO */}
+              {cupon.tipoDescuento === 'PORCENTAJE' ? `${(cupon.valor).toFixed(0)}%` : `S/ ${cupon.valor.toFixed(2)}`}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cupon.fechaExpiracion}</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cupon.usosActuales} / {cupon.usosMaximos === null ? '∞' : cupon.usosMaximos}</td>
@@ -147,6 +134,7 @@ const PaginaCuponesAdmin = () => {
   };
 
   const handleSaveSuccess = () => {
+    // La lógica de alert/notificación se movió al formulario para simplificar
     handleCloseModal();
     fetchCupones(); // Refrescar lista después de crear/editar
   };
@@ -184,17 +172,13 @@ const PaginaCuponesAdmin = () => {
       )}
 
 
-      {/* Modal de Creación/Edición (se usa el mismo componente CrearCuponForm) */}
-      {isModalOpen && (
-          <Modal title={cuponToEdit ? 'Editar Cupón' : 'Crear Cupón'} onClose={handleCloseModal}>
-              <CrearCuponForm
-                  onSuccess={handleSaveSuccess}
-                  onCancel={handleCloseModal}
-                  // Pasamos el cupón a editar o null/undefined
-                  cuponDataToEdit={cuponToEdit} 
-              />
-          </Modal>
-      )}
+      {/* Modal de Creación/Edición (Usando el Dialog del componente CrearCuponForm) */}
+      <CrearCuponForm
+          open={isModalOpen} // Usar el estado de apertura
+          onClose={handleCloseModal} // Usar la función de cerrar
+          onSuccess={handleSaveSuccess}
+          cuponDataToEdit={cuponToEdit} 
+      />
     </div>
   );
 };
