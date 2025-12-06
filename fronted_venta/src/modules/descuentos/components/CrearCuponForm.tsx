@@ -53,14 +53,14 @@ type FormChangeEventType =
     | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> 
     | SelectChangeEvent<string | number | null>; 
 
-const CrearCuponForm: React.FC<CrearCuponFormProps> = ({ // <-- CORRECCIÓN DE TIPOGRAFÍA APLICADA
+const CrearCuponForm: React.FC<CrearCuponFormProps> = ({ 
   open,
   onClose,
   onSuccess,
   cuponDataToEdit,
 }) => {
     
-    // Valores iniciales por defecto (alineados con el DTO corregido)
+    // Valores iniciales por defecto
     const initialFormData: CrearCuponRequest = {
         codigo: '',
         valor: 0,
@@ -127,10 +127,12 @@ const CrearCuponForm: React.FC<CrearCuponFormProps> = ({ // <-- CORRECCIÓN DE T
   };
 
   const validateForm = (): boolean => {
-    if (!formData.codigo.trim()) {
-      setError('El código es obligatorio.');
+    // MODIFICACIÓN: La validación del código solo se hace en modo de edición.
+    if (isEditing && !formData.codigo.trim()) { 
+      setError('El código es obligatorio para la edición.');
       return false;
     }
+    
     if (formData.valor <= 0) {
       setError('El valor del descuento debe ser mayor a 0.');
       return false;
@@ -174,6 +176,7 @@ const CrearCuponForm: React.FC<CrearCuponFormProps> = ({ // <-- CORRECCIÓN DE T
         ...formData,
         valor: parseFloat(formData.valor.toString()),
         montoMinimoRequerido: parseFloat(formData.montoMinimoRequerido.toString()),
+        // En creación, el backend ignora esto. En edición, toma el valor.
         usosMaximos: formData.usosMaximos === 0 ? null : formData.usosMaximos,
     };
 
@@ -182,7 +185,9 @@ const CrearCuponForm: React.FC<CrearCuponFormProps> = ({ // <-- CORRECCIÓN DE T
           await apiOperation.mutateAsync(requestData);
           alert('Cupón actualizado exitosamente.');
       } else {
-          await apiOperation.mutateAsync(requestData);
+          // Si es creación, el código y usosMaximos son irrelevantes para el backend, 
+          // pero se envían con los valores predeterminados de initialFormData.
+          await apiOperation.mutateAsync(requestData); 
           alert('Cupón creado exitosamente.');
       }
       onSuccess();
@@ -214,18 +219,23 @@ const CrearCuponForm: React.FC<CrearCuponFormProps> = ({ // <-- CORRECCIÓN DE T
             **Error:** {error || (apiOperation.error instanceof Error ? apiOperation.error.message : 'Error desconocido de API')}
           </p>
         )}
-        <TextField
-          autoFocus
-          margin="dense"
-          id="codigo"
-          name="codigo"
-          label="Código de Cupón"
-          type="text"
-          fullWidth
-          value={formData.codigo}
-          onChange={handleChange}
-          required
-        />
+        
+        {/* MODIFICACIÓN: Mostrar campo de código solo en edición */}
+        {isEditing && (
+            <TextField
+              autoFocus
+              margin="dense"
+              id="codigo"
+              name="codigo"
+              label="Código de Cupón"
+              type="text"
+              fullWidth
+              value={formData.codigo}
+              onChange={handleChange}
+              required
+            />
+        )}
+        
         <FormControl fullWidth margin="dense" required>
           <InputLabel id="tipoDescuento-label">Tipo de Descuento</InputLabel>
           <Select
@@ -282,17 +292,21 @@ const CrearCuponForm: React.FC<CrearCuponFormProps> = ({ // <-- CORRECCIÓN DE T
           required
           inputProps={{ min: 0, step: 0.01 }}
         />
-        <TextField
-          margin="dense"
-          id="usosMaximos"
-          name="usosMaximos"
-          label="Usos Máximos (0 o vacío = Ilimitado)"
-          type="number"
-          fullWidth
-          value={formData.usosMaximos === null ? '' : formData.usosMaximos} 
-          onChange={handleChange}
-          inputProps={{ min: 0, step: 1 }}
-        />
+        
+        {/* MODIFICACIÓN: Mostrar campo de usos máximos solo en edición */}
+        {isEditing && (
+            <TextField
+              margin="dense"
+              id="usosMaximos"
+              name="usosMaximos"
+              label="Usos Máximos (0 o vacío = Ilimitado)"
+              type="number"
+              fullWidth
+              value={formData.usosMaximos === null ? '' : formData.usosMaximos} 
+              onChange={handleChange}
+              inputProps={{ min: 0, step: 1 }}
+            />
+        )}
         
       </DialogContent>
       <DialogActions>
