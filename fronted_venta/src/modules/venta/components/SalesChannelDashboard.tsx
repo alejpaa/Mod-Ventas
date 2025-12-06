@@ -1,10 +1,7 @@
-// src/components/SalesChannelDashboard.tsx
-
 import React, { useState, useEffect, useMemo } from 'react';
-import type { VentasPorCanalResponse } from '../types/Ventas'; // Asegúrate de ajustar la ruta
+import type { VentasPorCanalResponse } from '../types/Ventas';
 import IngresosPorCanalChart from './IngresosPorCanalChart';
 
-// Nota: Asumimos que esta constante está definida globalmente o importada
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 const SalesChannelDashboard: React.FC = () => {
@@ -17,7 +14,6 @@ const SalesChannelDashboard: React.FC = () => {
             setIsLoading(true);
             setError(null);
             try {
-                // 🚨 LLAMADA AL ENDPOINT CREADO EN EL BACKEND
                 const response = await fetch(`${API_BASE_URL}/venta/analisis/ventas-por-canal`);
 
                 if (!response.ok) {
@@ -38,7 +34,6 @@ const SalesChannelDashboard: React.FC = () => {
         fetchData();
     }, []);
 
-    // Cálculos de Resumen
     const resumen = useMemo(() => {
         return data.reduce((acc, current) => {
             acc.totalVentas += current.cantidadVentas;
@@ -51,14 +46,13 @@ const SalesChannelDashboard: React.FC = () => {
         const labels: string[] = [];
         const dataPoints: number[] = [];
         const backgroundColors: string[] = [
-            '#3B82F6', // Azul para Físico
-            '#EA580C', // Naranja para Remoto/Llamada
-            '#6B7280' // Gris para Otro
+            '#3B82F6',
+            '#EA580C',
+            '#6B7280'
         ];
 
         for (const item of data) {
             labels.push(item.canal);
-            // Usamos los ingresos totales como el valor principal para el gráfico circular
             dataPoints.push(item.ingresosTotales);
         }
 
@@ -82,9 +76,6 @@ const SalesChannelDashboard: React.FC = () => {
         return <div className="p-8 text-red-700 bg-red-50 border border-red-300 rounded-lg">{error}</div>;
     }
 
-    // ----------------------------------------------------
-    // Renderizado del Dashboard
-    // ----------------------------------------------------
     return (
         <div className="space-y-6">
             <h1 className="text-2xl font-bold text-gray-800">Análisis de Ventas por Canal de Contacto</h1>
