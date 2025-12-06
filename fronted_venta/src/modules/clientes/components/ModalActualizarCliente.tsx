@@ -95,6 +95,35 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
   };
 
   const handleGuardar = async () => {
+    if (!validarPaso()) {
+      setError('Completa los campos obligatorios marcados con *');
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      const payload: ModificacionClienteRequest = {
+        dni: formData.dni,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        telefonoFijo: formData.telefonoFijo,
+        address: formData.address,
+        fechaNacimiento: formData.fechaNacimiento,
+        estado: formData.estado,
+      };
+      await actualizarCliente(clienteId, payload);
+      onSuccess();
+      onClose();
+    } catch (e: any) {
+      setError(e?.message || 'No se pudo guardar los cambios');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
     return (
       <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
         <div className="bg-white rounded-xl p-6 shadow-md">Cargando cliente...</div>
