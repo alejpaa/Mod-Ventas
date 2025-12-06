@@ -371,22 +371,6 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
         return clienteMapeador.toClienteResponse(clienteActualizado);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<ClienteActivoResponse> obtenerClientesActivos() {
-        List<Cliente> clientesActivos = clienteRepositorio.findAll().stream()
-                .filter(cliente -> cliente.getEstado() == EstadoClienteEnum.ACTIVO)
-                .collect(Collectors.toList());
-
-        return clientesActivos.stream()
-                .map(cliente -> ClienteActivoResponse.builder()
-                        .clienteId(cliente.getClienteId())
-                        .firstName(cliente.getFirstName())
-                        .lastName(cliente.getLastName())
-                        .build())
-                .collect(Collectors.toList());
-    }
-
     // ========== MÉTODOS PRIVADOS AUXILIARES ==========
 
     private Cliente findClienteEntityById(Long clienteId) {

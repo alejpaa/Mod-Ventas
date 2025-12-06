@@ -149,7 +149,7 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
-      <div className="bg-white w-full max-w-5xl rounded-2xl shadow-xl overflow-hidden">
+      <div className="bg-white w-full max-w-5xl rounded-2xl shadow-xl overflow-hidden flex flex-col" style={{ height: '85vh' }}>
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <h2 className="text-2xl font-semibold text-gray-900">Actualizar Cliente</h2>
           <button className="text-gray-500 text-xl font-bold" onClick={onClose}>
@@ -157,10 +157,19 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
           </button>
         </div>
 
-        <div className="flex gap-4 px-6 pt-4 pb-2 border-b bg-gray-50">
-          <PasoBadge num={1} label="Datos Personales" />
-          <PasoBadge num={2} label="Datos de Contacto" />
-          <PasoBadge num={3} label="Preferencias" />
+        <div className="flex gap-4 px-6 pt-4 pb-2 border-b bg-gray-50 items-center justify-between">
+          <div className="flex gap-4">
+            <PasoBadge num={1} label="Datos Personales" />
+            <PasoBadge num={2} label="Datos de Contacto" />
+            <PasoBadge num={3} label="Preferencias" />
+          </div>
+          <button
+            className="px-4 py-1.5 rounded-lg bg-red-100 text-red-700 border border-red-200 text-sm font-medium hover:bg-red-200"
+            onClick={handleDesactivar}
+            type="button"
+          >
+            Desactivar Cliente
+          </button>
         </div>
 
         {error && (
@@ -169,7 +178,7 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
           </div>
         )}
 
-        <div className="px-6 py-6 overflow-y-auto" style={{ maxHeight: '65vh' }}>
+        <div className="px-6 py-6 overflow-y-auto flex-1">
           {paso === 1 && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -441,13 +450,6 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
           <div className="flex gap-3">
             <button className="px-5 py-2 rounded-lg bg-gray-200 text-gray-800" onClick={onClose}>
               Cancelar
-            </button>
-            <button
-              className="px-5 py-2 rounded-lg bg-red-100 text-red-700 border border-red-200"
-              onClick={handleDesactivar}
-              type="button"
-            >
-              Desactivar Cliente
             </button>
             <button
               className="px-5 py-2 rounded-lg bg-blue-500 text-white"
