@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter;
 @Component
 public class VentaPdfTemplate {
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public String generateHtml(Venta venta, Cliente cliente, Vendedor vendedor) {
         StringBuilder html = new StringBuilder();

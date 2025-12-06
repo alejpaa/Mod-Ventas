@@ -59,6 +59,7 @@ const SortIcon = ({ active, direction }: { active: boolean; direction: 'asc' | '
 export function PaginaVenta() {
   const navigate = useNavigate();
   const [modalVisualizarOpen, setModalVisualizarOpen] = useState(false);
+  const [selectedVentaId, setSelectedVentaId] = useState<number | undefined>(undefined);
   const [ventas, setVentas] = useState<Venta[]>([]);
   const [filtros, setFiltros] = useState({
     cliente: '',
@@ -379,7 +380,10 @@ export function PaginaVenta() {
                         <EditIcon />
                       </button>
                       <button
-                        onClick={() => setModalVisualizarOpen(true)}
+                        onClick={() => {
+                          setSelectedVentaId(venta.ventaId);
+                          setModalVisualizarOpen(true);
+                        }}
                         className="text-gray-600 hover:text-gray-800 transition-colors p-1"
                         title="Visualizar"
                       >
@@ -443,6 +447,7 @@ export function PaginaVenta() {
         isOpen={modalVisualizarOpen}
         onClose={() => setModalVisualizarOpen(false)}
         tipoVenta="DIRECTA"
+        ventaId={selectedVentaId}
       />
     </div>
   );
