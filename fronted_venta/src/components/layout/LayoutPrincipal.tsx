@@ -10,6 +10,7 @@ export function LayoutPrincipal() {
   const normalizedRole = role ? role.toLowerCase() : '';
 
   const adminNav = [
+    { to: '/dashboard', label: 'Dashboard', icon: BoxIcon },
     { to: '/pagina-vendedor', label: 'Vendedor', icon: UserIcon },
     { to: '/pagina-combos', label: 'Combos', icon: BoxIcon },
     { to: '/admin/cupones', label: 'Gestión Cupones', icon: BoxIcon },
