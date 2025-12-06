@@ -25,6 +25,7 @@ export function useQuotation() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [isAccepting, setIsAccepting] = useState(false);
 
   // Error States
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +46,12 @@ export function useQuotation() {
   // Email Dialog State
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [selectedQuotationForEmail, setSelectedQuotationForEmail] = useState<Quotation | null>(
+    null
+  );
+
+  // Accept Dialog State
+  const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);
+  const [selectedQuotationForAccept, setSelectedQuotationForAccept] = useState<Quotation | null>(
     null
   );
 
@@ -215,17 +222,13 @@ export function useQuotation() {
     }
 
     setIsSubmitting(true);
+    setError(null);
 
     try {
-      // Calculate validity date
-      const vigencia = new Date();
-      vigencia.setDate(vigencia.getDate() + formData.validezDias);
-      const vigenciaStr = vigencia.toISOString().split('T')[0];
-
       const request: CotizacionRequest = {
-        clienteId: formData.clienteId,
-        vendedorId: formData.vendedorId,
-        vigencia: vigenciaStr,
+        clienteId: formData.clienteId!,
+        vendedorId: formData.vendedorId!,
+        validezDias: formData.validezDias, // Send the number of days directly
         items: formData.items.map((item) => ({
           productoId: item.productoId,
           cantidad: item.cantidad,
@@ -285,30 +288,48 @@ export function useQuotation() {
     }
   };
 
-  const handleAcceptQuotation = async (id: number) => {
-    if (!confirm('¿Está seguro de marcar esta cotización como ACEPTADA?')) {
-      return;
-    }
+  const handleOpenAcceptDialog = (quotation: Quotation) => {
+    setSelectedQuotationForAccept(quotation);
+    setAcceptDialogOpen(true);
+  };
 
+  const handleAcceptQuotation = async (id: number) => {
     setError(null);
+    setIsAccepting(true);
 
     try {
       await cotizacionService.aceptarCotizacion(id);
 
-      // Reload quotations to get updated status
-      await loadQuotations();
+      // Update only the affected quotation's state locally (no reload)
+      setQuotations((prevQuotations) =>
+        prevQuotations.map((q) => (q.id === id ? { ...q, estado: 'ACEPTADA' as const } : q))
+      );
 
-      alert('Cotización aceptada exitosamente');
+      // Close the dialog
+      setAcceptDialogOpen(false);
+      setSelectedQuotationForAccept(null);
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message || 'Error al aceptar la cotización');
       console.error('Error accepting quotation:', err);
+    } finally {
+      setIsAccepting(false);
     }
   };
 
   const handleConvertToSale = (id: number) => {
     // TODO: Implement conversion to sale
     alert(`Redirigiendo a generar venta para la cotización #${id}...`);
+  };
+
+  const handleDownloadPdf = async (id: number) => {
+    try {
+      await cotizacionService.descargarPdf(id);
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.message || 'Error al descargar el PDF');
+      console.error('Error downloading PDF:', err);
+    }
   };
 
   return {
@@ -327,6 +348,7 @@ export function useQuotation() {
     isLoading,
     isSubmitting,
     isSendingEmail,
+    isAccepting,
 
     // Error State
     error,
@@ -349,6 +371,11 @@ export function useQuotation() {
     setEmailDialogOpen,
     selectedQuotationForEmail,
 
+    // Accept Dialog State
+    acceptDialogOpen,
+    setAcceptDialogOpen,
+    selectedQuotationForAccept,
+
     // Catalog Modal State
     catalogModalOpen,
     setCatalogModalOpen,
@@ -364,7 +391,9 @@ export function useQuotation() {
     handleGeneratePDF,
     handleOpenEmailDialog,
     handleSendEmail,
+    handleOpenAcceptDialog,
     handleAcceptQuotation,
     handleConvertToSale,
+    handleDownloadPdf,
   };
 }

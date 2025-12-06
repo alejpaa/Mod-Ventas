@@ -2,18 +2,17 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ConfirmCancelModal } from '../components/ConfirmCancelModal';
 import { ProductCatalogModal } from '../components/ProductCatalogModal';
-import SellerDisplayWidget from '../components/SellerDisplayWidget';
-import type { VendedorResponse } from '../types/Vendedor';
+import SellerDisplayWidget from '../modules/vendedor/components/SellerDisplayWidget';
+import type { VendedorResponse } from '../modules/vendedor/types/Vendedor';
 import type { Product } from '../components/ProductCatalogModal';
+import { BuscadorCliente } from '../components/BuscadorCliente';
+import type { Cliente } from '../services/cliente.service';
+import { asignarClienteAVenta } from '../services/cliente.service';
+import { guardarProductosVenta, obtenerTotalesVenta, actualizarMetodoPago } from '../services/venta-productos.service';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 // --- Iconos SVG ---
-const SearchIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-400">
-    <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-  </svg>
-);
 const TrashIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
     <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
@@ -58,7 +57,7 @@ interface LineaCarritoApi {
   subtotal: number;
 }
 
-interface VentaResumenApi {
+export interface VentaResumenApi {
   ventaId: number;
   numVenta?: string;
   origen: 'DIRECTA' | 'LEAD' | 'COTIZACION';
@@ -68,6 +67,11 @@ interface VentaResumenApi {
   total: number;
   idVendedor?: number;
   nombreVendedor?: string;
+  clienteId?: number;
+  nombreCliente?: string;
+  clienteDni?: string;
+  clienteEmail?: string;
+  clienteTelefono?: string;
   items: LineaCarritoApi[];
 }
 
@@ -94,7 +98,7 @@ export function PaginaVentaDirecta() {
     nombre: string;
     dni: string;
     telefono: string;
-    direccion: string;
+    email: string;
   } | null>(null);
   const [busquedaCliente, setBusquedaCliente] = useState('');
   const [metodoPago, setMetodoPago] = useState<'EFECTIVO' | 'TARJETA'>('EFECTIVO');
@@ -135,6 +139,17 @@ export function PaginaVentaDirecta() {
             nombre: data.nombreVendedor
           });
           setSellerIdInput(data.idVendedor);
+        }
+
+        // Cargar cliente asignado si existe
+        if (data.clienteId && data.nombreCliente) {
+          setClienteSeleccionado({
+            id: data.clienteId,
+            nombre: data.nombreCliente,
+            dni: data.clienteDni || '',
+            telefono: data.clienteTelefono || '',
+            email: data.clienteEmail || ''
+          });
         }
       } catch (e) {
         console.error(e);
@@ -203,7 +218,7 @@ export function PaginaVentaDirecta() {
         nombre: 'Juan Pérez',
         dni: '12345678',
         telefono: '+51 987 654 321',
-        direccion: 'Av. Principal 123, Lima',
+        email: 'juan.perez@example.com',
       });
       setBusquedaCliente('');
     }
@@ -239,6 +254,34 @@ export function PaginaVentaDirecta() {
       alert('Ocurrió un error al asignar el vendedor.');
     } finally {
       setAsignandoVendedor(false);
+    }
+  };
+
+  const handleGuardarProductos = async () => {
+    if (!ventaId) return;
+
+    try {
+      await guardarProductosVenta(Number(ventaId));
+      alert('Productos guardados exitosamente');
+
+      // Recargar totales
+      const totales = await obtenerTotalesVenta(Number(ventaId));
+      setDescuentoApi(totales.descuentoTotal);
+    } catch (error) {
+      console.error('Error al guardar productos:', error);
+      alert('Error al guardar productos');
+    }
+  };
+
+  const handleActualizarMetodoPago = async (metodo: 'EFECTIVO' | 'TARJETA') => {
+    if (!ventaId) return;
+
+    try {
+      await actualizarMetodoPago(Number(ventaId), metodo);
+      alert(`Método de pago actualizado a ${metodo}`);
+    } catch (error) {
+      console.error('Error al actualizar método de pago:', error);
+      alert('Error al actualizar método de pago');
     }
   };
 
@@ -297,23 +340,34 @@ export function PaginaVentaDirecta() {
               </div>
             </div>
 
-            <div className="relative mb-6">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <SearchIcon />
-              </div>
-              <input
-                type="text"
-                placeholder="Buscar por Nombre, DNI, RUC..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                value={busquedaCliente}
-                onChange={(e) => setBusquedaCliente(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && busquedaCliente.trim() && !clienteSeleccionado) {
-                    handleAsignarCliente();
-                  }
-                }}
-              />
-            </div>
+            <BuscadorCliente
+              onClienteSeleccionado={async (cliente: Cliente) => {
+                if (!ventaId) {
+                  alert('Error: No hay venta activa');
+                  return;
+                }
+
+                try {
+                  // Llamar al endpoint para asignar cliente
+                  await asignarClienteAVenta(Number(ventaId), cliente.clienteId);
+
+                  // Actualizar estado local
+                  setClienteSeleccionado({
+                    id: cliente.clienteId,
+                    nombre: cliente.fullName,
+                    dni: cliente.dni,
+                    telefono: cliente.phoneNumber || 'N/A',
+                    email: cliente.email
+                  });
+
+                  alert('Cliente asignado exitosamente');
+                } catch (error) {
+                  console.error('Error al asignar cliente:', error);
+                  alert('Error al asignar cliente a la venta');
+                }
+              }}
+              clienteInicial={null}
+            />
 
             {clienteSeleccionado ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 text-sm">
@@ -330,8 +384,8 @@ export function PaginaVentaDirecta() {
                   <span className="block font-medium text-gray-900 text-base">{clienteSeleccionado.telefono}</span>
                 </div>
                 <div>
-                  <span className="block text-gray-500 mb-1">Dirección</span>
-                  <span className="block font-medium text-gray-900 text-base">{clienteSeleccionado.direccion}</span>
+                  <span className="block text-gray-500 mb-1">Email</span>
+                  <span className="block font-medium text-gray-900 text-base">{clienteSeleccionado.email}</span>
                 </div>
               </div>
             ) : (
@@ -444,7 +498,11 @@ export function PaginaVentaDirecta() {
               <label className="block text-sm font-medium text-gray-700 mb-2">Método de Pago</label>
               <select
                 value={metodoPago}
-                onChange={(e) => setMetodoPago(e.target.value as 'EFECTIVO' | 'TARJETA')}
+                onChange={(e) => {
+                  const metodo = e.target.value as 'EFECTIVO' | 'TARJETA';
+                  setMetodoPago(metodo);
+                  handleActualizarMetodoPago(metodo);
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
                 <option value="EFECTIVO">Efectivo</option>
@@ -468,6 +526,16 @@ export function PaginaVentaDirecta() {
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col gap-3">
+            <button
+              onClick={handleGuardarProductos}
+              className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded shadow-sm flex justify-center items-center gap-2 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+              </svg>
+              Guardar Productos
+            </button>
+
             <button className="w-full py-3 bg-[#3C83F6] hover:bg-blue-600 text-white font-medium rounded shadow-sm flex justify-center items-center gap-2 transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />

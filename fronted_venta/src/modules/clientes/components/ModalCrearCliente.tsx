@@ -99,24 +99,6 @@ export function ModalCrearCliente({ onClose, onSuccess }: ModalCrearClienteProps
   const camposObligatoriosPaso1 = formData.dni.trim() && formData.firstName.trim() && formData.lastName.trim();
   const camposObligatoriosPaso2 = formData.phoneNumber.trim();
 
-  const sePuedeAvanzar = () => {
-    if (paso === 1) return Boolean(camposObligatoriosPaso1);
-    if (paso === 2) return Boolean(camposObligatoriosPaso2);
-    return true;
-  };
-
-  const irAlSiguiente = () => {
-    if (paso < 3 && sePuedeAvanzar()) {
-      setPaso((prev) => (prev + 1) as PasoFormulario);
-    }
-  };
-
-  const irAlAnterior = () => {
-    if (paso > 1) {
-      setPaso((prev) => (prev - 1) as PasoFormulario);
-    }
-  };
-
   const handleSubmit = async () => {
     setError(null);
     if (!camposObligatoriosPaso1 || !camposObligatoriosPaso2) {
@@ -152,11 +134,10 @@ export function ModalCrearCliente({ onClose, onSuccess }: ModalCrearClienteProps
       {[1, 2, 3].map((value) => (
         <button
           key={value}
-          className={`w-8 h-8 rounded-full border text-sm font-medium transition-colors ${
-            paso === value
-              ? 'bg-primary-500 text-white border-primary-500'
-              : 'bg-white text-gray-600 border-gray-300 hover:border-primary-400'
-          }`}
+          className={`w-8 h-8 rounded-full border text-sm font-medium transition-colors ${paso === value
+            ? 'bg-primary-500 text-white border-primary-500'
+            : 'bg-white text-gray-600 border-gray-300 hover:border-primary-400'
+            }`}
           onClick={() => setPaso(value as PasoFormulario)}
           type="button"
         >
@@ -479,9 +460,9 @@ export function ModalCrearCliente({ onClose, onSuccess }: ModalCrearClienteProps
       className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 flex justify-center items-center p-4"
       onClick={onClose}
     >
-      <div className="bg-white p-8 rounded-lg shadow-xl z-50 w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white p-8 rounded-lg shadow-xl z-50 w-full max-w-4xl flex flex-col" style={{ height: '85vh' }} onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Agregar Nuevo Cliente</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Registrar nuevo cliente</h2>
           <button onClick={onClose} className="text-gray-500 text-3xl">
             &times;
           </button>
@@ -508,7 +489,7 @@ export function ModalCrearCliente({ onClose, onSuccess }: ModalCrearClienteProps
           </div>
         </div>
 
-        <div className="px-6 py-6 overflow-y-auto" style={{ maxHeight: '70vh' }}>
+        <div className="px-6 py-6 overflow-y-auto flex-1">
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded">
               {error}
@@ -529,36 +510,20 @@ export function ModalCrearCliente({ onClose, onSuccess }: ModalCrearClienteProps
             >
               Cancelar
             </button>
-            {paso > 1 && (
-              <button
-                onClick={irAlAnterior}
-                className="px-5 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:border-primary-400 transition-colors"
-                disabled={isSaving}
-                type="button"
-              >
-                Anterior
-              </button>
-            )}
-            {paso < 3 && (
-              <button
-                onClick={irAlSiguiente}
-                className="px-5 py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 transition-colors disabled:bg-gray-300"
-                disabled={!sePuedeAvanzar() || isSaving}
-                type="button"
-              >
-                Siguiente
-              </button>
-            )}
-            {paso === 3 && (
-              <button
-                onClick={handleSubmit}
-                className="px-5 py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 transition-colors disabled:bg-gray-300"
-                disabled={isSaving}
-                type="button"
-              >
-                {isSaving ? 'Guardando...' : 'Agregar Cliente'}
-              </button>
-            )}
+            <button
+              onClick={() => {
+                if (paso < 3) {
+                  setPaso((prev) => (prev + 1) as PasoFormulario);
+                } else {
+                  handleSubmit();
+                }
+              }}
+              className="px-5 py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 transition-colors disabled:bg-gray-300"
+              disabled={isSaving}
+              type="button"
+            >
+              {paso < 3 ? 'Siguiente' : isSaving ? 'Guardando...' : 'Registrar cliente'}
+            </button>
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ import com.venta.backend.descuento.dominio.estrategias.IDescuentoStrategy;
 import com.venta.backend.venta.entities.Venta;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -16,30 +17,45 @@ import java.math.BigDecimal;
 @Component
 public class ReglaMontoMinimo implements IReglaDescuento {
 
-    private static final BigDecimal MONTO_REQUERIDO = new BigDecimal("1000.00");
-    private static final BigDecimal VALOR_DESCUENTO_FIJO = new BigDecimal("50.00");
+    // Ya no son estáticas ni finales, se inyectarán
+    private final BigDecimal montoRequerido;
+    private final BigDecimal valorDescuentoFijo;
 
     private final IDescuentoStrategy fixedAmountStrategy;
 
     @Autowired
-    public ReglaMontoMinimo(@Qualifier("fixedAmountStrategy") IDescuentoStrategy fixedAmountStrategy) {
+    public ReglaMontoMinimo(
+            @Qualifier("fixedAmountStrategy") IDescuentoStrategy fixedAmountStrategy,
+            // Inyectar desde propiedades (o un servicio que lea de DB)
+            @Value("${descuentos.montoMinimo.requerido:1000.00}") BigDecimal montoRequerido,
+            @Value("${descuentos.montoMinimo.descuentoFijo:50.00}") BigDecimal valorDescuentoFijo
+    ) {
         this.fixedAmountStrategy = fixedAmountStrategy;
+        this.montoRequerido = montoRequerido; // Nuevo: valor inyectado
+        this.valorDescuentoFijo = valorDescuentoFijo; // Nuevo: valor inyectado
     }
 
     @Override
     public boolean esAplicable(Venta venta, Cliente cliente, String codigoCupon) {
         if (codigoCupon != null) return false;
-        return venta.calcularTotal().compareTo(MONTO_REQUERIDO) >= 0;
+        // Usar el valor inyectado
+        return venta.calcularTotal().compareTo(this.montoRequerido) >= 0; 
     }
 
     @Override
     public DescuentoAplicadoResponse aplicar(Venta venta, Cliente cliente) {
-        BigDecimal montoDescontado = fixedAmountStrategy.calcular(venta, VALOR_DESCUENTO_FIJO);
+        // Usar el valor inyectado
+        BigDecimal montoDescontado = fixedAmountStrategy.calcular(venta, this.valorDescuentoFijo);
+        
+        // Mejorar el mensaje usando los valores
+        String mensaje = String.format("S/ %.2f por exceder el monto mínimo de consumo de S/ %.2f", 
+                                        this.valorDescuentoFijo, this.montoRequerido);
+
         return new DescuentoAplicadoResponse(
                 "MONTO_MINIMO",
                 montoDescontado,
                 venta.calcularTotal().subtract(montoDescontado),
-                "S/ 50.00 por exceder el monto mínimo de consumo de S/ 1000.00"
+                mensaje 
         );
     }
 

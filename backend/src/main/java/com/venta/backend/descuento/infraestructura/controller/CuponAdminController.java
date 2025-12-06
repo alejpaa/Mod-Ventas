@@ -1,6 +1,7 @@
 package com.venta.backend.descuento.infraestructura.controller;
 
 import com.venta.backend.descuento.aplicacion.CuponAdminService;
+import com.venta.backend.descuento.DTO.CrearCuponLoteRequest; // Importar el nuevo DTO de lote
 import com.venta.backend.descuento.DTO.CrearCuponRequest;
 import com.venta.backend.descuento.DTO.CuponResponse;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +20,13 @@ public class CuponAdminController {
     private final CuponAdminService cuponAdminService;
 
     // CRUD ENDPOINTS
+    // MODIFICADO: Ahora recibe CrearCuponLoteRequest y devuelve List<CuponResponse>
     @PostMapping
-    public ResponseEntity<CuponResponse> crearCupon(@RequestBody CrearCuponRequest request) {
+    public ResponseEntity<List<CuponResponse>> crearCuponesEnLote(@RequestBody CrearCuponLoteRequest request) {
         try {
-            return new ResponseEntity<>(cuponAdminService.crearCupon(request), HttpStatus.CREATED);
+            return new ResponseEntity<>(cuponAdminService.crearCuponesEnLote(request), HttpStatus.CREATED);
         } catch (RuntimeException e) {
+            // Si el código existe o falla la validación del DTO
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build(); 
         }
     }
@@ -43,7 +46,7 @@ public class CuponAdminController {
             CuponResponse response = cuponAdminService.obtenerPorId(id);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            // Si no se encuentra el recurso, se retorna 404 NOT FOUND (asumiendo que el servicio lanza una excepción)
+            // Si no se encuentra el recurso, se retorna 404 NOT FOUND
             return ResponseEntity.notFound().build(); 
         }
     }
@@ -59,7 +62,6 @@ public class CuponAdminController {
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             // Si el cupón no existe, 404 NOT FOUND. Si es un error de validación, 400 BAD REQUEST.
-            // Para simplificar, devolvemos 404 si el recurso no es encontrado.
             if (e.getMessage() != null && e.getMessage().contains("no encontrado")) {
                  return ResponseEntity.notFound().build();
             }

@@ -2,6 +2,7 @@ import { useQuotation } from '../hooks/useQuotation';
 import { QuotationList } from '../components/QuotationList';
 import { QuotationForm } from '../components/QuotationForm';
 import { EmailDialog } from '../components/EmailDialog';
+import { AcceptQuotationDialog } from '../components/AcceptQuotationDialog';
 
 export function PaginaCotizacion() {
   const hookData = useQuotation();
@@ -108,9 +109,9 @@ export function PaginaCotizacion() {
           onSearchChange={hookData.setSearchTerm}
           statusFilter={hookData.statusFilter}
           onFilterChange={hookData.setStatusFilter}
-          onGeneratePDF={hookData.handleGeneratePDF}
+          onDownloadPdf={hookData.handleDownloadPdf}
           onSendEmail={hookData.handleOpenEmailDialog}
-          onAccept={hookData.handleAcceptQuotation}
+          onOpenAcceptDialog={hookData.handleOpenAcceptDialog}
           onConvertToSale={hookData.handleConvertToSale}
           isLoading={hookData.isLoading}
         />
@@ -145,6 +146,15 @@ export function PaginaCotizacion() {
         onClose={() => hookData.setEmailDialogOpen(false)}
         onSend={hookData.handleSendEmail}
         isLoading={hookData.isSendingEmail}
+      />
+
+      {/* Accept Quotation Dialog */}
+      <AcceptQuotationDialog
+        isOpen={hookData.acceptDialogOpen}
+        quotationNumber={hookData.selectedQuotationForAccept?.numCotizacion || ''}
+        onConfirm={() => hookData.handleAcceptQuotation(hookData.selectedQuotationForAccept!.id)}
+        onCancel={() => hookData.setAcceptDialogOpen(false)}
+        isLoading={hookData.isAccepting}
       />
     </div>
   );

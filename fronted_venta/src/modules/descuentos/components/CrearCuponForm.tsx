@@ -1,221 +1,422 @@
-// src/modules/descuentos/components/CrearCuponForm.tsx
+import React, { useState, useEffect } from 'react';
+import {
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  CircularProgress,
+  type SelectChangeEvent, 
+} from '@mui/material';
+// Se actualizan las importaciones para incluir los tipos de lote y el servicio
+import type { 
+    TipoDescuento, 
+    CuponResponse, 
+    CrearCuponRequest,
+    CrearCuponLoteRequest 
+} from '../types/cupon.types';
+import { crearCuponesEnLote, actualizarCupon } from '../services/cupon.service';
 
-import React, { useState } from 'react';
-import type { CrearCuponRequest } from '../types/cupon.types';
-import { initialCuponRequest } from '../types/cupon.types';
-import { crearCupon } from '../services/cupon.service';
-import { DollarSign, Percent } from 'lucide-react'; 
+// --- MOCK DE HOOKS DE MUTACIÓN (Actualizado para el nuevo servicio de creación) ---
+const useMutation = (mutationFn: (data: any) => Promise<any>) => {
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<any>(null);
+    const mutateAsync = async (data: any) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const result = await mutationFn(data);
+            setIsLoading(false);
+            return result;
+        } catch (e) {
+            setIsLoading(false);
+            setError(e);
+            throw e; 
+        }
+    };
+    return { isLoading, error, mutateAsync, setError };
+};
+
+// Hook para la creación de lotes (reemplaza a useCreateCupon)
+const useCreateCuponesLote = () => useMutation(crearCuponesEnLote);
+const useUpdateCupon = (id: number) => useMutation((data) => actualizarCupon(id, data as CrearCuponRequest));
+// --- FIN MOCK DE HOOKS ---
 
 interface CrearCuponFormProps {
+  open: boolean;
+  onClose: () => void;
   onSuccess: () => void;
-  onCancel: () => void;
-  // Propiedad opcional para indicar que estamos editando
-  cuponDataToEdit?: CrearCuponRequest & { id?: number } | null;
+  cuponDataToEdit: CuponResponse | null; 
 }
 
-const CrearCuponForm: React.FC<CrearCuponFormProps> = ({ onSuccess, onCancel, cuponDataToEdit }) => {
-  const [formData, setFormData] = useState<CrearCuponRequest>(
-    cuponDataToEdit || initialCuponRequest
-  );
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+// Tipo combinado para el estado del formulario que soporta tanto creación por lote como edición
+type FormDataType = CrearCuponRequest & CrearCuponLoteRequest; 
 
-  const isEditing = !!cuponDataToEdit;
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
+// Valores iniciales para el modo EDICIÓN
+const initialEditData: CrearCuponRequest = {
+    codigo: '',
+    valor: 0,
+    tipoDescuento: 'PORCENTAJE', 
+    fechaExpiracion: new Date().toISOString().split('T')[0], 
+    montoMinimoRequerido: 0,
+    usosMaximos: null, 
+};
+
+// Valores iniciales para el modo CREACIÓN (LOTE)
+const initialLoteData: CrearCuponLoteRequest = {
+    nombreCampana: '',
+    cantidadCupones: 1,
+    valor: 10, // Valor de ejemplo
+    tipoDescuento: 'PORCENTAJE', 
+    fechaExpiracion: new Date().toISOString().split('T')[0], 
+    montoMinimoRequerido: 0,
+};
+
+
+// DEFINICIÓN DEL TIPO DE EVENTO COMBINADO PARA EL HANDLER
+type FormChangeEventType = 
+    | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> 
+    | SelectChangeEvent<string | number | null>; 
+
+const CrearCuponForm: React.FC<CrearCuponFormProps> = ({ 
+  open,
+  onClose,
+  onSuccess,
+  cuponDataToEdit,
+}) => {
     
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'number' && name !== 'usosMaximos' 
-        ? parseFloat(value) 
-        : type === 'number' && name === 'usosMaximos'
-        ? (value === '' ? null : parseInt(value))
-        : value,
-    }));
-  };
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    setSuccessMessage(null);
+    const isEditing = !!cuponDataToEdit;
     
-    // Normalizar usosMaximos a null si el usuario dejó 0 o vacío
-    const finalData = {
-        ...formData,
-        usosMaximos: (formData.usosMaximos === 0 || formData.usosMaximos === null) ? null : formData.usosMaximos
+    const initialCombinedData: FormDataType = isEditing
+        ? { ...initialEditData, ...cuponDataToEdit, nombreCampana: '', cantidadCupones: 1 } // Al editar, inicializa los campos extra de lote a valores no relevantes
+        : { ...initialEditData, ...initialLoteData }; // Al crear, usa los datos de lote
+
+    const [formData, setFormData] = useState<FormDataType>(initialCombinedData);
+    const [error, setError] = useState<string | null>(null);
+
+    const cuponId = cuponDataToEdit?.id ?? 0;
+    
+    const createCuponesLote = useCreateCuponesLote(); // Nuevo hook para creación
+    const updateCupon = useUpdateCupon(cuponId);
+    const apiOperation = isEditing ? updateCupon : createCuponesLote; // Se selecciona la operación correcta
+
+    // Resetea el formulario cuando se abre o el cupón de edición cambia
+    useEffect(() => {
+        if (cuponDataToEdit) {
+            setFormData({
+                // Campos de edición
+                ...cuponDataToEdit,
+                // Campos de lote (no relevantes para edición, se resetean)
+                nombreCampana: '', 
+                cantidadCupones: 1, 
+            });
+        } else {
+            // Usa los valores iniciales para la creación por lote
+            setFormData(initialCombinedData); 
+        }
+        setError(null);
+        apiOperation.setError(null);
+    }, [cuponDataToEdit, open]); 
+
+  const handleChange = (e: FormChangeEventType) => { 
+    const { name, value } = e.target;
+
+    let finalValue: string | number | null = value;
+    
+    if (name === 'valor' || name === 'montoMinimoRequerido') {
+        finalValue = parseFloat(value as string);
+        if (isNaN(finalValue) || finalValue < 0) {
+            finalValue = 0;
+        }
+    } else if (name === 'usosMaximos' || name === 'cantidadCupones') { // Se incluye cantidadCupones
+        const stringValue = typeof value === 'string' ? value : String(value);
+        const intValue = parseInt(stringValue, 10); 
+
+        if (name === 'usosMaximos') {
+             if (stringValue === '' || stringValue === '0' || isNaN(intValue)) {
+                finalValue = null; 
+            } else {
+                finalValue = Math.max(1, intValue);
+            }
+        } else if (name === 'cantidadCupones') {
+             if (isNaN(intValue) || intValue < 1) {
+                finalValue = 1;
+            } else {
+                finalValue = intValue;
+            }
+        }
+    } else if (name === 'nombreCampana') {
+        // Asegurar que el nombre de campaña esté en mayúsculas y sin espacios iniciales/finales
+        finalValue = (value as string).toUpperCase().trim();
     }
 
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: finalValue,
+    }));
+
+    setError(null);
+    apiOperation.setError(null);
+  };
+
+  const validateForm = (): boolean => {
+    // Validaciones específicas del modo CREACIÓN (LOTE)
+    if (!isEditing) {
+        if (!formData.nombreCampana.trim()) {
+            setError('El nombre de la campaña es obligatorio.');
+            return false;
+        }
+        if (formData.cantidadCupones < 1 || !Number.isInteger(formData.cantidadCupones)) {
+            setError('La cantidad de cupones a crear debe ser un número entero mayor a 0.');
+            return false;
+        }
+    } 
+    // Validaciones específicas del modo EDICIÓN
+    else if (isEditing && !formData.codigo.trim()) { 
+      setError('El código es obligatorio para la edición.');
+      return false;
+    }
+    
+    // Validaciones comunes
+    if (formData.valor <= 0) {
+      setError('El valor del descuento debe ser mayor a 0.');
+      return false;
+    }
+    if (
+      formData.tipoDescuento === 'PORCENTAJE' &&
+      formData.valor > 100
+    ) {
+      setError('El porcentaje de descuento no puede ser mayor a 100.');
+      return false;
+    }
+
+    if (!formData.fechaExpiracion) {
+        setError('La fecha de expiración es obligatoria.');
+        return false;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const expirationDate = new Date(formData.fechaExpiracion);
+
+    if (expirationDate.getTime() < today.getTime()) {
+      setError('La fecha de expiración debe ser posterior o igual a la fecha actual.');
+      return false;
+    }
+    
+    if (formData.montoMinimoRequerido < 0) {
+        setError('El monto mínimo de compra no puede ser negativo.');
+        return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+    
     try {
-      // Simulación de creación/edición (PENDIENTE de implementar la lógica de edición en el service)
       if (isEditing) {
-          // Lógica para actualizarCupon(cuponDataToEdit.id, finalData)
-          setSuccessMessage(`Cupón ${formData.codigo} actualizado exitosamente.`);
+          // Lógica de EDICIÓN (usa CrearCuponRequest)
+          const requestData: CrearCuponRequest = {
+            codigo: formData.codigo,
+            tipoDescuento: formData.tipoDescuento,
+            valor: parseFloat(formData.valor.toString()),
+            fechaExpiracion: formData.fechaExpiracion,
+            usosMaximos: formData.usosMaximos === 0 ? null : formData.usosMaximos,
+            montoMinimoRequerido: parseFloat(formData.montoMinimoRequerido.toString()),
+          };
+          await updateCupon.mutateAsync(requestData);
+          alert('Cupón actualizado exitosamente.');
       } else {
-          await crearCupon(finalData);
-          setSuccessMessage(`Cupón ${formData.codigo} creado exitosamente.`);
-          setFormData(initialCuponRequest); // Limpiar solo si es creación
+          // Lógica de CREACIÓN POR LOTE (usa CrearCuponLoteRequest)
+          const requestData: CrearCuponLoteRequest = {
+            nombreCampana: formData.nombreCampana,
+            cantidadCupones: formData.cantidadCupones,
+            tipoDescuento: formData.tipoDescuento,
+            valor: parseFloat(formData.valor.toString()),
+            fechaExpiracion: formData.fechaExpiracion,
+            montoMinimoRequerido: parseFloat(formData.montoMinimoRequerido.toString()),
+            // El backend fuerza usosMaximos a 1, no se envía aquí
+          };
+          await createCuponesLote.mutateAsync(requestData); 
+          alert(`¡${formData.cantidadCupones} cupones de la campaña ${formData.nombreCampana} creados exitosamente!`);
       }
-      
       onSuccess();
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Ocurrió un error desconocido al guardar el cupón.");
-      }
-    } finally {
-      setIsLoading(false);
+    } catch (err: any) {
+      const apiError =
+        (err instanceof Error ? err.message : err?.response?.data?.message) ||
+        `Error al ${isEditing ? 'actualizar' : 'crear'} el cupón. Intente de nuevo.`;
+      setError(apiError);
     }
   };
 
   return (
-    <div className="p-8 bg-white rounded-lg shadow-xl border border-gray-200">
-      <h2 className="text-3xl font-extrabold mb-6 text-gray-900">
-        {isEditing ? 'Editar Cupón' : 'Crear Nuevo Cupón'}
-      </h2>
-      
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <Dialog 
+        open={open} 
+        onClose={onClose} 
+        aria-labelledby="form-dialog-title"
+        maxWidth="sm" 
+        fullWidth
+        BackdropProps={{ 
+            style: { 
+                backgroundColor: 'rgba(0, 0, 0, 0.3)', 
+            },
+        }}
+    >
+      <DialogTitle id="form-dialog-title">{isEditing ? 'Editar Cupón Existente' : 'Crear Lote de Cupones'}</DialogTitle>
+      <DialogContent>
+        {(error || apiOperation.error) && (
+          <p style={{ color: 'red', marginTop: '10px' }}>
+            **Error:** {error || (apiOperation.error instanceof Error ? apiOperation.error.message : 'Error desconocido de API')}
+          </p>
+        )}
         
-        {/* Usamos una cuadrícula para organizar los campos en dos columnas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Columna 1: Código y Tipo */}
-            <div className="space-y-6">
-                {/* Código del Cupón */}
-                <div>
-                  <label htmlFor="codigo" className="block text-sm font-medium text-gray-700">Código {isEditing && `(ID: ${cuponDataToEdit?.id})`}</label>
-                  <input
-                    type="text"
-                    id="codigo"
-                    name="codigo"
-                    value={formData.codigo}
-                    onChange={handleChange}
-                    required
-                    // Desactivamos la edición del código si estamos editando (opcional)
-                    disabled={isEditing} 
-                    className={`mt-1 block w-full border ${isEditing ? 'bg-gray-50' : 'bg-white'} border-gray-300 rounded-md shadow-sm p-3`}
-                  />
-                </div>
-                
-                {/* Tipo de Descuento (Select) */}
-                <div>
-                  <label htmlFor="tipoDescuento" className="block text-sm font-medium text-gray-700">Tipo de Descuento</label>
-                  <select
-                    id="tipoDescuento"
-                    name="tipoDescuento"
-                    value={formData.tipoDescuento}
-                    onChange={handleChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 bg-white"
-                    required
-                  >
-                    <option value="PORCENTAJE">Porcentaje (%)</option>
-                    <option value="MONTO_FIJO">Monto Fijo (S/)</option>
-                  </select>
-                </div>
-            </div>
-
-            {/* Columna 2: Valor y Usos Máximos */}
-            <div className="space-y-6">
-                {/* Valor del Descuento */}
-                <div>
-                  <label htmlFor="valor" className="block text-sm font-medium text-gray-700">Valor del Descuento</label>
-                  <div className="relative mt-1 rounded-md shadow-sm">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      {formData.tipoDescuento === 'PORCENTAJE' ? <Percent className="h-5 w-5 text-indigo-500" /> : <DollarSign className="h-5 w-5 text-indigo-500" />}
-                    </div>
-                    <input
-                      type="number"
-                      id="valor"
-                      name="valor"
-                      step={formData.tipoDescuento === 'PORCENTAJE' ? '0.01' : '0.10'}
-                      min="0"
-                      value={formData.valor === 0 ? '' : formData.valor}
-                      onChange={handleChange}
-                      required
-                      placeholder={formData.tipoDescuento === 'PORCENTAJE' ? 'Ej. 0.15 (15%)' : 'Ej. 50.00'}
-                      className="block w-full rounded-md border-0 py-3 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400"
-                    />
-                  </div>
-                </div>
-
-                {/* Usos Máximos */}
-                <div>
-                  <label htmlFor="usosMaximos" className="block text-sm font-medium text-gray-700">Usos Máximos (0 o vacío = Ilimitado)</label>
-                  <input
-                    type="number"
-                    id="usosMaximos"
-                    name="usosMaximos"
-                    min="0"
-                    value={formData.usosMaximos === null ? '' : formData.usosMaximos}
-                    onChange={handleChange}
-                    placeholder="Ej. 100 o dejar en blanco"
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3"
-                  />
-                </div>
-            </div>
-        </div>
+        {/* CAMPOS ESPECÍFICOS DE CREACIÓN POR LOTE */}
+        {!isEditing && (
+            <>
+                <TextField
+                  autoFocus
+                  margin="dense"
+                  id="nombreCampana"
+                  name="nombreCampana"
+                  label="Nombre de Campaña (Prefijo del Código)"
+                  type="text"
+                  fullWidth
+                  value={formData.nombreCampana}
+                  onChange={handleChange}
+                  required
+                  helperText="Ej: NAVIDAD25. Generará códigos como NAVIDAD25001, etc."
+                />
+                <TextField
+                  margin="dense"
+                  id="cantidadCupones"
+                  name="cantidadCupones"
+                  label="Cantidad de Cupones a Crear"
+                  type="number"
+                  fullWidth
+                  value={formData.cantidadCupones}
+                  onChange={handleChange}
+                  required
+                  inputProps={{ min: 1, step: 1 }}
+                />
+            </>
+        )}
         
-        {/* Fila Única: Fecha Expiración y Monto Mínimo */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             {/* Fecha de Expiración */}
-            <div>
-              <label htmlFor="fechaExpiracion" className="block text-sm font-medium text-gray-700">Fecha de Expiración</label>
-              <input
-                type="date"
-                id="fechaExpiracion"
-                name="fechaExpiracion"
-                value={formData.fechaExpiracion}
-                onChange={handleChange}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 bg-white"
-                required
-              />
-            </div>
-            
-            {/* Monto Mínimo Requerido */}
-            <div>
-              <label htmlFor="montoMinimoRequerido" className="block text-sm font-medium text-gray-700">Monto Mínimo Requerido (S/)</label>
-              <input
-                type="number"
-                id="montoMinimoRequerido"
-                name="montoMinimoRequerido"
-                step="0.01"
-                min="0"
-                value={formData.montoMinimoRequerido}
-                onChange={handleChange}
-                required
-                placeholder="Ej. 100.00"
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3"
-              />
-            </div>
-        </div>
+        {/* CAMPO ESPECÍFICO DE EDICIÓN */}
+        {isEditing && (
+            <TextField
+              autoFocus
+              margin="dense"
+              id="codigo"
+              name="codigo"
+              label="Código de Cupón"
+              type="text"
+              fullWidth
+              value={formData.codigo}
+              onChange={handleChange}
+              required
+            />
+        )}
         
-        {/* Mensajes de Estado */}
-        {error && <p className="text-red-600 font-medium text-sm border border-red-200 p-2 rounded-md bg-red-50">{error}</p>}
-        {successMessage && <p className="text-green-600 font-medium text-sm border border-green-200 p-2 rounded-md bg-green-50">{successMessage}</p>}
-
-        {/* Botones de Acción */}
-        <div className="flex justify-end space-x-3 pt-4">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-6 py-3 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition duration-150"
-            disabled={isLoading}
+        {/* CAMPOS COMUNES */}
+        <FormControl fullWidth margin="dense" required>
+          <InputLabel id="tipoDescuento-label">Tipo de Descuento</InputLabel>
+          <Select
+            labelId="tipoDescuento-label"
+            id="tipoDescuento"
+            name="tipoDescuento"
+            value={formData.tipoDescuento}
+            onChange={handleChange} 
+            label="Tipo de Descuento"
           >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="px-6 py-3 text-sm font-semibold text-white bg-indigo-600 rounded-lg shadow-md hover:bg-indigo-700 transition duration-150 disabled:bg-indigo-400"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Guardando...' : (isEditing ? 'Guardar Cambios' : 'Crear Cupón')}
-          </button>
-        </div>
-      </form>
-    </div>
+            <MenuItem value={'PORCENTAJE' as TipoDescuento}>Porcentaje (%)</MenuItem>
+            <MenuItem value={'MONTO_FIJO' as TipoDescuento}>Monto Fijo</MenuItem>
+          </Select>
+        </FormControl>
+        <TextField
+          margin="dense"
+          id="valor"
+          name="valor"
+          label={`Valor de Descuento (${
+            formData.tipoDescuento === 'PORCENTAJE' ? '%' : 'S/'
+          })`}
+          type="number"
+          fullWidth
+          value={formData.valor}
+          onChange={handleChange}
+          required
+          inputProps={{ 
+              min: 0, 
+              step: 0.01, 
+              max: formData.tipoDescuento === 'PORCENTAJE' ? 100 : undefined 
+          }} 
+        />
+        <TextField
+          margin="dense"
+          id="fechaExpiracion"
+          name="fechaExpiracion"
+          label="Fecha de Expiración"
+          type="date"
+          fullWidth
+          value={formData.fechaExpiracion}
+          onChange={handleChange}
+          InputLabelProps={{ shrink: true }}
+          required
+        />
+        <TextField
+          margin="dense"
+          id="montoMinimoRequerido"
+          name="montoMinimoRequerido"
+          label="Monto Mínimo de Compra (S/)"
+          type="number"
+          fullWidth
+          value={formData.montoMinimoRequerido}
+          onChange={handleChange}
+          required
+          inputProps={{ min: 0, step: 0.01 }}
+        />
+        
+        {/* CAMPO ESPECÍFICO DE EDICIÓN (Usos Máximos) */}
+        {isEditing && (
+            <TextField
+              margin="dense"
+              id="usosMaximos"
+              name="usosMaximos"
+              label="Usos Máximos (0 o vacío = Ilimitado)"
+              type="number"
+              fullWidth
+              value={formData.usosMaximos === null ? '' : formData.usosMaximos} 
+              onChange={handleChange}
+              inputProps={{ min: 0, step: 1 }}
+              helperText="En modo de creación, este valor se ignora y se fuerza a '1' por cupón."
+            />
+        )}
+        
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} color="secondary">
+          Cancelar
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          color="primary"
+          disabled={apiOperation.isLoading}
+        >
+          {apiOperation.isLoading ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : isEditing ? 'Guardar Cambios' : 'Crear Lote'}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

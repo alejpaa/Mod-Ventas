@@ -38,6 +38,7 @@ public interface CotizacionMapper {
     CotizacionResponse toDto(Cotizacion cotizacion);
 
     @Mapping(target = "clienteNombre", expression = "java(cotizacion.getCliente().getFullName())")
+    @Mapping(target = "fechaExpiracion", expression = "java(cotizacion.getFechaExpiracion())")
     CotizacionListResponse toListDto(Cotizacion cotizacion);
 }
 

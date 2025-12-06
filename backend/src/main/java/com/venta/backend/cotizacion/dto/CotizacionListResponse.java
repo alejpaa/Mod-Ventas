@@ -15,7 +15,9 @@ public class CotizacionListResponse {
     Integer id;
     String numCotizacion;
     String clienteNombre;
-    LocalDate fechaCotizacion;
+    LocalDate fechaCotizacion;  // Fecha de creación
+    LocalDate fechaExpiracion;   // Fecha de expiración (calculada)
+    Integer validezDias;
     BigDecimal totalCotizado;
     CotizacionEstado estado;
 }

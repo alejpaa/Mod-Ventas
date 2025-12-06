@@ -123,11 +123,6 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
     }
   };
 
-  const handleDesactivar = () => {
-    if (!confirm('¿Seguro que deseas desactivar este cliente?')) return;
-    setFormData((prev) => ({ ...prev, estado: 'INACTIVO' }));
-  };
-
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -149,9 +144,9 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
-      <div className="bg-white w-full max-w-5xl rounded-2xl shadow-xl overflow-hidden">
+      <div className="bg-white w-full max-w-5xl rounded-2xl shadow-xl overflow-hidden flex flex-col" style={{ height: '85vh' }}>
         <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-2xl font-semibold text-gray-900">Actualizar Cliente</h2>
+          <h2 className="text-2xl font-semibold text-gray-900">Actualizar cliente</h2>
           <button className="text-gray-500 text-xl font-bold" onClick={onClose}>
             ×
           </button>
@@ -169,7 +164,7 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
           </div>
         )}
 
-        <div className="px-6 py-6 overflow-y-auto" style={{ maxHeight: '65vh' }}>
+        <div className="px-6 py-6 overflow-y-auto flex-1">
           {paso === 1 && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -443,18 +438,11 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
               Cancelar
             </button>
             <button
-              className="px-5 py-2 rounded-lg bg-red-100 text-red-700 border border-red-200"
-              onClick={handleDesactivar}
-              type="button"
-            >
-              Desactivar Cliente
-            </button>
-            <button
               className="px-5 py-2 rounded-lg bg-blue-500 text-white"
-              onClick={paso < 3 ? () => setPaso((prev) => (prev + 1) as Paso) : handleGuardar}
+              onClick={handleGuardar}
               disabled={saving}
             >
-              {paso < 3 ? 'Siguiente' : saving ? 'Guardando...' : 'Guardar Cambios'}
+              {saving ? 'Guardando...' : 'Guardar cambios'}
             </button>
           </div>
         </div>

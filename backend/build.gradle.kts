@@ -44,6 +44,9 @@ dependencies {
     annotationProcessor ("org.projectlombok:lombok-mapstruct-binding:0.2.0")
     // SpringDoc OpenAPI (para Spring Boot 3.x)
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14")
+    // Flying Saucer for PDF generation
+    implementation("org.xhtmlrenderer:flying-saucer-pdf:9.1.22")
+    implementation("org.xhtmlrenderer:flying-saucer-core:9.1.22")
 }
 
 tasks.withType<Test> {

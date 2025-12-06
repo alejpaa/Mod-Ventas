@@ -55,19 +55,6 @@ public class AtencionClienteIntegrationController {
         ClienteResponse response = adminServicio.actualizarCliente(idCliente, request);
         return ResponseEntity.ok(response);
     }
-
-    /**
-     * PATCH /api/clientes/integracion/atencion-cliente/dni/{dni}
-     * Actualiza parcialmente los datos de un cliente por DNI
-     * Permite modificar todos los campos excepto clienteId (que es la identidad)
-     */
-    @PatchMapping("/dni/{dni}")
-    @Operation(summary = "Actualizar Cliente por DNI", description = "Actualiza parcialmente los datos del cliente usando DNI. Permite modificar todos los campos excepto clienteId (que es la identidad).")
-    public ResponseEntity<ClienteResponse> actualizarClientePorDni(
-            @PathVariable String dni,
-            @RequestBody ModificacionClienteRequest request) {
-        ClienteResponse response = adminServicio.actualizarClientePorDni(dni, request);
-        return ResponseEntity.ok(response);
-    }
 }
+
 
