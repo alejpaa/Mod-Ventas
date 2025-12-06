@@ -20,6 +20,11 @@ public class VentaResumenResponse {
     BigDecimal total;
     Long idVendedor;
     String nombreVendedor;
+    Long clienteId;
+    String nombreCliente;
+    String clienteDni;
+    String clienteEmail;
+    String clienteTelefono;
     List<LineaCarritoResponse> items;
 }
 

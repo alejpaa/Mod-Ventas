@@ -1,7 +1,7 @@
 package com.venta.backend.descuento.infraestructura.controller;
 
 import com.venta.backend.descuento.aplicacion.CuponAdminService;
-import com.venta.backend.descuento.DTO.CrearCuponRequest;
+import com.venta.backend.descuento.DTO.CrearCuponLoteRequest;
 import com.venta.backend.descuento.DTO.CuponResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,17 +20,14 @@ public class CuponAdminController {
 
     // CRUD ENDPOINTS
     @PostMapping
-    public ResponseEntity<CuponResponse> crearCupon(@RequestBody CrearCuponRequest request) {
+    public ResponseEntity<List<CuponResponse>> crearCuponesEnLote(@RequestBody CrearCuponLoteRequest request) {
         try {
-            return new ResponseEntity<>(cuponAdminService.crearCupon(request), HttpStatus.CREATED);
+            // El status 201 Created es apropiado para la creación exitosa de recursos.
+            return new ResponseEntity<>(cuponAdminService.crearCuponesEnLote(request), HttpStatus.CREATED); 
         } catch (RuntimeException e) {
+            // En caso de error de validación o código existente
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build(); 
         }
-    }
-
-    @GetMapping
-    public ResponseEntity<List<CuponResponse>> listarCupones() {
-        return ResponseEntity.ok(cuponAdminService.listarTodos());
     }
 
     /**

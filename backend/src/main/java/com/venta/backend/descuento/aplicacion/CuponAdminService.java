@@ -4,13 +4,16 @@ import com.venta.backend.descuento.DTO.CrearCuponRequest;
 import com.venta.backend.descuento.DTO.CuponResponse;
 import com.venta.backend.descuento.dominio.entidades.Cupon;
 import com.venta.backend.descuento.infraestructura.repository.CuponRepositorio;
+import com.venta.backend.descuento.DTO.CrearCuponLoteRequest;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.security.SecureRandom; // Importación necesaria para generar códigos
+import java.security.SecureRandom;
+import java.util.ArrayList; // Importación necesaria para generar códigos
 
 /**
  * Servicio para la gestión de la administración (CRUD) de Cupones.
@@ -53,23 +56,50 @@ public class CuponAdminService {
 
 
     // -------------------------------------------------------------------------
-    // C R E A R - MODIFICADO para auto-generación y uso único
+    // C R E A R C U P O N E S (Lote) - NUEVO MÉTODO CENTRAL DE CREACIÓN
     // -------------------------------------------------------------------------
-    public CuponResponse crearCupon(CrearCuponRequest request) {
-        // 1. Generar el código automáticamente y único
-        String codigoGenerado = generarCodigoUnico(); 
-
-        // 2. Mapear y establecer código/uso máximo
-        Cupon nuevoCupon = mapFromRequest(request);
+    public List<CuponResponse> crearCuponesEnLote(CrearCuponLoteRequest request) {
         
-        nuevoCupon.setCodigo(codigoGenerado); // Establece el código único generado
+        String prefijo = request.getNombreCampana().toUpperCase().trim();
+        int cantidad = request.getCantidadCupones();
+        int longitudSecuencia = String.valueOf(cantidad).length(); // Para NAVIDAD25001, longitud es 3 (si es hasta 100)
+        
+        List<Cupon> nuevosCupones = new ArrayList<>();
+        
+        // 1. Generar y validar todos los cupones antes de guardar.
+        for (int i = 1; i <= cantidad; i++) {
+            // Formato secuencial (ej: 001, 002, 010, 100)
+            String sufijo = String.format("%0" + longitudSecuencia + "d", i);
+            String codigoGenerado = prefijo + sufijo;
+            
+            // 2. Verificar unicidad (es crucial aquí)
+            if (cuponRepositorio.findByCodigo(codigoGenerado).isPresent()) {
+                 // Si se encuentra, lanza una excepción para detener todo el lote.
+                 throw new RuntimeException("El código de cupón " + codigoGenerado + " ya existe en la base de datos. No se creó ningún cupón.");
+            }
+            
+            Cupon nuevoCupon = new Cupon();
+            nuevoCupon.setCodigo(codigoGenerado); // Código secuencial
+            
+            // 3. Mapear datos comunes y forzar la restricción anterior de uso único (si aplica)
+            nuevoCupon.setTipoDescuento(request.getTipoDescuento());
+            nuevoCupon.setValor(request.getValor());
+            nuevoCupon.setFechaExpiracion(request.getFechaExpiracion());
+            
+            nuevoCupon.setUsosMaximos(1); // <--- REQUISITO ANTERIOR: Uso único
+            
+            nuevoCupon.setMontoMinimoRequerido(request.getMontoMinimoRequerido());
+            
+            nuevosCupones.add(nuevoCupon);
+        }
 
-        // 3. Forzar el uso a 1
-        nuevoCupon.setUsosMaximos(1); // El cupón es válido solo para 1 uso.
-
-        // 4. Guardar y retornar
-        nuevoCupon = cuponRepositorio.save(nuevoCupon);
-        return mapToResponse(nuevoCupon);
+        // 4. Guardar todos los cupones en la base de datos (se usa saveAll para eficiencia)
+        List<Cupon> cuponesGuardados = cuponRepositorio.saveAll(nuevosCupones);
+        
+        // 5. Mapear a respuesta
+        return cuponesGuardados.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     // -------------------------------------------------------------------------

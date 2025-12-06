@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ConfirmCancelModal } from '../components/ConfirmCancelModal';
 import { ProductCatalogModal } from '../components/ProductCatalogModal';
-import SellerDisplayWidget from '../components/SellerDisplayWidget';
-import type { VendedorResponse } from '../types/Vendedor';
+import SellerDisplayWidget from '../modules/vendedor/components/SellerDisplayWidget';
+import type { VendedorResponse } from '../modules/vendedor/types/Vendedor';
 import type { Product } from '../components/ProductCatalogModal';
 import { BuscadorCliente } from '../components/BuscadorCliente';
 import type { Cliente } from '../services/cliente.service';
+import { asignarClienteAVenta } from '../services/cliente.service';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
@@ -65,6 +66,11 @@ interface VentaResumenApi {
   total: number;
   idVendedor?: number;
   nombreVendedor?: string;
+  clienteId?: number;
+  nombreCliente?: string;
+  clienteDni?: string;
+  clienteEmail?: string;
+  clienteTelefono?: string;
   items: LineaCarritoApi[];
 }
 
@@ -132,6 +138,17 @@ export function PaginaVentaDirecta() {
             nombre: data.nombreVendedor
           });
           setSellerIdInput(data.idVendedor);
+        }
+
+        // Cargar cliente asignado si existe
+        if (data.clienteId && data.nombreCliente) {
+          setClienteSeleccionado({
+            id: data.clienteId,
+            nombre: data.nombreCliente,
+            dni: data.clienteDni || '',
+            telefono: data.clienteTelefono || '',
+            email: data.clienteEmail || ''
+          });
         }
       } catch (e) {
         console.error(e);
@@ -295,14 +312,30 @@ export function PaginaVentaDirecta() {
             </div>
 
             <BuscadorCliente
-              onClienteSeleccionado={(cliente: Cliente) => {
-                setClienteSeleccionado({
-                  id: cliente.clienteId,
-                  nombre: cliente.fullName,
-                  dni: cliente.dni,
-                  telefono: cliente.phoneNumber || 'N/A',
-                  email: cliente.email
-                });
+              onClienteSeleccionado={async (cliente: Cliente) => {
+                if (!ventaId) {
+                  alert('Error: No hay venta activa');
+                  return;
+                }
+
+                try {
+                  // Llamar al endpoint para asignar cliente
+                  await asignarClienteAVenta(Number(ventaId), cliente.clienteId);
+
+                  // Actualizar estado local
+                  setClienteSeleccionado({
+                    id: cliente.clienteId,
+                    nombre: cliente.fullName,
+                    dni: cliente.dni,
+                    telefono: cliente.phoneNumber || 'N/A',
+                    email: cliente.email
+                  });
+
+                  alert('Cliente asignado exitosamente');
+                } catch (error) {
+                  console.error('Error al asignar cliente:', error);
+                  alert('Error al asignar cliente a la venta');
+                }
               }}
               clienteInicial={null}
             />

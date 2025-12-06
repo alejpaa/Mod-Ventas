@@ -6,7 +6,7 @@ import { LayoutPrincipal } from './components/layout/LayoutPrincipal';
 import { PaginaNoEncontrada } from "./paginas/PaginaNoEncontrada"
 import Login from "./components/Login"
 import { useRole } from "./contexts/RoleContext"
-import { PaginaVendedor } from "./paginas/PaginaVendedor"
+import { PaginaVendedor } from "./modules/vendedor/pages/PaginaVendedor"
 import { PaginaVentaDirecta } from "./paginas/PaginaVentaDirecta"
 import { PaginaVentaLead } from "./paginas/PaginaVentaLead"
 import PaginaCuponesAdmin from './paginas/PaginaCuponesAdmin';
