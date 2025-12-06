@@ -20,16 +20,10 @@ export interface QuotationItem {
 export interface Quotation {
   id: number;
   numCotizacion: string;
-  idCliente: number;
-  sellerCode: string;
+  clienteNombre: string;
   fechaCotizacion: string;
-  validezDias: number;
-  estado: 'BORRADOR' | 'ENVIADA' | 'ACEPTADA' | 'RECHAZADA';
   totalCotizado: number;
-  items: QuotationItemResponse[];
-  // Optional fields that might be calculated or missing in list view
-  subtotal?: number;
-  igv?: number;
+  estado: 'BORRADOR' | 'ENVIADA' | 'ACEPTADA' | 'RECHAZADA';
 }
 
 // API Response types

@@ -91,7 +91,7 @@ export function QuotationList({
               quotations.map((q) => (
                 <tr key={q.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 font-medium text-gray-900">{q.numCotizacion}</td>
-                  <td className="px-6 py-4 text-gray-700">Cliente #{q.idCliente}</td>
+                  <td className="px-6 py-4 text-gray-700">{q.clienteNombre}</td>
                   <td className="px-6 py-4 text-gray-500">
                     {new Date(q.fechaCotizacion).toLocaleDateString('es-PE')}
                   </td>

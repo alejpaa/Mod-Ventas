@@ -9,16 +9,15 @@ import { useRole } from "./contexts/RoleContext"
 import { PaginaVendedor } from "./paginas/PaginaVendedor"
 import { PaginaVentaDirecta } from "./paginas/PaginaVentaDirecta"
 import { PaginaVentaLead } from "./paginas/PaginaVentaLead"
+import PaginaCuponesAdmin from './paginas/PaginaCuponesAdmin';
 
 function App() {
   const { role } = useRole();
 
   if (!role) return <Login />;
 
+  // Se ha cambiado la estructura para usar rutas anidadas y controlar el rol de forma más limpia.
   return (
-    // Si agregan lo de producto y descuento como página
-    // Tendría que modificarlo en el LayoutPrincipal.tsx para agregar los links si va para vendedor o admin
-    // Y dentro de esta Route agregan las rutas respectivas
     <Routes>
       <Route path="/" element={<LayoutPrincipal />}>
         <Route index element={<PaginaVenta />} />
@@ -27,6 +26,7 @@ function App() {
         <Route path="pagina-cotizacion" element={<PaginaCotizacion />} />
         <Route path="pagina-cliente" element={<PaginaCliente />} />
         <Route path="pagina-vendedor" element={<PaginaVendedor />} />
+        <Route path="/admin/cupones" element={<PaginaCuponesAdmin />} />
       </Route>
 
       <Route path="*" element={<PaginaNoEncontrada />}></Route>

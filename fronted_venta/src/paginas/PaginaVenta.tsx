@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PendingLeadSalesModal } from '../components/PendingLeadSalesModal';
 import { listarVentasPaginadas, type VentaListado } from '../services/venta.service';
+import { ModalVisualizarVenta } from '../components/ModalVisualizarVenta';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mod-ventas.onrender.com/api';
 
@@ -57,7 +58,7 @@ const SortIcon = ({ active, direction }: { active: boolean; direction: 'asc' | '
 // --- COMPONENTE PRINCIPAL ---
 export function PaginaVenta() {
   const navigate = useNavigate();
-
+  const [modalVisualizarOpen, setModalVisualizarOpen] = useState(false);
   const [ventas, setVentas] = useState<Venta[]>([]);
   const [filtros, setFiltros] = useState({
     cliente: '',
@@ -268,7 +269,7 @@ export function PaginaVenta() {
             {/* Botón Naranja */}
             <button
               onClick={() => setShowLeadsModal(true)}
-              className="h-10 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors text-sm font-medium shadow-sm whitespace-nowrap cursor-pointer flex items-center justify-center"
+              className="h-10 px-2 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors text-sm font-medium shadow-sm whitespace-nowrap cursor-pointer flex items-center justify-center"
             >
               Ventas por Leads
             </button>
@@ -276,7 +277,7 @@ export function PaginaVenta() {
             {/* Botón Azul */}
             <button
               onClick={handleCrearOrdenVenta}
-              className="h-10 px-4 py-2 bg-[#3C83F6] text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm whitespace-nowrap cursor-pointer flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+              className="h-10 px-3 py-2 bg-[#3C83F6] text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm whitespace-nowrap cursor-pointer flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
               disabled={creating}
             >
               <span className="mr-2 text-lg">+</span> Crear orden de venta
@@ -358,7 +359,13 @@ export function PaginaVenta() {
                       >
                         <EditIcon />
                       </button>
-                      <button className="text-gray-600 hover:text-gray-800 transition-colors p-1" title="Visualizar"><ViewIcon /></button>
+                      <button 
+                        onClick={() => setModalVisualizarOpen(true)}
+                        className="text-gray-600 hover:text-gray-800 transition-colors p-1" 
+                        title="Visualizar"
+                      >
+                        <ViewIcon />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -403,7 +410,12 @@ export function PaginaVenta() {
       )}
 
       {showLeadsModal && <PendingLeadSalesModal onClose={() => setShowLeadsModal(false)} />}
-
+      {/* Modal de Visualización */}
+      <ModalVisualizarVenta 
+        isOpen={modalVisualizarOpen}
+        onClose={() => setModalVisualizarOpen(false)}
+        tipoVenta="DIRECTA"
+      />
     </div>
   );
 }

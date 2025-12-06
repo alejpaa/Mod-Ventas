@@ -1,5 +1,8 @@
+// fronted_venta/src/components/SellerTable.tsx
+
 import StatusPill from "./StatusPill";
 import TypePill from "./TypePill";
+// Asegúrate de importar SellerTableProps y SellerStatus desde el archivo corregido
 import { type SellerTableProps, SellerStatus } from "../types/seller.types";
 
 const SellerTable = ({ sellers, onDeactivate, onActivate, onEdit }: SellerTableProps) => (
@@ -28,7 +31,12 @@ const SellerTable = ({ sellers, onDeactivate, onActivate, onEdit }: SellerTableP
             <td className="px-6 py-4 whitespace-nowrap text-sm">
               <TypePill type={seller.type} />
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{seller.sede}</td>
+            
+            {/* 🔑 CORRECCIÓN: Acceder a la propiedad .name del objeto sede */}
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+              {seller.sede ? (typeof seller.sede === 'string' ? seller.sede : seller.sede.name) : 'N/A'}
+            </td>
+            
             <td className="px-6 py-4 whitespace-nowrap text-sm">
               <StatusPill status={seller.status} />
             </td>

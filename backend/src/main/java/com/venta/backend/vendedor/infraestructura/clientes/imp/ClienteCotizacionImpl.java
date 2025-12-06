@@ -26,9 +26,7 @@ public class ClienteCotizacionImpl implements IClienteCotizacion {
                 CotizacionEstado.ENVIADA
         );
 
-        String sellerCode = String.valueOf(sellerId);
-
-        long pendingCount = cotizacionRepository.countBySellerCodeAndEstadoIn(sellerCode, pendingStatuses);
+        long pendingCount = cotizacionRepository.countByVendedor_SellerIdAndEstadoIn(sellerId, pendingStatuses);
 
         return pendingCount > 0;
     }

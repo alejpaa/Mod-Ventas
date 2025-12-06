@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Search, ShoppingCart, Info, Filter, CheckSquare, Square, Package } from 'lucide-react';
+import { ProductoService, type ProductoDisponible } from '../modules/producto/services/producto.service';
 
 // Tipos para el catálogo
 export interface Product {
@@ -11,15 +12,22 @@ export interface Product {
   rating?: number;
 }
 
-// Datos de prueba (Mock Data) actualizados con nuevos tipos
-const MOCK_PRODUCTS: Product[] = Array.from({ length: 12 }).map((_, i) => ({
-  id: `PROD-${100 + i}`,
-  name: `Producto Corporativo ${i + 1}`,
-  price: 120.00 + i * 15, // Precios van aprox de 120 a 285
-  image: `https://via.placeholder.com/300x180/f3f4f6/1f2937?text=Item+${i + 1}`,
-  category: i % 3 === 0 ? 'Equipo' : i % 3 === 1 ? 'Servicio' : 'Combo',
-  rating: 4 + (i % 2) * 0.5
-}));
+// Función para mapear el tipo del backend a la categoría del frontend
+const mapearTipoACategoria = (tipo: string): 'Equipo' | 'Servicio' | 'Combo' => {
+  if (tipo === 'EQUIPO_MOVIL') return 'Equipo';
+  if (tipo === 'SERVICIO_HOGAR' || tipo === 'SERVICIO_MOVIL') return 'Servicio';
+  if (tipo === 'COMBO') return 'Combo';
+  return 'Equipo'; // Por defecto
+};
+
+// Función para convertir ProductoDisponible a Product
+const convertirProductoDisponible = (producto: ProductoDisponible): Product => ({
+  id: producto.id.toString(),
+  name: producto.nombre,
+  price: producto.precio,
+  image: '', // Sin imagen
+  category: mapearTipoACategoria(producto.tipo),
+});
 
 interface ProductCatalogModalProps {
   isOpen: boolean;
@@ -30,16 +38,41 @@ interface ProductCatalogModalProps {
 export const ProductCatalogModal: React.FC<ProductCatalogModalProps> = ({ isOpen, onClose, onAddProduct }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [maxPrice, setMaxPrice] = useState<number>(500); // Estado para el filtro de precio
+  const [maxPrice, setMaxPrice] = useState<number>(500);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Cargar productos cuando se abre el modal
+  useEffect(() => {
+    if (isOpen) {
+      cargarProductos();
+    }
+  }, [isOpen]);
+
+  const cargarProductos = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const productosDisponibles = await ProductoService.obtenerProductosDisponibles();
+      const productosConvertidos = productosDisponibles.map(convertirProductoDisponible);
+      setProducts(productosConvertidos);
+    } catch (err) {
+      console.error('Error al cargar productos:', err);
+      setError('No se pudieron cargar los productos. Por favor, intente nuevamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
   // Lógica de Filtrado Actualizada
-  const filteredProducts = MOCK_PRODUCTS.filter(p => {
+  const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           p.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory ? p.category === selectedCategory : true;
-    const matchesPrice = p.price <= maxPrice; // Filtro de precio activo
+    const matchesPrice = p.price <= maxPrice;
 
     return matchesSearch && matchesCategory && matchesPrice;
   });
@@ -147,13 +180,34 @@ export const ProductCatalogModal: React.FC<ProductCatalogModalProps> = ({ isOpen
             <div className="mb-5 flex items-center justify-between">
                 <h3 className="text-gray-800 font-semibold text-lg">Resultados</h3>
                 <span className="text-xs font-medium text-gray-500 bg-white border border-gray-200 px-3 py-1 rounded-full shadow-sm">
-                    {filteredProducts.length} productos encontrados
+                    {loading ? 'Cargando...' : `${filteredProducts.length} productos encontrados`}
                 </span>
             </div>
             
+            {/* Mensaje de Error */}
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {error}
+                <button 
+                  onClick={cargarProductos}
+                  className="ml-2 underline hover:text-red-900"
+                >
+                  Reintentar
+                </button>
+              </div>
+            )}
+
+            {/* Indicador de Carga */}
+            {loading && (
+              <div className="flex items-center justify-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              </div>
+            )}
+            
             {/* Grid de Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.map((product) => (
+            {!loading && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredProducts.map((product) => (
                 <div 
                   key={product.id}
                   className="group bg-white rounded-lg border border-gray-200 hover:border-blue-300 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden relative"
@@ -165,13 +219,9 @@ export const ProductCatalogModal: React.FC<ProductCatalogModalProps> = ({ isOpen
                     {product.category}
                   </span>
 
-                  {/* Imagen */}
-                  <div className="aspect-[4/3] w-full overflow-hidden bg-gray-100 relative border-b border-gray-100">
-                    <img 
-                      src={product.image} 
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
+                  {/* Imagen - Placeholder sin cargar imágenes externas */}
+                  <div className="aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 relative border-b border-gray-100 flex items-center justify-center">
+                    <Package size={48} className="text-gray-400" />
                   </div>
 
                   {/* Info del Producto */}
@@ -211,17 +261,12 @@ export const ProductCatalogModal: React.FC<ProductCatalogModalProps> = ({ isOpen
                 </div>
               ))}
             </div>
+            )}
             
-            {/* Paginación / Ver más */}
-            {filteredProducts.length === 0 ? (
+            {/* Mensaje cuando no hay productos */}
+            {!loading && filteredProducts.length === 0 && !error && (
                 <div className="mt-10 py-10 text-center text-gray-400">
                     <p>No se encontraron productos con estos filtros.</p>
-                </div>
-            ) : (
-                <div className="mt-10 py-6 text-center border-t border-gray-200">
-                <button className="text-blue-600 text-sm font-medium hover:text-blue-800 hover:bg-blue-50 px-4 py-2 rounded transition-colors">
-                    Cargar más productos
-                </button>
                 </div>
             )}
           </div>

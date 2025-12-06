@@ -1,58 +1,56 @@
 export interface VendedorResponse {
   sellerId: number;
+  dni?: string;
+  firstName?: string;
+  lastName?: string;
   fullName: string;
+  email?: string;
+  phoneNumber?: string;
+  sellerType?: string;
+  sellerStatus?: string;
+  sellerBranchId?: number;
   sellerBranchName: string;
 }
 
-// Datos simulados de vendedores
-const MOCK_VENDEDORES: VendedorResponse[] = [
-  {
-    sellerId: 1,
-    fullName: 'Fardito Leon Chacon',
-    sellerBranchName: 'Lima Centro',
-  },
-  {
-    sellerId: 2,
-    fullName: 'Ana Torres Ramírez',
-    sellerBranchName: 'Lima Norte',
-  },
-  {
-    sellerId: 3,
-    fullName: 'Pedro Ramírez González',
-    sellerBranchName: 'Lima Sur',
-  },
-  {
-    sellerId: 4,
-    fullName: 'Lucía Fernández Castro',
-    sellerBranchName: 'Lima Este',
-  },
-  {
-    sellerId: 5,
-    fullName: 'Miguel Ángel Castro Díaz',
-    sellerBranchName: 'Callao',
-  },
-  {
-    sellerId: 6,
-    fullName: 'Carmen Rosa Vega',
-    sellerBranchName: 'San Isidro',
-  },
-];
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 export const vendedorService = {
   /**
-   * Listar vendedores activos (datos simulados)
+   * Listar vendedores activos desde el API
    */
   async listarVendedoresActivos(): Promise<VendedorResponse[]> {
-    // Simular delay de red
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return MOCK_VENDEDORES;
+    try {
+      const response = await fetch(`${API_BASE_URL}/vendedores/activos`);
+
+      if (!response.ok) {
+        throw new Error('Error al cargar los vendedores');
+      }
+
+      const data: VendedorResponse[] = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error loading sellers:', error);
+      // Retornar array vacío en caso de error
+      return [];
+    }
   },
 
   /**
-   * Obtener vendedor por ID (datos simulados)
+   * Obtener vendedor por ID
    */
   async obtenerVendedor(id: number): Promise<VendedorResponse | undefined> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    return MOCK_VENDEDORES.find((v) => v.sellerId === id);
+    try {
+      const response = await fetch(`${API_BASE_URL}/vendedores/${id}`);
+
+      if (!response.ok) {
+        return undefined;
+      }
+
+      const data: VendedorResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error loading seller:', error);
+      return undefined;
+    }
   },
 };

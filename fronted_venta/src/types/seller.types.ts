@@ -1,22 +1,30 @@
 export const SellerStatus = {
   Activo: 'Activo',
   Inactivo: 'Inactivo',
-} as const
-export type SellerStatus = typeof SellerStatus[keyof typeof SellerStatus]
+} as const;
+export type SellerStatus = (typeof SellerStatus)[keyof typeof SellerStatus];
 
 export const SellerType = {
   Interno: 'Interno',
   Externo: 'Externo',
-} as const
-export type SellerType = typeof SellerType[keyof typeof SellerType]
+} as const;
+export type SellerType = (typeof SellerType)[keyof typeof SellerType];
 
+// 🚀 NUEVA INTERFAZ: Definición del objeto Sede (basada en Sede.java)
+export interface Sede {
+  id: string;
+  name: string; // Este campo es el que contiene el nombre legible.
+  branchType?: string; // Asumiendo que existe el tipo de sucursal.
+  // ... otras propiedades si las hay
+}
 
 export interface Seller {
   id: string;
   name: string;
   dni: string;
   type: SellerType;
-  sede: string;
+  // 🔑 CORRECCIÓN CLAVE: sede puede ser string o Sede object
+  sede: string | Sede;
   status: SellerStatus;
 }
 
@@ -36,6 +44,7 @@ export interface StatusPillProps {
 }
 
 export interface SellerToolbarProps {
-  onNewSellerClick: () => void; // La función que viene desde PaginaVendedor
-  // para otros filtros podría ser
+  onNewSellerClick: () => void;
+  onCreateComboClick?: () => void;
+  isAdmin?: boolean;
 }

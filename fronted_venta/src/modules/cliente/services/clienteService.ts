@@ -4,76 +4,92 @@ export interface Cliente {
   documento?: string;
   telefono?: string;
   direccion?: string;
+  email?: string;
 }
 
-// Datos simulados de clientes
-const MOCK_CLIENTES: Cliente[] = [
-  {
-    id: 1,
-    nombre: 'Juan Pérez García',
-    documento: '12345678',
-    telefono: '+51 987 654 321',
-    direccion: 'Av. Principal 123, Lima',
-  },
-  {
-    id: 2,
-    nombre: 'María García López',
-    documento: '87654321',
-    telefono: '+51 912 345 678',
-    direccion: 'Jr. Los Olivos 456, Lima',
-  },
-  {
-    id: 3,
-    nombre: 'Carlos López Mendoza',
-    documento: '11223344',
-    telefono: '+51 998 765 432',
-    direccion: 'Calle Las Flores 789, Lima',
-  },
-  {
-    id: 4,
-    nombre: 'Ana Torres Mendoza',
-    documento: '22334455',
-    telefono: '+51 955 123 456',
-    direccion: 'Av. Arequipa 1010, Lima',
-  },
-  {
-    id: 5,
-    nombre: 'Roberto Silva Chávez',
-    documento: '33445566',
-    telefono: '+51 944 567 890',
-    direccion: 'Jr. Independencia 234, Lima',
-  },
-  {
-    id: 6,
-    nombre: 'Empresa ABC S.A.C.',
-    documento: '20123456789',
-    telefono: '+51 987 111 222',
-    direccion: 'Av. Javier Prado 2500, San Isidro',
-  },
-  {
-    id: 7,
-    nombre: 'Tech Solutions EIRL',
-    documento: '20987654321',
-    telefono: '+51 912 333 444',
-    direccion: 'Calle Los Negocios 100, Miraflores',
-  },
-];
+// Interfaz del backend
+interface ClienteResponse {
+  clienteId: number;
+  dni: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  telefonoFijo: string;
+  address: string;
+  fechaNacimiento: string;
+  registrationDate: string;
+  estado: string;
+  categoria: string;
+}
+
+interface PageClienteResponse {
+  clientes: ClienteResponse[];
+  currentPage: number;
+  totalPages: number;
+  totalElements: number;
+  pageSize: number;
+}
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 export const clienteService = {
   /**
-   * Listar todos los clientes (datos simulados)
+   * Listar todos los clientes activos desde el API
    */
   async listarClientes(): Promise<Cliente[]> {
-    // Simular delay de red
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return MOCK_CLIENTES;
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/clientes/filtroClientes?page=0&size=100&estado=ACTIVO`
+      );
+
+      if (!response.ok) {
+        throw new Error('Error al cargar los clientes');
+      }
+
+      const data: PageClienteResponse = await response.json();
+
+      // Mapear ClienteResponse a Cliente
+      return data.clientes.map((cliente) => ({
+        id: cliente.clienteId,
+        nombre: cliente.fullName,
+        documento: cliente.dni,
+        telefono: cliente.phoneNumber,
+        direccion: cliente.address,
+        email: cliente.email,
+      }));
+    } catch (error) {
+      console.error('Error loading clients:', error);
+      // Retornar array vacío en caso de error
+      return [];
+    }
   },
 
   /**
-   * Buscar cliente por ID (datos simulados)
+   * Buscar cliente por ID
    */
   async obtenerCliente(id: number): Promise<Cliente | undefined> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    return MOCK_CLIENTES.find((c) => c.id === id);
+    try {
+      const response = await fetch(`${API_BASE_URL}/clientes/integracion/atencion-cliente/${id}`);
+
+      if (!response.ok) {
+        return undefined;
+      }
+
+      const cliente: ClienteResponse = await response.json();
+
+      return {
+        id: cliente.clienteId,
+        nombre: cliente.fullName,
+        documento: cliente.dni,
+        telefono: cliente.phoneNumber,
+        direccion: cliente.address,
+        email: cliente.email,
+      };
+    } catch (error) {
+      console.error('Error loading client:', error);
+      return undefined;
+    }
   },
 };

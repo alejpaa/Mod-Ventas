@@ -6,7 +6,7 @@ import com.venta.backend.descuento.dominio.reglas.IReglaDescuento;
 import com.venta.backend.descuento.DTO.AplicarDescuentoRequest;
 import com.venta.backend.descuento.DTO.DescuentoAplicadoResponse;
 import com.venta.backend.venta.entities.Venta;
-import com.venta.backend.venta.infraestructura.repository.VentaRepositorio;
+import com.venta.backend.venta.repository.VentaRepositorio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.venta.backend.descuento.aplicacion.exceptions.CuponNoValidoException;

@@ -106,7 +106,7 @@ export function useQuotation() {
   const filteredQuotations = quotations.filter((q) => {
     const matchesSearch =
       q.numCotizacion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      q.idCliente.toString().includes(searchTerm);
+      q.clienteNombre.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'ALL' || q.estado === statusFilter;
     return matchesSearch && matchesStatus;
   });

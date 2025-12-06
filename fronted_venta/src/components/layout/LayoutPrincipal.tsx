@@ -7,11 +7,13 @@ import { QuoteIcon, UsersIcon, UserIcon, ShoppingCartIcon, LogOutIcon, BoxIcon }
 
 export function LayoutPrincipal() {
   const { role, logout } = useRole();
+  const normalizedRole = role ? role.toLowerCase() : '';
 
   // Navigation configuration with icons
   const adminNav = [
     { to: '/pagina-cliente', label: 'Clientes', icon: UsersIcon },
     { to: '/pagina-vendedor', label: 'Vendedor', icon: UserIcon },
+    { to: '/admin/cupones', label: 'Gestión Cupones', icon: BoxIcon },
   ];
 
   const vendedorNav = [
@@ -22,7 +24,7 @@ export function LayoutPrincipal() {
 
   const defaultNav = [{ to: '/', label: 'Venta', icon: ShoppingCartIcon }];
 
-  const nav = role === 'administrador' ? adminNav : role === 'vendedor' ? vendedorNav : defaultNav;
+  const nav = normalizedRole === 'administrador' ? adminNav : normalizedRole === 'vendedor' ? vendedorNav : defaultNav;
 
   return (
     <div className="flex h-screen bg-gray-50">

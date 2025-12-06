@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listarVentasLeadPendientes, type VentaLeadPendiente } from '../services/ventaLead.service';
+import { ModalVisualizarVenta } from './ModalVisualizarVenta';
 
 // --- Tipos para el Ordenamiento ---
 type SortKey = keyof Omit<VentaLeadPendiente, 'ventaId'>;
@@ -65,9 +66,8 @@ const SortIcon = ({ direction, active }: { direction: SortDirection; active: boo
       viewBox="0 0 24 24"
       strokeWidth={2}
       stroke="currentColor"
-      className={`w-4 h-4 ml-1 transition-transform duration-200 ${
-        active ? 'text-blue-600' : 'text-gray-300'
-      } ${active && direction === 'desc' ? 'rotate-180' : ''}`}
+      className={`w-4 h-4 ml-1 transition-transform duration-200 ${active ? 'text-blue-600' : 'text-gray-300'
+        } ${active && direction === 'desc' ? 'rotate-180' : ''}`}
     >
       <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
     </svg>
@@ -85,6 +85,7 @@ export function PendingLeadSalesModal({ onClose }: PendingLeadSalesModalProps) {
   const [leads, setLeads] = useState<VentaLeadPendiente[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [modalVisualizarOpen, setModalVisualizarOpen] = useState(false);
 
   // Estado para filtros
   const [filters, setFilters] = useState({
@@ -312,6 +313,7 @@ export function PendingLeadSalesModal({ onClose }: PendingLeadSalesModalProps) {
                               <EditIcon />
                             </button>
                             <button
+                              onClick={() => setModalVisualizarOpen(true)}
                               className="text-gray-600 hover:text-gray-800 transition-colors p-1"
                               title="Ver Detalle"
                             >
@@ -339,6 +341,13 @@ export function PendingLeadSalesModal({ onClose }: PendingLeadSalesModalProps) {
 
         <div className="h-4 bg-gray-50 border-t border-gray-100"></div>
       </div>
+
+      {/* Modal de Visualización */}
+      <ModalVisualizarVenta
+        isOpen={modalVisualizarOpen}
+        onClose={() => setModalVisualizarOpen(false)}
+        tipoVenta="LEAD"
+      />
     </div>
   );
 }

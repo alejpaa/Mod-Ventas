@@ -8,14 +8,16 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
 
 export const cotizacionService = {
   /**
-   * List all quotations - USA LA API
+   * List all quotations - USA LA API (with pagination)
    */
   async listarCotizaciones(): Promise<Quotation[]> {
-    const response = await fetch(`${API_BASE_URL}/cotizaciones`);
+    const response = await fetch(`${API_BASE_URL}/cotizaciones?page=0&size=100`);
     if (!response.ok) {
       throw new Error('Error al cargar las cotizaciones');
     }
-    return response.json();
+    const paginatedResponse = await response.json();
+    // Extract the content array from the paginated response
+    return paginatedResponse.content || [];
   },
 
   /**

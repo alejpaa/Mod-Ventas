@@ -66,6 +66,8 @@ interface VentaResumenApi {
   subtotal: number;
   descuentoTotal: number;
   total: number;
+  idVendedor?: number;
+  nombreVendedor?: string;
   items: LineaCarritoApi[];
 }
 
@@ -97,6 +99,8 @@ export function PaginaVentaDirecta() {
   const [busquedaCliente, setBusquedaCliente] = useState('');
   const [metodoPago, setMetodoPago] = useState<'EFECTIVO' | 'TARJETA'>('EFECTIVO');
   const [numVenta, setNumVenta] = useState<string>('');
+  const [asignandoVendedor, setAsignandoVendedor] = useState(false);
+  const [vendedorAsignado, setVendedorAsignado] = useState<{ id: number, nombre: string } | null>(null);
 
   // --- Carga Inicial de Datos ---
   useEffect(() => {
@@ -123,6 +127,15 @@ export function PaginaVentaDirecta() {
         setDescuentoApi(data.descuentoTotal);
         //setTotalApi(data.total);
         setNumVenta(data.numVenta || `VENTA-${data.ventaId}`);
+
+        // Cargar vendedor asignado si existe
+        if (data.idVendedor && data.nombreVendedor) {
+          setVendedorAsignado({
+            id: data.idVendedor,
+            nombre: data.nombreVendedor
+          });
+          setSellerIdInput(data.idVendedor);
+        }
       } catch (e) {
         console.error(e);
       }
@@ -199,6 +212,34 @@ export function PaginaVentaDirecta() {
   const handleEliminarCliente = () => {
     setClienteSeleccionado(null);
     setBusquedaCliente('');
+  };
+
+  const handleAsignarVendedor = async () => {
+    if (!validatedSeller || !ventaId) return;
+
+    try {
+      setAsignandoVendedor(true);
+      const response = await fetch(`${API_BASE_URL}/venta/${ventaId}/vendedor/${validatedSeller.sellerId}`, {
+        method: 'PUT',
+      });
+
+      if (!response.ok) {
+        throw new Error('No se pudo asignar el vendedor');
+      }
+
+      // Actualizar estado del vendedor asignado
+      setVendedorAsignado({
+        id: validatedSeller.sellerId,
+        nombre: `${validatedSeller.firstName} ${validatedSeller.lastName}`
+      });
+
+      alert('Vendedor asignado exitosamente');
+    } catch (e) {
+      console.error(e);
+      alert('Ocurrió un error al asignar el vendedor.');
+    } finally {
+      setAsignandoVendedor(false);
+    }
   };
 
   return (
@@ -447,16 +488,31 @@ export function PaginaVentaDirecta() {
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex justify-between items-center mb-2">
               <label className="text-sm font-medium text-gray-700">Asignar Vendedor</label>
-              <button className="text-xs bg-[#3C83F6] text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors">
-                Buscar vendedor
+              <button
+                onClick={handleAsignarVendedor}
+                disabled={!validatedSeller || asignandoVendedor}
+                className="text-xs bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
+              >
+                {asignandoVendedor ? 'Asignando...' : 'Asignar Vendedor'}
               </button>
             </div>
             <input
               type="text"
               placeholder="Codigo de Vendedor"
+              value={sellerIdInput || ''}
               onChange={(e) => setSellerIdInput(parseInt(e.target.value) || null)}
               className="w-full px-3 py-2 border border-gray-300 rounded text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
+
+            {/* Mostrar vendedor asignado si existe */}
+            {vendedorAsignado && (
+              <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded">
+                <p className="text-xs text-blue-600 font-medium mb-1">Vendedor Actualmente Asignado:</p>
+                <p className="text-sm font-bold text-blue-800">{vendedorAsignado.nombre}</p>
+                <p className="text-xs text-blue-500 mt-1">ID: {vendedorAsignado.id}</p>
+              </div>
+            )}
+
             {/* WIDGET DE VALIDACIÓN */}
             <div className="pt-3 border-t border-gray-100">
               <SellerDisplayWidget

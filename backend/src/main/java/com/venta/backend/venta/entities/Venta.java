@@ -2,6 +2,7 @@ package com.venta.backend.venta.entities;
 
 import com.venta.backend.venta.enums.OrigenVenta;
 import com.venta.backend.venta.enums.VentaEstado;
+import com.venta.backend.venta.enums.EstadoPago;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -46,6 +47,11 @@ public class Venta {
 
     @Column(name = "id_vendedor")
     private Long idVendedor;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado_pago")
+    @Builder.Default
+    private EstadoPago estadoPago = EstadoPago.PENDIENTE;
 
     @Column(nullable = false)
     private BigDecimal subtotal;
