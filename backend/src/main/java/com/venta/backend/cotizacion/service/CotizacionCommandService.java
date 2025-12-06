@@ -100,7 +100,7 @@ public class CotizacionCommandService {
         
         // Update state and send email with PDF attachment
         cotizacion.setEstado(CotizacionEstado.ENVIADA);
-        String enlace = "/cotizaciones/" + cotizacion.getId() + "/aceptacion";
+        String enlace = "https://mod-ventas.onrender.com/api/cotizaciones/" + cotizacion.getId() + "/aceptacion";
         cotizacionEmailService.enviarCotizacionConPdf(cotizacion, request.getEmail(), enlace, pdfBytes);
         cotizacionRepository.save(cotizacion);
     }

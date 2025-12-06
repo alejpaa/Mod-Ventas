@@ -1,4 +1,4 @@
-import { QuoteIcon, UsersIcon, Download } from 'lucide-react';
+import { Download, Mail, CheckCircle, ShoppingCart } from 'lucide-react';
 import type { Quotation } from '../types/quotation.types';
 
 interface QuotationListProps {
@@ -29,41 +29,50 @@ export function QuotationList({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'BORRADOR':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-700';
       case 'ENVIADA':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-700';
       case 'ACEPTADA':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-700';
       case 'RECHAZADA':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-700';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-700';
     }
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      {/* Filters Bar */}
-      <div className="p-6 border-b border-gray-200 flex flex-wrap gap-4 justify-between items-center bg-gray-50/50">
-        <div className="flex gap-4 flex-1">
-          <input
-            type="text"
-            placeholder="Buscar por cliente o N° cotización..."
-            className="px-4 py-2 border border-gray-300 rounded-lg w-full max-w-md focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-          <select
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-            value={statusFilter}
-            onChange={(e) => onFilterChange(e.target.value)}
-          >
-            <option value="ALL">Todos los estados</option>
-            <option value="BORRADOR">Borrador</option>
-            <option value="ENVIADA">Enviada</option>
-            <option value="ACEPTADA">Aceptada</option>
-            <option value="RECHAZADA">Rechazada</option>
-          </select>
+    <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+      {/* Header */}
+      <div className="p-6 border-b border-gray-200 bg-gray-50">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-800">Cotizaciones</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              {quotations.length} cotización{quotations.length !== 1 ? 'es' : ''} en total
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input
+              type="text"
+              placeholder="Buscar cotización..."
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+            />
+            <select
+              value={statusFilter}
+              onChange={(e) => onFilterChange(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+            >
+              <option value="ALL">Todos los estados</option>
+              <option value="BORRADOR">Borrador</option>
+              <option value="ENVIADA">Enviada</option>
+              <option value="ACEPTADA">Aceptada</option>
+              <option value="RECHAZADA">Rechazada</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -113,38 +122,49 @@ export function QuotationList({
                       {q.estado}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right space-x-2">
-                    <button
-                      onClick={() => onDownloadPdf(q.id)}
-                      className="text-gray-500 hover:text-primary-600 p-1"
-                      title="Descargar PDF"
+                  <td className="px-6 py-4">
+                    <div
+                      className="flex items-center justify-end gap-2"
+                      style={{ minWidth: '320px' }}
                     >
-                      <Download size={18} />
-                    </button>
-                    <button
-                      onClick={() => onSendEmail(q)}
-                      className="text-gray-500 hover:text-primary-600 p-1"
-                      title="Enviar por Correo"
-                    >
-                      <QuoteIcon size={18} />
-                    </button>
-                    {q.estado !== 'ACEPTADA' && (
                       <button
-                        onClick={() => onOpenAcceptDialog(q)}
-                        className="text-gray-500 hover:text-green-600 p-1"
-                        title="Marcar como Aceptada"
+                        onClick={() => onDownloadPdf(q.id)}
+                        className="px-3 py-1.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all font-medium text-sm inline-flex items-center gap-1.5"
+                        title="Descargar PDF"
                       >
-                        <UsersIcon size={18} />
+                        <Download size={16} />
+                        PDF
                       </button>
-                    )}
-                    {q.estado === 'ACEPTADA' && (
                       <button
-                        onClick={() => onConvertToSale(q.id)}
-                        className="text-primary-600 hover:text-primary-800 font-medium text-sm ml-2"
+                        onClick={() => onSendEmail(q)}
+                        className="px-3 py-1.5 text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-lg transition-all font-medium text-sm inline-flex items-center gap-1.5"
+                        title="Enviar por Correo"
                       >
-                        Generar Venta
+                        <Mail size={16} />
+                        Enviar
                       </button>
-                    )}
+                      {q.estado !== 'ACEPTADA' ? (
+                        <button
+                          onClick={() => onOpenAcceptDialog(q)}
+                          className="px-3 py-1.5 text-green-700 bg-green-100 hover:bg-green-200 rounded-lg transition-all font-medium text-sm inline-flex items-center gap-1.5"
+                          style={{ minWidth: '110px' }}
+                          title="Marcar como Aceptada"
+                        >
+                          <CheckCircle size={16} />
+                          Aceptar
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => onConvertToSale(q.id)}
+                          className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-medium text-sm inline-flex items-center gap-1.5"
+                          style={{ minWidth: '110px' }}
+                          title="Generar Venta"
+                        >
+                          <ShoppingCart size={16} />
+                          Venta
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))

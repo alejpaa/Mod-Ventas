@@ -13,5 +13,11 @@ public interface IVentaCarritoService {
     VentaResumenResponse obtenerResumen(Long ventaId);
     
     void asignarVendedor(Long ventaId, Long vendedorId);
+    
+    void cancelarVenta(Long ventaId);
+    
+    VentaResumenResponse crearVentaDesdeCotizacion(Long cotizacionId);
+    
+    void asignarCliente(Long ventaId, Long clienteId);
 }
 

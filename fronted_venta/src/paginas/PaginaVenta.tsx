@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PendingLeadSalesModal } from '../components/PendingLeadSalesModal';
-import { listarVentasPaginadas, type VentaListado } from '../services/venta.service';
+import { listarVentasPaginadas, cancelarVenta, type VentaListado } from '../services/venta.service';
 import { ModalVisualizarVenta } from '../components/ModalVisualizarVenta';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mod-ventas.onrender.com/api';
@@ -178,6 +178,13 @@ export function PaginaVenta() {
         const [year, month, day] = filtros.fecha.split('-');
         if (venta.fecha !== `${day}/${month}/${year}`) return false;
       }
+
+      // Filtrado automático por estado:
+      // Si es "En Borrador", solo mostrar ventas DIRECTA
+      if (venta.estado === 'En Borrador' && venta.origen !== 'DIRECTA') {
+        return false;
+      }
+
       return true;
     });
   }, [filtros, ventas]);
@@ -185,6 +192,18 @@ export function PaginaVenta() {
   const handleEditarVenta = (venta: Venta) => {
     if (venta.estado !== 'En Borrador') return;
     navigate(`/registrar-venta?ventaId=${venta.ventaId}`);
+  };
+
+  const handleCancelarVenta = async (venta: Venta) => {
+    if (window.confirm(`¿Estás seguro de que deseas cancelar la venta ${venta.id}?`)) {
+      try {
+        await cancelarVenta(venta.ventaId);
+        fetchVentas();
+      } catch (error) {
+        console.error('Error al cancelar venta:', error);
+        alert('Error al cancelar la venta');
+      }
+    }
   };
 
   const handlePageChange = (newPage: number) => {
@@ -359,12 +378,21 @@ export function PaginaVenta() {
                       >
                         <EditIcon />
                       </button>
-                      <button 
+                      <button
                         onClick={() => setModalVisualizarOpen(true)}
-                        className="text-gray-600 hover:text-gray-800 transition-colors p-1" 
+                        className="text-gray-600 hover:text-gray-800 transition-colors p-1"
                         title="Visualizar"
                       >
                         <ViewIcon />
+                      </button>
+                      <button
+                        onClick={() => handleCancelarVenta(venta)}
+                        className="text-red-600 hover:text-red-800 transition-colors p-1"
+                        title="Cancelar venta"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
                       </button>
                     </div>
                   </td>
@@ -411,7 +439,7 @@ export function PaginaVenta() {
 
       {showLeadsModal && <PendingLeadSalesModal onClose={() => setShowLeadsModal(false)} />}
       {/* Modal de Visualización */}
-      <ModalVisualizarVenta 
+      <ModalVisualizarVenta
         isOpen={modalVisualizarOpen}
         onClose={() => setModalVisualizarOpen(false)}
         tipoVenta="DIRECTA"

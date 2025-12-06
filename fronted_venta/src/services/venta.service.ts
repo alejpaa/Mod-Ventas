@@ -45,3 +45,14 @@ export const listarTodasVentas = async (): Promise<VentaListado[]> => {
 
     return response.json();
 };
+
+export const cancelarVenta = async (ventaId: number): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/venta/${ventaId}/cancelar`, {
+        method: 'PUT',
+    });
+
+    if (!response.ok) {
+        throw new Error('Error al cancelar la venta');
+    }
+};
+
