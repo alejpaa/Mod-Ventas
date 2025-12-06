@@ -12,9 +12,13 @@ import org.mapstruct.Mapping;
 public interface IVentaMapper {
 
     @Mapping(target = "ventaId", source = "id")
+    @Mapping(target = "numVenta", source = "numVenta")
     @Mapping(target = "origen", source = "origenVenta")
     @Mapping(target = "items", source = "detalles")
+    @Mapping(target = "idVendedor", source = "idVendedor")
+    @Mapping(target = "nombreVendedor", ignore = true)
     VentaResumenResponse toResumen(Venta venta);
+
 
     @Mapping(target = "detalleId", source = "id")
     @Mapping(target = "itemProductoId", source = "itemProducto.id")

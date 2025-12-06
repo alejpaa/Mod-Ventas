@@ -12,11 +12,14 @@ import java.util.List;
 @Builder
 public class VentaResumenResponse {
     Long ventaId;
+    String numVenta;
     OrigenVenta origen;
     VentaEstado estado;
     BigDecimal subtotal;
     BigDecimal descuentoTotal;
     BigDecimal total;
+    Long idVendedor;
+    String nombreVendedor;
     List<LineaCarritoResponse> items;
 }
 
