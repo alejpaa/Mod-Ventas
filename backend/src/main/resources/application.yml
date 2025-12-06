@@ -37,4 +37,4 @@ springdoc:
   show-actuator: false
 sendgrid:
   api:
-    key: ${SENDGRID_API_KEY}
+    key: ${SENDGRID_API_KEY:}
