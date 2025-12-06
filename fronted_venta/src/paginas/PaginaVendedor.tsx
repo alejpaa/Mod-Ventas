@@ -4,6 +4,10 @@ import SellerTable from '../components/SellerTable';
 import { SellerType, SellerStatus } from '../types/seller.types';
 import type { VendedorResponse, SedeResponse } from '../types/Vendedor';
 import { CreateSellerModal } from '../components/CreateSellerModal';
+
+import { CreateComboModal } from '../components/CreateComboModal';
+import { useRole } from '../contexts/RoleContext';
+
 import SedeTable from '../components/SedeTable';
 import SellerPagination from '../components/SellerPagination';
 
@@ -32,21 +36,20 @@ interface FilterState {
 
 export function PaginaVendedor() {
   // Empieza con la pestaña de vendedores
-  const [activeTab, setActiveTab] = useState<TabId>('vendedores');
+  const [activeTab, setActiveTab] = useState<TabId>('vendedores'); // Obtener rol del usuario
 
-  // 2. Usar el tipo VendedorResponse para el estado
+  const { role } = useRole();
+  const isAdmin = role === 'administrador'; // 2. Usar el tipo VendedorResponse para el estado
+
   const [sellers, setSellers] = useState<VendedorResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<Error | null>(null); // [ESTADOS PARA SEDES]
 
-  // [ESTADOS PARA SEDES]
   const [sedes, setSedes] = useState<SedeResponse[]>([]);
   const [isSedesLoading, setIsSedesLoading] = useState(false);
-  const [sedesError, setSedesError] = useState<Error | null>(null);
-  // Para almacenar el vendedor a editar (objeto completo de la API)
-  const [sellerToEdit, setSellerToEdit] = useState<VendedorResponse | null>(null);
+  const [sedesError, setSedesError] = useState<Error | null>(null); // Para almacenar el vendedor a editar (objeto completo de la API)
+  const [sellerToEdit, setSellerToEdit] = useState<VendedorResponse | null>(null); // estados para paginación
 
-  // estados para paginación
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
@@ -73,17 +76,16 @@ export function PaginaVendedor() {
     type: vendedor.sellerType === 'INTERNAL' ? SellerType.Interno : SellerType.Externo,
     sede: vendedor.sellerBranchName,
     status: vendedor.sellerStatus === 'ACTIVE' ? SellerStatus.Activo : SellerStatus.Inactivo,
-  }));
+  })); // Estado para los modales
 
-  // Estado para el modal de creación
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreateComboModalOpen, setIsCreateComboModalOpen] = useState(false);
 
   const tabs = [
     { id: 'vendedores', label: 'Vendedores' },
     { id: 'sedes', label: 'Sedes de Venta' },
-  ];
+  ]; // 3. Función para hacer la llamada a la API
 
-  // 3. Función para hacer la llamada a la API
   const fetchSellers = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -127,9 +129,8 @@ export function PaginaVendedor() {
         page: newPage, // Al cambiar 'filters.page', se dispara fetchSellers
       }));
     }
-  };
+  }; // para obtener las sedes
 
-  // para obtener las sedes
   const fetchSedes = useCallback(async () => {
     setIsSedesLoading(true);
     setSedesError(null);
@@ -149,9 +150,8 @@ export function PaginaVendedor() {
     } finally {
       setIsSedesLoading(false);
     }
-  }, []);
+  }, []); // para cargar sedes cuando se cambia de pestaña
 
-  // para cargar sedes cuando se cambia de pestaña
   useEffect(() => {
     if (activeTab === 'vendedores') {
       fetchSellers();
@@ -235,9 +235,8 @@ export function PaginaVendedor() {
       const response = await fetch(`${API_BASE_URL}/vendedores/${sellerId}`);
       if (!response.ok) throw new Error('No se pudo cargar el vendedor para editar.');
 
-      const sellerData: VendedorResponse = await response.json();
+      const sellerData: VendedorResponse = await response.json(); // 2. Almacenar los datos y abrir el modal
 
-      // 2. Almacenar los datos y abrir el modal
       setSellerToEdit(sellerData);
       setIsCreateModalOpen(true);
     } catch (e: unknown) {
@@ -256,118 +255,154 @@ export function PaginaVendedor() {
     setIsCreateModalOpen(false);
     setSellerToEdit(null); // Limpiar el estado de edición al cerrar
   };
+
   const handleSaveSuccess = () => {
     setIsCreateModalOpen(false); // Cerrar el modal
     setSellerToEdit(null); // Limpiar el estado
     fetchSellers(); // Refrescar la lista de vendedores
   };
 
+  const handleComboSaveSuccess = () => {
+    setIsCreateComboModalOpen(false); // Cerrar el modal
+    // Podrías refrescar una lista de combos aquí si fuera necesario
+  };
+
   return (
     <div className="bg-gray-100 min-h-screen">
+           {' '}
       <div className="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow-lg">
-        {/* 1. Cabecera */}
+                {/* 1. Cabecera */}       {' '}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Gestión de Vendedores</h1>
+                    <h1 className="text-3xl font-bold text-gray-900">Gestión de Vendedores</h1>     
+             {' '}
           <p className="text-gray-600 mt-1">
-            Crear vendedores y asignarles a una sede para empezar a vender
+                        Crear vendedores y asignarles a una sede para empezar a vender        
+             {' '}
           </p>
+                 {' '}
         </div>
-        {/* 2. Pestañas (Tabs) */}
+                {/* 2. Pestañas (Tabs) */}       {' '}
         <div className="border-b border-gray-200 mb-6">
+                   {' '}
           <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                       {' '}
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as TabId)}
                 className={`
-                  ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }
-                  whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm
-                `}
+                  ${
+                  activeTab === tab.id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }
+                  whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm
+                `}
               >
-                {tab.label}
+                                {tab.label}             {' '}
               </button>
             ))}
+                     {' '}
           </nav>
+                 {' '}
         </div>
-        {/* 3. Contenido Principal (basado en la pestaña activa) */}
+                {/* 3. Contenido Principal (basado en la pestaña activa) */}       {' '}
         <div>
-          {/* Contenido de la pestaña VENDEDORES */}
+                    {/* Contenido de la pestaña VENDEDORES */}         {' '}
           {activeTab === 'vendedores' && (
             <div>
+                           {' '}
               <SellerToolbar
                 onNewSellerClick={() => {
-                  setSellerToEdit(null);
+                  setSellerToEdit(null); // Asegura que es un nuevo registro
                   setIsCreateModalOpen(true);
                 }}
+                onCreateComboClick={() => {
+                  setIsCreateComboModalOpen(true);
+                }}
+                isAdmin={isAdmin}
                 onFilterChange={handleFilterChange}
               />
+                           {' '}
               {isLoading && (
                 <p className="py-4 text-center text-gray-600">
-                  Cargando vendedores desde el backend...
+                                    Cargando vendedores desde el backend...                {' '}
                 </p>
               )}
+                           {' '}
               {error && (
                 <div className="p-4 my-4 bg-red-100 text-red-700 rounded-md">
-                  <p className="font-bold">Error al cargar datos:</p>
-                  <p>{error.message}</p>
+                                    <p className="font-bold">Error al cargar datos:</p>             
+                      <p>{error.message}</p>                 {' '}
                   <p className="mt-2 text-sm">
-                    Asegúrese de que el backend (${API_BASE_URL}) esté activo.
+                                        Asegúrese de que el backend (${API_BASE_URL}) esté activo.  
+                                   {' '}
                   </p>
+                                 {' '}
                 </div>
               )}
-              {/* Solo mostramos la tabla si no está cargando y no hay error */}
+                            {/* Solo mostramos la tabla si no está cargando y no hay error */}     
+                     {' '}
               {!isLoading && !error && (
                 <>
+                                   {' '}
                   <SellerTable
                     sellers={mappedSellers}
                     onDeactivate={(id) => handleDeactivateSeller(id)}
                     onActivate={(id) => handleActivateSeller(id)}
                     onEdit={handleEditSeller}
                   />
-
+                                   {' '}
                   <div className="mt-4">
+                                       {' '}
                     <SellerPagination
                       currentPage={filters.page}
                       totalPages={totalPages}
                       totalElements={totalElements}
                       onPageChange={handlePageChange}
                     />
+                                     {' '}
                   </div>
+                                 {' '}
                 </>
               )}
+                         {' '}
             </div>
           )}
-          {/* Contenido de la pestaña SEDES */}
+                    {/* Contenido de la pestaña SEDES */}         {' '}
           {activeTab === 'sedes' && (
             <div className="p-4">
-              <h3 className="text-xl font-semibold">Listados de sede de ventas</h3>
+                            <h3 className="text-xl font-semibold">Listados de sede de ventas</h3>   
+                       {' '}
               {isSedesLoading && (
                 <p className="py-4 text-center text-gray-600">Cargando sedes...</p>
               )}
+                           {' '}
               {sedesError && (
                 <div className="p-4 my-4 bg-red-100 text-red-700 rounded-md">
-                  <p className="font-bold">Error al cargar sedes:</p>
-                  <p>{sedesError.message}</p>
+                                    <p className="font-bold">Error al cargar sedes:</p>             
+                      <p>{sedesError.message}</p>                 {' '}
                   <p className="mt-2 text-sm">
-                    Asegúrese de que el backend ({API_BASE_URL}) esté activo.
+                                        Asegúrese de que el backend ({API_BASE_URL}) esté activo.  
+                                   {' '}
                   </p>
+                                 {' '}
                 </div>
               )}
-              {/* VISUALIZACIÓN DE LA TABLA */}
-              {!isSedesLoading && !sedesError && sedes.length > 0 && <SedeTable sedes={sedes} />}
+              {!isSedesLoading && !sedesError && sedes.length > 0 && <SedeTable sedes={sedes} />}{' '}
               {!isSedesLoading && !sedesError && sedes.length === 0 && (
                 <p className="py-4 text-center text-gray-500 italic">
                   No hay sedes registradas o activas.
                 </p>
               )}
+                         {' '}
             </div>
           )}
+                 {' '}
         </div>
+             {' '}
       </div>
+            {/* Modales */}     {' '}
       {isCreateModalOpen && (
         <CreateSellerModal
           onClose={handleCloseModal}
@@ -376,6 +411,16 @@ export function PaginaVendedor() {
           sellerDataToEdit={sellerToEdit}
         />
       )}
+           {' '}
+      {isCreateComboModalOpen && (
+        <CreateComboModal
+          isOpen={isCreateComboModalOpen}
+          onClose={() => setIsCreateComboModalOpen(false)}
+          onSaveSuccess={handleComboSaveSuccess}
+          apiBaseUrl={API_BASE_URL}
+        />
+      )}
+         {' '}
     </div>
   );
 }

@@ -12,11 +12,13 @@ export function LayoutPrincipal() {
   const adminNav = [
     { to: '/pagina-cliente', label: 'Clientes', icon: UsersIcon },
     { to: '/pagina-vendedor', label: 'Vendedor', icon: UserIcon },
+    { to: '/admin/cupones', label: 'Gestión Cupones', icon: BoxIcon },
   ];
 
   const vendedorNav = [
     { to: '/', label: 'Venta', icon: ShoppingCartIcon },
     { to: '/pagina-cotizacion', label: 'Cotización', icon: QuoteIcon },
+    { to: '/pagina-cliente', label: 'Clientes', icon: UsersIcon },
   ];
 
   const defaultNav = [{ to: '/', label: 'Venta', icon: ShoppingCartIcon }];

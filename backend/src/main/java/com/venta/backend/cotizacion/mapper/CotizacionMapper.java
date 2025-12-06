@@ -2,6 +2,7 @@ package com.venta.backend.cotizacion.mapper;
 
 import com.venta.backend.cotizacion.dto.CotizacionItemRequest;
 import com.venta.backend.cotizacion.dto.CotizacionItemResponse;
+import com.venta.backend.cotizacion.dto.CotizacionListResponse;
 import com.venta.backend.cotizacion.dto.CotizacionRequest;
 import com.venta.backend.cotizacion.dto.CotizacionResponse;
 import com.venta.backend.cotizacion.model.Cotizacion;
@@ -26,10 +27,18 @@ public interface CotizacionMapper {
     @Mapping(target = "fechaCotizacion", expression = "java(java.time.LocalDate.now())")
     @Mapping(target = "estado", expression = "java(com.venta.backend.cotizacion.model.CotizacionEstado.BORRADOR)")
     @Mapping(target = "items", ignore = true)
+    @Mapping(target = "cliente", ignore = true)
+    @Mapping(target = "vendedor", ignore = true)
     Cotizacion toEntity(CotizacionRequest request);
 
+    @Mapping(target = "idCliente", source = "cliente.clienteId")
+    @Mapping(target = "sellerCode", expression = "java(String.valueOf(cotizacion.getVendedor().getSellerId()))")
+    @Mapping(target = "idSede", expression = "java(cotizacion.getVendedor().getSellerBranch() != null ? cotizacion.getVendedor().getSellerBranch().getBranchId().intValue() : null)")
     @Mapping(target = "items", expression = "java(cotizacion.getItems().stream().map(this::toDto).toList())")
     CotizacionResponse toDto(Cotizacion cotizacion);
+
+    @Mapping(target = "clienteNombre", expression = "java(cotizacion.getCliente().getFullName())")
+    CotizacionListResponse toListDto(Cotizacion cotizacion);
 }
 
 

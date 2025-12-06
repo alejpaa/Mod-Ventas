@@ -47,5 +47,15 @@ public interface IClienteAdminServicio {
      * @param clienteId El ID del cliente a dar de baja.
      */
     void darBajaCliente(Long clienteId);
+
+    /**
+     * Actualiza la información de un cliente existente por DNI.
+     * Permite modificar todos los campos excepto clienteId (que es la identidad).
+     *
+     * @param dni El DNI del cliente a actualizar.
+     * @param request El DTO con los campos que se pueden modificar.
+     * @return Un ClienteResponse con los datos actualizados.
+     */
+    ClienteResponse actualizarClientePorDni(String dni, ModificacionClienteRequest request);
 }
 

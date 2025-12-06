@@ -90,10 +90,6 @@ export function PaginaCliente() {
     }
   };
 
-  const handleEstadisticas = () => {
-    alert('Aquí iría el panel de estadísticas del cliente.');
-  };
-
   const getEstadoBadge = (value?: string) => {
     if (value === 'INACTIVO') return 'bg-gray-100 text-gray-700';
     return 'bg-green-100 text-green-700';
@@ -123,27 +119,23 @@ export function PaginaCliente() {
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
               placeholder="Buscar por nombre o RUC..."
-              className="w-full pl-4 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full pl-4 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div className="flex items-center gap-2">
-            {(['TODOS', 'ACTIVO', 'INACTIVO'] as EstadoFiltro[]).map((estadoBtn) => (
-              <button
-                key={estadoBtn}
-                onClick={() => setEstado(estadoBtn)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  estado === estadoBtn
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {estadoBtn === 'TODOS' ? 'Todos' : estadoBtn === 'ACTIVO' ? 'Activos' : 'Inactivos'}
-              </button>
-            ))}
+            <select
+              value={estado}
+              onChange={(e) => setEstado(e.target.value as EstadoFiltro)}
+              className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none"
+            >
+              <option value="TODOS">Todo Estado</option>
+              <option value="ACTIVO">Activo</option>
+              <option value="INACTIVO">Inactivo</option>
+            </select>
           </div>
           <button
             onClick={handleBuscar}
-            className="px-4 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+            className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition duration-300"
           >
             Buscar
           </button>
@@ -154,10 +146,9 @@ export function PaginaCliente() {
             <div className="col-span-3">Nombre</div>
             <div className="col-span-2">RUC/DNI</div>
             <div className="col-span-2">Email</div>
-            <div className="col-span-1">Teléfono</div>
-            <div className="col-span-2">Última compra</div>
+            <div className="col-span-2">Teléfono</div>
             <div className="col-span-1">Estado</div>
-            <div className="col-span-1 text-right">Acciones</div>
+            <div className="col-span-2 text-right">Acciones</div>
           </div>
 
           <div className="divide-y divide-gray-100 bg-white">
@@ -167,18 +158,15 @@ export function PaginaCliente() {
             )}
             {!loading &&
               clientes.map((cliente) => (
-                <div key={cliente.clienteId} className="grid grid-cols-12 px-6 py-4 items-center">
+                <div key={cliente.clienteId} className="grid grid-cols-12 px-6 py-4 items-center hover:bg-gray-50">
                   <div className="col-span-3">
                     <p className="font-medium text-gray-900">{cliente.fullName}</p>
                     <p className="text-xs text-gray-500">ID: {cliente.clienteId}</p>
                   </div>
                   <div className="col-span-2 text-gray-700">{cliente.dni || '—'}</div>
                   <div className="col-span-2 text-gray-700 truncate">{cliente.email || '—'}</div>
-                  <div className="col-span-1 text-gray-700 truncate">
+                  <div className="col-span-2 text-gray-700 truncate">
                     {cliente.phoneNumber || '—'}
-                  </div>
-                  <div className="col-span-2 text-gray-900 font-medium">
-                    {cliente.ultimaCompra || '—'}
                   </div>
                   <div className="col-span-1">
                     <select
@@ -200,34 +188,24 @@ export function PaginaCliente() {
                       <option value="INACTIVO">Inactivo</option>
                     </select>
                   </div>
-                  <div className="col-span-1 flex justify-end gap-2 text-sm">
+                  <div className="col-span-2 flex justify-end gap-4 text-sm font-medium">
                     <button
                       onClick={() => handleOpenEditar(cliente.clienteId)}
-                      className="text-blue-600 hover:text-blue-700"
-                      title="Ver/Editar"
+                      className="text-blue-600 hover:text-blue-800"
                     >
-                      👁️
-                    </button>
-                    <button
-                      onClick={() => handleOpenHistorial(cliente)}
-                      className="text-emerald-600 hover:text-emerald-700"
-                      title="Historial de compras"
-                    >
-                      💰
-                    </button>
-                    <button
-                      onClick={handleEstadisticas}
-                      className="text-purple-600 hover:text-purple-700"
-                      title="Estadísticas"
-                    >
-                      📊
+                      Editar
                     </button>
                     <button
                       onClick={() => handleCambiarEstado(cliente, 'INACTIVO')}
-                      className="text-red-600 hover:text-red-700"
-                      title="Desactivar"
+                      className="text-red-600 hover:text-red-800"
                     >
-                      ⏸️
+                      Desactivar
+                    </button>
+                    <button
+                      onClick={() => handleOpenHistorial(cliente)}
+                      className="text-green-600 hover:text-green-800"
+                    >
+                      Historial de compras
                     </button>
                   </div>
                 </div>

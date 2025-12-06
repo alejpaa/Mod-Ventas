@@ -1,6 +1,7 @@
 package com.venta.backend.cotizacion.controller;
 
 import com.venta.backend.cotizacion.dto.AceptacionCotizacionRequest;
+import com.venta.backend.cotizacion.dto.CotizacionListResponse;
 import com.venta.backend.cotizacion.dto.CotizacionRequest;
 import com.venta.backend.cotizacion.dto.CotizacionResponse;
 import com.venta.backend.cotizacion.dto.EnviarCotizacionRequest;
@@ -8,11 +9,13 @@ import com.venta.backend.cotizacion.service.CotizacionCommandService;
 import com.venta.backend.cotizacion.service.CotizacionQueryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -23,8 +26,13 @@ public class CotizacionController {
     private final CotizacionCommandService cotizacionCommandService;
 
     @GetMapping("/cotizaciones")
-    public ResponseEntity<List<CotizacionResponse>> listarCotizaciones() {
-        return ResponseEntity.ok(cotizacionQueryService.listarCotizaciones());
+    public ResponseEntity<Page<CotizacionListResponse>> listarCotizaciones(
+            @RequestParam(required = false) Long vendedorId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by("fechaCotizacion").descending());
+        return ResponseEntity.ok(cotizacionQueryService.listarCotizaciones(vendedorId, pageable));
     }
 
     @PostMapping("/cotizaciones")

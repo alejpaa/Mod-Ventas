@@ -1,5 +1,7 @@
 package com.venta.backend.cotizacion.service;
 
+import com.venta.backend.cliente.entities.Cliente;
+import com.venta.backend.cliente.infraestructura.repository.ClienteRepositorio;
 import com.venta.backend.cotizacion.dto.AceptacionCotizacionRequest;
 import com.venta.backend.cotizacion.dto.CotizacionRequest;
 import com.venta.backend.cotizacion.dto.CotizacionResponse;
@@ -11,6 +13,8 @@ import com.venta.backend.cotizacion.model.Cotizacion;
 import com.venta.backend.cotizacion.model.CotizacionEstado;
 import com.venta.backend.cotizacion.model.DetalleCotizacion;
 import com.venta.backend.cotizacion.repository.CotizacionRepository;
+import com.venta.backend.vendedor.entities.Vendedor;
+import com.venta.backend.vendedor.infraestructura.repository.VendedorRepositorio;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,10 +28,23 @@ public class CotizacionCommandService {
     private final CotizacionRepository cotizacionRepository;
     private final CotizacionMapper cotizacionMapper;
     private final CotizacionEmailService cotizacionEmailService;
+    private final ClienteRepositorio clienteRepositorio;
+    private final VendedorRepositorio vendedorRepositorio;
 
     @Transactional
     public CotizacionResponse crearCotizacion(CotizacionRequest request) {
+        // Buscar cliente y vendedor
+        Cliente cliente = clienteRepositorio.findById(request.getClienteId())
+                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado con ID: " + request.getClienteId()));
+        
+        Vendedor vendedor = vendedorRepositorio.findById(request.getVendedorId())
+                .orElseThrow(() -> new IllegalArgumentException("Vendedor no encontrado con ID: " + request.getVendedorId()));
+        
         Cotizacion cotizacion = cotizacionMapper.toEntity(request);
+        
+        // Establecer las relaciones
+        cotizacion.setCliente(cliente);
+        cotizacion.setVendedor(vendedor);
         
         // Generate unique quotation number (simplified - you may want to implement a better strategy)
         cotizacion.setNumCotizacion("COT-" + System.currentTimeMillis());

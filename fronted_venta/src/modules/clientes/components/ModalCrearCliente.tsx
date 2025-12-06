@@ -29,7 +29,7 @@ interface DatosClienteExtendido extends RegistroClienteRequest {
 }
 
 const opcionesEstado = ['ACTIVO', 'INACTIVO'];
-const opcionesGenero = ['Masculino', 'Femenino', 'Prefiero no decirlo'];
+const opcionesGenero = ['Masculino', 'Femenino'];
 const opcionesNivelEducativo = [
   'Primaria',
   'Secundaria',
@@ -475,16 +475,15 @@ export function ModalCrearCliente({ onClose, onSuccess }: ModalCrearClienteProps
   );
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-2xl font-semibold text-gray-900">Agregar Nuevo Cliente</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-xl font-bold"
-            aria-label="Cerrar modal"
-          >
-            ×
+    <div
+      className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 flex justify-center items-center p-4"
+      onClick={onClose}
+    >
+      <div className="bg-white p-8 rounded-lg shadow-xl z-50 w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">Agregar Nuevo Cliente</h2>
+          <button onClick={onClose} className="text-gray-500 text-3xl">
+            &times;
           </button>
         </div>
 

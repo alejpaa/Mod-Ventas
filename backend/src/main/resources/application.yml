@@ -4,17 +4,17 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:mysql://db-erp.mysql.database.azure.com/db_ventas}
     username: ${DB_USER:ventas_user}
-    password: ${DB_PASS}
+    password: ${DB_PASS:fisi123}
   jpa:
     hibernate:
-      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:none}
     show-sql: ${SPRING_JPA_SHOW_SQL:false}
     properties:
       hibernate:
         format_sql: ${SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL:false}
 server:
-    port: ${PORT:8080}
-    forward-headers-strategy: framework
+  port: ${PORT:8080}
+  forward-headers-strategy: framework
 management:
   endpoints:
     web:
@@ -33,5 +33,5 @@ springdoc:
     operations-sorter: method
     tags-sorter: alpha
     # Usar especificación OpenAPI personalizada
-    url: /openapi.yml
+    #url: /openapi.yml
   show-actuator: false
