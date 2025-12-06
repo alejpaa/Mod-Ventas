@@ -3,17 +3,20 @@ import { X, Search, ShoppingCart, Info, Filter, CheckSquare, Square, Package } f
 import { ProductoService, type ProductoDisponible } from '../modules/producto/services/producto.service';
 import type { ProductoDTO } from '../modules/producto/types/product.types';
 
-// Tipos para el catálogo
 export interface Product {
   id: string;
   name: string;
   price: number;
-  priceOriginal?: number; // Para combos: precio sin descuento
+  priceOriginal?: number;
   stock?: number;
   image: string;
   category: 'Equipo' | 'Servicio' | 'Combo';
   isCombo?: boolean;
   rating?: number;
+  // Campos adicionales para compatibilidad
+  codigo: string;
+  nombre: string;
+  precio: number;
 }
 
 // Función para mapear el tipo del backend a la categoría del frontend
@@ -33,18 +36,26 @@ const convertirProductoDisponible = (producto: ProductoDisponible): Product => (
   image: producto.imagenUrl || '',
   category: mapearTipoACategoria(producto.tipo),
   isCombo: false,
+  // Campos adicionales
+  codigo: producto.codigo || producto.id.toString(),
+  nombre: producto.nombre,
+  precio: producto.precioBase,
 });
 
 // Función para convertir ProductoDTO (combos) a Product
 const convertirComboAProduct = (combo: any): Product => ({
   id: combo.id.toString(),
   name: combo.nombre,
-  price: combo.precioFinal,  // Precio con descuento
-  priceOriginal: combo.precioBase,  // Precio sin descuento
+  price: combo.precioFinal,
+  priceOriginal: combo.precioBase,
   stock: combo.stock ?? 1,
   image: combo.imagenUrl || '',
   category: 'Combo',
   isCombo: true,
+  // Campos adicionales
+  codigo: combo.codigo || combo.id.toString(),
+  nombre: combo.nombre,
+  precio: combo.precioFinal,
 });
 
 interface ProductCatalogModalProps {
@@ -460,6 +471,9 @@ export const ProductCatalogModal: React.FC<ProductCatalogModalProps> = ({ isOpen
                         image: '',
                         category: 'Combo',
                         isCombo: true,
+                        codigo: '',
+                        nombre: '',
+                        precio: 0
                       });
                       handleCloseComboDetails();
                     }}

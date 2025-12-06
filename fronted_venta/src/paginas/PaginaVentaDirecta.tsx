@@ -6,6 +6,7 @@ import SellerDisplayWidget from '../modules/vendedor/components/SellerDisplayWid
 import type { VendedorResponse } from '../modules/vendedor/types/Vendedor';
 import type { Product } from '../components/ProductCatalogModal';
 import { BuscadorCliente } from '../components/BuscadorCliente';
+import { ModalRegistrarCliente } from '../components/ModalRegistrarCliente';
 import type { Cliente } from '../services/cliente.service';
 import { asignarClienteAVenta, desasignarClienteDeVenta } from '../services/cliente.service';
 import { guardarProductosVenta, obtenerTotalesVenta, actualizarMetodoPago, confirmarVenta } from '../services/venta-productos.service';
@@ -107,9 +108,9 @@ export function PaginaVentaDirecta() {
   const [asignandoVendedor, setAsignandoVendedor] = useState(false);
   const [vendedorAsignado, setVendedorAsignado] = useState<{ id: number, nombre: string } | null>(null);
   const [resumen, setResumen] = useState<VentaResumenApi | null>(null);
+  const [modalRegistroClienteOpen, setModalRegistroClienteOpen] = useState(false);
   const [codigoCupon, setCodigoCupon] = useState('');
   const [mensajeDescuento, setMensajeDescuento] = useState<string | null>(null);
-
 
   // --- Carga Inicial de Datos ---
   useEffect(() => {
@@ -260,7 +261,7 @@ export function PaginaVentaDirecta() {
         codigoCupon: codigoCupon || null
       });
       setMensajeDescuento(`✓ ${response.mensaje} - Descuento: S/ ${response.montoDescontado.toFixed(2)}`);
-      // Totales se actualizarán automáticamente
+      await cargarTotales();
       setTimeout(() => setMensajeDescuento(null), 5000);
     } catch (error) {
       console.error('Error al aplicar descuento:', error);
@@ -423,7 +424,7 @@ export function PaginaVentaDirecta() {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-gray-800">Cliente</h2>
               <div className="flex gap-2">
-                <button onClick={() => alert('Función de registro de cliente pendiente')} className="bg-[#3C83F6] hover:bg-blue-600 text-white px-4 py-2 rounded text-sm flex items-center font-medium transition-colors">
+                <button onClick={() => setModalRegistroClienteOpen(true)} className="bg-[#3C83F6] hover:bg-blue-600 text-white px-4 py-2 rounded text-sm flex items-center font-medium transition-colors">
                   <span className="mr-1 text-lg leading-none">+</span> Registrar cliente
                 </button>
                 {clienteSeleccionado ? (
@@ -738,7 +739,15 @@ export function PaginaVentaDirecta() {
         onAddProduct={handleAddProductFromModal}
       />
       {/* Modal Registrar Cliente */}
-      
+      <ModalRegistrarCliente
+        isOpen={modalRegistroClienteOpen}
+        onClose={() => setModalRegistroClienteOpen(false)}
+        onClienteRegistrado={handleClienteRegistrado}
+      />
     </div>
   );
+}
+
+function cargarTotales() {
+  throw new Error('Function not implemented.');
 }

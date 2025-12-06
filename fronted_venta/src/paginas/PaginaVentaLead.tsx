@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { obtenerDetalleVentaLead, type VentaLeadDetalle } from '../services/ventaLead.service';
+import { ProductCatalogModal } from '../components/ProductCatalogModal';
+import type { Product } from '../components/ProductCatalogModal';
+import SellerDisplayWidget from '../modules/vendedor/components/SellerDisplayWidget';
+import { aplicarMejorDescuento } from '../services/descuento.service';
+import { guardarProductosVenta, confirmarVenta, obtenerTotalesVenta } from '../services/venta-productos.service';
 
 // --- Tipos de datos Producto ---
 interface ProductoVenta {
@@ -60,8 +65,17 @@ export function PaginaVentaLead() {
 
   // Estado productos
   const [productos, setProductos] = useState<ProductoVenta[]>([]);
-  const [descuento] = useState(0.00);
+  const [descuento, setDescuento] = useState(0.00);
+  // Modal de catálogo
+  const [isCatalogOpen, setIsCatalogOpen] = useState(false);
 
+  // Vendedor
+  const [sellerIdInput, setSellerIdInput] = useState<number | null>(null);
+  const [vendedorAsignado, setVendedorAsignado] = useState<{ id: number, nombre: string } | null>(null);
+
+  // Descuentos
+  const [codigoCupon, setCodigoCupon] = useState('');
+  const [mensajeDescuento, setMensajeDescuento] = useState<string | null>(null);
   const subtotal = productos.reduce((acc, item) => acc + (item.precioUnitario * item.cantidad), 0);
   const total = subtotal - descuento;
 
@@ -102,7 +116,123 @@ export function PaginaVentaLead() {
   const eliminarProducto = (id: string) => {
     setProductos(prev => prev.filter(p => p.id !== id));
   };
+  const handleAddProductFromModal = async (product: Product) => {
+    const nuevoProducto: ProductoVenta = {
+      id: product.id.toString(),
+      codigo: product.codigo,
+      nombre: product.nombre,
+      precioUnitario: product.precio,
+      cantidad: 1
+    };
 
+    setProductos(prev => {
+      const existe = prev.find(p => p.id === nuevoProducto.id);
+      if (existe) {
+        return prev.map(p =>
+          p.id === nuevoProducto.id
+            ? { ...p, cantidad: p.cantidad + 1 }
+            : p
+        );
+      }
+      return [...prev, nuevoProducto];
+    });
+
+    if (ventaId) {
+      try {
+        await guardarProductosVenta(Number(ventaId), [{
+          idProducto: Number(nuevoProducto.id),
+          nombreProducto: nuevoProducto.nombre,
+          precioUnitario: nuevoProducto.precioUnitario,
+          cantidad: nuevoProducto.cantidad
+        }]);
+      } catch (error) {
+        console.error('Error al guardar producto:', error);
+      }
+    }
+  };
+
+  const handleAplicarDescuento = async () => {
+    if (!ventaId) {
+      alert('No hay venta activa');
+      return;
+    }
+
+    if (!leadData) {
+      alert('No hay cliente asignado');
+      return;
+    }
+
+    try {
+      const response = await aplicarMejorDescuento({
+        ventaId: ventaId,
+        dniCliente: leadData.dni,
+        codigoCupon: codigoCupon || undefined
+      });
+
+      setMensajeDescuento(`✓ ${response.mensaje} - Descuento: S/ ${response.montoDescontado.toFixed(2)}`);
+      setTimeout(() => setMensajeDescuento(null), 5000);
+    } catch (error) {
+      console.error('Error al aplicar descuento:', error);
+      alert('Error al aplicar descuento');
+    }
+  };
+
+  const handleGuardarProductos = async () => {
+    if (!ventaId) return;
+
+    try {
+      // Convertir productos del estado local al formato esperado por el backend
+      const productosParaGuardar = productos.map(prod => ({
+        idProducto: Number(prod.codigo),
+        nombreProducto: prod.nombre,
+        precioUnitario: prod.precioUnitario,
+        cantidad: prod.cantidad
+      }));
+
+      await guardarProductosVenta(Number(ventaId), productosParaGuardar);
+      alert('Productos guardados exitosamente');
+
+      // Recargar totales y productos desde el backend
+      const totales = await obtenerTotalesVenta(Number(ventaId));
+      setDescuento(totales.descuentoTotal);
+
+      // Actualizar productos desde el backend para sincronizar IDs
+      const mappedProductos: ProductoVenta[] = totales.items.map((item) => ({
+        id: String(item.detalleId ?? item.itemProductoId),
+        codigo: String(item.itemProductoId),
+        nombre: item.nombreProducto,
+        precioUnitario: item.precioUnitario,
+        cantidad: item.cantidad,
+      }));
+      setProductos(mappedProductos);
+    } catch (error) {
+      console.error('Error al guardar productos:', error);
+      alert('Error al guardar productos');
+    }
+  };
+
+  const handleConfirmarVenta = async () => {
+    if (!vendedorAsignado) {
+      alert('Debe asignar un vendedor antes de confirmar la venta');
+      return;
+    }
+
+    if (productos.length === 0) {
+      alert('Debe agregar al menos un producto');
+      return;
+    }
+
+    if (!ventaId) return;
+
+    try {
+      await confirmarVenta(Number(ventaId));
+      alert('Venta confirmada exitosamente');
+      navigate('/ventas');
+    } catch (error) {
+      console.error('Error al confirmar venta:', error);
+      alert('Error al confirmar la venta');
+    }
+  };
   // Mostrar loading
   if (isLoading) {
     return (
@@ -120,7 +250,7 @@ export function PaginaVentaLead() {
       <div className="bg-gray-100 min-h-screen p-6 pt-4 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 text-lg mb-4">{error || 'No se encontraron datos del lead'}</p>
-          <button 
+          <button
             onClick={() => navigate(-1)}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
@@ -133,10 +263,10 @@ export function PaginaVentaLead() {
 
   return (
     <div className="bg-gray-100 min-h-screen p-6 pt-4">
-      
+
       {/* Encabezado */}
       <div className="mb-6 flex items-center relative justify-center">
-        <button 
+        <button
           onClick={() => navigate(-1)}
           className="absolute left-0 flex items-center text-gray-600 hover:text-blue-600 font-medium transition-colors"
         >
@@ -147,10 +277,10 @@ export function PaginaVentaLead() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* === COLUMNA IZQUIERDA (2/3) === */}
         <div className="lg:col-span-2 space-y-6">
-          
+
           {/* 1. TARJETA CLIENTE (Datos Fijos / Solo Lectura) */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex justify-between items-center mb-4">
@@ -213,11 +343,11 @@ export function PaginaVentaLead() {
             <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
               <h2 className="text-lg font-bold text-gray-800">Selección de Productos</h2>
               <div className="flex gap-3">
-                <button className="px-4 py-2 border border-blue-200 text-blue-600 rounded hover:bg-blue-50 text-sm font-medium flex items-center whitespace-nowrap">
-                  <span className="mr-2"><PlusIcon/></span> Agregar producto
+                <button onClick={() => setIsCatalogOpen(true)} className="px-4 py-2 border border-blue-200 text-blue-600 rounded hover:bg-blue-50 text-sm font-medium flex items-center whitespace-nowrap">
+                  <span className="mr-2"><PlusIcon /></span> Agregar producto
                 </button>
                 <button className="px-4 py-2 border border-blue-200 text-blue-600 rounded hover:bg-blue-50 text-sm font-medium flex items-center whitespace-nowrap">
-                  <span className="mr-2"><CheckIcon/></span> Validar stock
+                  <span className="mr-2"><CheckIcon /></span> Validar stock
                 </button>
               </div>
             </div>
@@ -272,29 +402,71 @@ export function PaginaVentaLead() {
 
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <h3 className="font-bold text-gray-800 mb-3">Descuentos y Cupones</h3>
+
+            {mensajeDescuento && (
+              <div className="mb-3 p-3 bg-green-50 border border-green-200 text-green-700 rounded text-sm">
+                {mensajeDescuento}
+              </div>
+            )}
+
             <div className="flex gap-2">
-              <input type="text" placeholder="Ingresar código de cupón" className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
-              <button className="px-4 py-2 border border-gray-300 text-blue-600 rounded hover:bg-gray-50 text-sm font-medium transition-colors">Aplicar</button>
+              <input
+                type="text"
+                value={codigoCupon}
+                onChange={(e) => setCodigoCupon(e.target.value)}
+                placeholder="Ingresar código de cupón (opcional)"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <button
+                onClick={handleAplicarDescuento}
+                className="px-4 py-2 border border-gray-300 text-blue-600 rounded hover:bg-gray-50 text-sm font-medium transition-colors"
+              >
+                Aplicar
+              </button>
             </div>
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col gap-3">
-            <button className="w-full py-3 bg-[#3C83F6] hover:bg-blue-600 text-white font-medium rounded shadow-sm flex justify-center items-center gap-2 transition-colors">Confirmar Venta</button>
+            <button
+              onClick={handleGuardarProductos}
+              className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded shadow-sm flex justify-center items-center gap-2 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+              </svg>
+              Guardar Productos
+            </button>
+            <button onClick={handleConfirmarVenta} className="w-full py-3 bg-[#3C83F6] hover:bg-blue-600 text-white font-medium rounded shadow-sm flex justify-center items-center gap-2 transition-colors">Confirmar Venta</button>
             <button onClick={() => navigate(-1)} className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded shadow-sm flex justify-center items-center transition-colors">Cancelar Venta</button>
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex justify-between items-center mb-2">
-              <label className="text-sm font-medium text-gray-700">Asignar Vendedor</label>
-              <button className="text-xs bg-[#3C83F6] text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors">Buscar vendedor</button>
-            </div>
-            <input type="text" placeholder="Codigo de Vendedor" className="w-full px-3 py-2 border border-gray-300 rounded text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-            <div className="pt-3 border-t border-gray-100">
-              <p className="text-xs text-gray-500">Nombre del Vendedor: <span className="font-medium text-gray-800">Fardito Leon Chacon</span></p>
-            </div>
+            <h3 className="font-bold text-gray-800 mb-3">Vendedor Asignado</h3>
+            <input
+              type="text"
+              placeholder="Codigo de Vendedor"
+              value={sellerIdInput || ''}
+              onChange={(e) => setSellerIdInput(parseInt(e.target.value) || null)}
+              className="w-full px-3 py-2 border border-gray-300 rounded text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+            <SellerDisplayWidget
+              sellerId={sellerIdInput}
+              onSellerDataLoaded={(seller) => {
+                if (seller) {
+                  setVendedorAsignado({ id: seller.sellerId, nombre: seller.fullName });
+                } else {
+                  setVendedorAsignado(null);
+                }
+              }}
+            />
           </div>
         </div>
       </div>
+      <ProductCatalogModal
+        isOpen={isCatalogOpen}
+        onClose={() => setIsCatalogOpen(false)}
+        onAddProduct={handleAddProductFromModal}
+      />
     </div>
   );
 }
