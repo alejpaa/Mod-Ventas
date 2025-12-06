@@ -17,6 +17,11 @@ public interface IVentaMapper {
     @Mapping(target = "items", source = "detalles")
     @Mapping(target = "idVendedor", source = "idVendedor")
     @Mapping(target = "nombreVendedor", ignore = true)
+    @Mapping(target = "clienteId", source = "clienteId")
+    @Mapping(target = "nombreCliente", ignore = true)
+    @Mapping(target = "clienteDni", ignore = true)
+    @Mapping(target = "clienteEmail", ignore = true)
+    @Mapping(target = "clienteTelefono", ignore = true)
     VentaResumenResponse toResumen(Venta venta);
 
 
@@ -25,6 +30,7 @@ public interface IVentaMapper {
     @Mapping(target = "nombreProducto", source = "itemProducto.nombre")
     LineaCarritoResponse toLinea(DetalleVenta detalle);
 
+    @Mapping(target = "nombreCliente", ignore = true)
     VentaListadoResponse toListado(Venta venta);
 }
 
