@@ -53,6 +53,6 @@ public class ProductoAdminService {
         return repository.findById(id)
                 .filter(c -> c.getTipo().equals(com.venta.backend.producto.enums.TipoProducto.COMBO))
                 .map(ProductoDTO::fromComponent)
-                .orElseThrow(() -> new com.venta.backend.vendedor.application.exceptions.RecursoNoEncontradoException("Combo no encontrado con ID: " + id));
+                .orElseThrow(() -> new com.venta.backend.vendedor.exceptions.RecursoNoEncontradoException("Combo no encontrado con ID: " + id));
     }
 }
