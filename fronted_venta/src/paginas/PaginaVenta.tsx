@@ -269,7 +269,7 @@ export function PaginaVenta() {
             {/* Botón Naranja */}
             <button
               onClick={() => setShowLeadsModal(true)}
-              className="h-10 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors text-sm font-medium shadow-sm whitespace-nowrap cursor-pointer flex items-center justify-center"
+              className="h-10 px-2 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors text-sm font-medium shadow-sm whitespace-nowrap cursor-pointer flex items-center justify-center"
             >
               Ventas por Leads
             </button>
@@ -277,7 +277,7 @@ export function PaginaVenta() {
             {/* Botón Azul */}
             <button
               onClick={handleCrearOrdenVenta}
-              className="h-10 px-4 py-2 bg-[#3C83F6] text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm whitespace-nowrap cursor-pointer flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+              className="h-10 px-3 py-2 bg-[#3C83F6] text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm whitespace-nowrap cursor-pointer flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
               disabled={creating}
             >
               <span className="mr-2 text-lg">+</span> Crear orden de venta

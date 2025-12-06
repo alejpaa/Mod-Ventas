@@ -23,7 +23,6 @@ public interface BoletaRepositorio extends JpaRepository<Boleta, Long> {
      * Hace un INNER JOIN entre Boleta y Venta
      */
     @Query("SELECT b FROM Boleta b " +
-           "INNER JOIN Venta v ON b.idVenta = v.id " +
-           "WHERE v.clienteId = :clienteId")
+           "WHERE b.venta.clienteId = :clienteId")
     List<Boleta> findBoletasByClienteId(@Param("clienteId") Long clienteId);
 }
