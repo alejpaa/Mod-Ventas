@@ -56,7 +56,7 @@ export function BuscadorCliente({ onClienteSeleccionado, clienteInicial }: Busca
         setClienteSeleccionado(cliente);
         setBusqueda(cliente.fullName);
         setMostrarResultados(false);
-        onClienteSeleccionado(cliente);
+        // NO llamar a onClienteSeleccionado aquí - esperar a que el usuario haga click en "Asignar"
     };
 
     const handleLimpiar = () => {
@@ -126,17 +126,38 @@ export function BuscadorCliente({ onClienteSeleccionado, clienteInicial }: Busca
                 </div>
             )}
 
-            {/* Información del cliente seleccionado */}
+            {/* Información del cliente seleccionado - FONDO BLANCO */}
             {clienteSeleccionado && (
-                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                    <div className="text-sm">
-                        <div className="font-medium text-blue-900">{clienteSeleccionado.fullName}</div>
-                        <div className="text-blue-700">DNI: {clienteSeleccionado.dni}</div>
-                        <div className="text-blue-700">Email: {clienteSeleccionado.email}</div>
+                <div className="mt-3 p-4 bg-white border border-gray-200 rounded-md">
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <span className="block text-gray-500 mb-1">Nombre</span>
+                            <span className="block font-medium text-gray-900">{clienteSeleccionado.fullName}</span>
+                        </div>
+                        <div>
+                            <span className="block text-gray-500 mb-1">DNI</span>
+                            <span className="block font-medium text-gray-900">{clienteSeleccionado.dni}</span>
+                        </div>
+                        <div>
+                            <span className="block text-gray-500 mb-1">Email</span>
+                            <span className="block font-medium text-gray-900">{clienteSeleccionado.email}</span>
+                        </div>
                         {clienteSeleccionado.phoneNumber && (
-                            <div className="text-blue-700">Teléfono: {clienteSeleccionado.phoneNumber}</div>
+                            <div>
+                                <span className="block text-gray-500 mb-1">Teléfono</span>
+                                <span className="block font-medium text-gray-900">{clienteSeleccionado.phoneNumber}</span>
+                            </div>
                         )}
                     </div>
+
+                    {/* Botón para confirmar asignación */}
+                    <button
+                        type="button"
+                        onClick={() => onClienteSeleccionado(clienteSeleccionado)}
+                        className="mt-3 w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors font-medium"
+                    >
+                        Asignar Cliente
+                    </button>
                 </div>
             )}
         </div>
