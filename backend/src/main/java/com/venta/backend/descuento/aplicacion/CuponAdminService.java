@@ -3,7 +3,6 @@ package com.venta.backend.descuento.aplicacion;
 import com.venta.backend.descuento.DTO.CrearCuponRequest;
 import com.venta.backend.descuento.DTO.CuponResponse;
 import com.venta.backend.descuento.dominio.entidades.Cupon;
-import com.venta.backend.descuento.dominio.enums.TipoDescuento;
 import com.venta.backend.descuento.infraestructura.repository.CuponRepositorio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.security.SecureRandom; // Importación necesaria para generar códigos
 
 /**
  * Servicio para la gestión de la administración (CRUD) de Cupones.
@@ -21,14 +21,53 @@ public class CuponAdminService {
 
     private final CuponRepositorio cuponRepositorio;
 
+    // --- UTILERÍAS DE GENERACIÓN DE CÓDIGO ---
+    private static final String CARACTERES_PERMITIDOS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final int LONGITUD_CODIGO = 10;
+    private static final SecureRandom random = new SecureRandom();
+
+    /**
+     * Genera un código aleatorio de 10 caracteres y verifica que no exista en la DB.
+     * @return Código único no repetido.
+     */
+    private String generarCodigoUnico() {
+        String nuevoCodigo;
+        Optional<Cupon> cuponExistente;
+
+        // Se repite hasta encontrar un código no existente en la DB
+        do {
+            StringBuilder sb = new StringBuilder(LONGITUD_CODIGO);
+            for (int i = 0; i < LONGITUD_CODIGO; i++) {
+                int indice = random.nextInt(CARACTERES_PERMITIDOS.length());
+                sb.append(CARACTERES_PERMITIDOS.charAt(indice));
+            }
+            nuevoCodigo = sb.toString();
+
+            // Usamos el repositorio para verificar la unicidad
+            cuponExistente = cuponRepositorio.findByCodigo(nuevoCodigo);
+        } while (cuponExistente.isPresent());
+
+        return nuevoCodigo;
+    }
+    // -------------------------------------------
+
+
     // -------------------------------------------------------------------------
-    // C R E A R
+    // C R E A R - MODIFICADO para auto-generación y uso único
     // -------------------------------------------------------------------------
     public CuponResponse crearCupon(CrearCuponRequest request) {
-        if (cuponRepositorio.findByCodigo(request.getCodigo()).isPresent()) {
-            throw new RuntimeException("El código de cupón ya existe.");
-        }
+        // 1. Generar el código automáticamente y único
+        String codigoGenerado = generarCodigoUnico(); 
+
+        // 2. Mapear y establecer código/uso máximo
         Cupon nuevoCupon = mapFromRequest(request);
+        
+        nuevoCupon.setCodigo(codigoGenerado); // Establece el código único generado
+
+        // 3. Forzar el uso a 1
+        nuevoCupon.setUsosMaximos(1); // El cupón es válido solo para 1 uso.
+
+        // 4. Guardar y retornar
         nuevoCupon = cuponRepositorio.save(nuevoCupon);
         return mapToResponse(nuevoCupon);
     }
@@ -93,15 +132,15 @@ public class CuponAdminService {
     }
 
     // -------------------------------------------------------------------------
-    // M A P E A D O R E S (Simplificados, puedes moverlos a una clase Mapper si lo deseas)
+    // M A P E A D O R E S (Modificado: se elimina la asignación de 'codigo' y 'usosMaximos' del request)
     // -------------------------------------------------------------------------
     private Cupon mapFromRequest(CrearCuponRequest request) {
         Cupon cupon = new Cupon();
-        cupon.setCodigo(request.getCodigo());
+        // Eliminado: cupon.setCodigo(request.getCodigo());
         cupon.setTipoDescuento(request.getTipoDescuento());
         cupon.setValor(request.getValor());
         cupon.setFechaExpiracion(request.getFechaExpiracion());
-        cupon.setUsosMaximos(request.getUsosMaximos());
+        // Eliminado: cupon.setUsosMaximos(request.getUsosMaximos());
         cupon.setMontoMinimoRequerido(request.getMontoMinimoRequerido() != null ? request.getMontoMinimoRequerido() : new java.math.BigDecimal("0.00"));
         return cupon;
     }
