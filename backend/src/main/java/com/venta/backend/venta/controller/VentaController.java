@@ -3,14 +3,7 @@ package com.venta.backend.venta.controller;
 import com.venta.backend.venta.dto.request.AgregarItemVentaRequest;
 import com.venta.backend.venta.dto.request.CrearVentaDirectaRequest;
 import com.venta.backend.venta.dto.request.CrearVentaLeadRequest;
-import com.venta.backend.venta.dto.response.VentaResumenResponse;
-import com.venta.backend.venta.dto.response.VentaListadoResponse;
-import com.venta.backend.venta.dto.response.VentaLeadResponse;
-import com.venta.backend.venta.dto.response.VentaLeadPendienteResponse;
-import com.venta.backend.venta.dto.response.VentaLeadDetalleResponse;
-import com.venta.backend.venta.dto.response.BoletaResponse;
-import com.venta.backend.venta.dto.response.BoletaClienteResponse;
-import com.venta.backend.venta.dto.response.VentaPaginadaResponse;
+import com.venta.backend.venta.dto.response.*;
 import com.venta.backend.venta.servicios.IVentaCarritoService;
 import com.venta.backend.venta.servicios.IVentaConsultaService;
 import com.venta.backend.venta.servicios.VentaLeadService;
@@ -26,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Tag(name = "Ventas", description = "API para gestión de ventas directas y desde leads")
 @RequestMapping("/api/venta")
@@ -219,5 +214,10 @@ public class VentaController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void confirmarVenta(@Parameter(description = "ID de la venta") @PathVariable Long ventaId) {
         ventaCarritoService.confirmarVenta(ventaId);
+
+    @Operation(summary = "Obtener ventas agregadas por canal (Físico vs. Llamada)")
+    @GetMapping("/analisis/ventas-por-canal")
+    public ResponseEntity<List<VentasPorCanalResponse>> obtenerVentasPorCanal() {
+        return ResponseEntity.ok(ventaConsultaService.obtenerVentasPorCanal());
     }
 }

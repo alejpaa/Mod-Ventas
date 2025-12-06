@@ -15,5 +15,7 @@ public interface VentaRepositorio extends JpaRepository<Venta, Long> {
     
     @Query("SELECT v FROM Venta v WHERE v.origenVenta = :origen AND v.estado = :estado ORDER BY v.fechaVentaCreada DESC")
     List<Venta> findByOrigenVentaAndEstado(OrigenVenta origen, VentaEstado estado);
+
+    List<Venta> findByEstado(VentaEstado estado);
 }
 
