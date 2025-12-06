@@ -26,18 +26,11 @@ export interface Seller {
   // 🔑 CORRECCIÓN CLAVE: sede puede ser string o Sede object
   sede: string | Sede;
   status: SellerStatus;
-<<<<<<< HEAD
 }export interface SellerTableProps {
-  sellers: Seller[];
-=======
-}
-
-export interface SellerTableProps {
   sellers: Seller[];
   onDeactivate: (id: number) => void;
   onActivate: (id: number) => void;
   onEdit: (id: number) => void;
->>>>>>> 25bb0cd37e9979886468ca0a21cd4da33ac31152
 }
 
 export interface TypePillProps {
@@ -49,13 +42,8 @@ export interface StatusPillProps {
 }
 
 export interface SellerToolbarProps {
-<<<<<<< HEAD
   onNewSellerClick: () => void;
   onCreateComboClick?: () => void;
   isAdmin?: boolean;
 }
-=======
-  onNewSellerClick: () => void; // La función que viene desde PaginaVendedor
-  // para otros filtros podría ser
-}
->>>>>>> 25bb0cd37e9979886468ca0a21cd4da33ac31152
+
