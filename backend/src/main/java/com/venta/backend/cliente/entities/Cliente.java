@@ -40,8 +40,13 @@ public class Cliente {
     private String telefonoFijo;
 
     private String address;
-
     private LocalDate fechaNacimiento;
+
+    @Column(length = 20)
+    private String genero;
+
+    @Column(length = 100)
+    private String ocupacion;
 
     @Column(nullable = false, updatable = false)
     private LocalDate registrationDate;
@@ -50,36 +55,20 @@ public class Cliente {
     @Column(nullable = false)
     private EstadoClienteEnum estado;
 
-    private String categoria; // Estándar, VIP, etc.
+    private String categoria;
 
-    /**
-     * Comprueba si el cliente está activo.
-     * @return true si el estado es ACTIVO, false de lo contrario.
-     */
     public boolean isActive() {
         return this.estado == EstadoClienteEnum.ACTIVO;
     }
 
-    /**
-     * Cambia el estado del cliente (para baja lógica o reactivación).
-     * @param newEstado El nuevo estado (ACTIVO, INACTIVO, BLOQUEADO).
-     */
     public void changeStatus(EstadoClienteEnum newEstado) {
         this.estado = newEstado;
     }
 
-    /**
-     * Devuelve el nombre completo del cliente.
-     * @return String con "firstName lastName".
-     */
     public String getFullName() {
         return this.firstName + " " + this.lastName;
     }
 
-    /**
-     * Actualiza la categoría del cliente según su historial de compras.
-     * @param nuevaCategoria La nueva categoría (Estándar, VIP, etc.).
-     */
     public void updateCategoria(String nuevaCategoria) {
         this.categoria = nuevaCategoria;
     }
@@ -88,4 +77,3 @@ public class Cliente {
         return this.categoria;
     }
 }
-

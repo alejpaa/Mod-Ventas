@@ -29,7 +29,9 @@ public class ModificacionClienteRequest {
     private String telefonoFijo;
     private String address;
     private LocalDate fechaNacimiento;
-    
+    private String genero;
+    private String ocupacion;
+
     // Estado del cliente (para activar, desactivar o bloquear)
     private EstadoClienteEnum estado;
 }

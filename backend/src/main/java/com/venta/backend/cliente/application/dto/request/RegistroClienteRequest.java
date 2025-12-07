@@ -40,5 +40,7 @@ public class RegistroClienteRequest {
     private String telefonoFijo;
     private String address;
     private LocalDate fechaNacimiento;
+    private String genero;
+    private String ocupacion;
 }
 
