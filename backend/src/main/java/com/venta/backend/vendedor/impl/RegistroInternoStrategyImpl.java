@@ -8,7 +8,7 @@ import com.venta.backend.vendedor.exceptions.RegistroVendedorException;
 import com.venta.backend.vendedor.entities.Sede;
 import com.venta.backend.vendedor.entities.Vendedor;
 import com.venta.backend.vendedor.enums.BranchType;
-import com.venta.backend.vendedor.infraestructura.clientes.IClienteRRHH;
+import com.venta.backend.vendedor.infraestructura.clientes.IRrhhServiceSubject;
 import com.venta.backend.vendedor.infraestructura.clientes.dto.EmpleadoRRHHDTO;
 import com.venta.backend.vendedor.infraestructura.repository.VendedorRepositorio;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 public class RegistroInternoStrategyImpl implements IRegistroVendedorStrategy {
 
     private final VendedorRepositorio vendedorRepositorio;
-    private final IClienteRRHH clienteRRHH;
+    private final IRrhhServiceSubject clienteRRHH;
     private final IEmpleadoAdapter adaptadorEmpleado;
 
     @Override

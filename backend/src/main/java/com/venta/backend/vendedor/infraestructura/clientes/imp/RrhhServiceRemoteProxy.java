@@ -1,6 +1,6 @@
 package com.venta.backend.vendedor.infraestructura.clientes.imp;
 
-import com.venta.backend.vendedor.infraestructura.clientes.IClienteRRHH;
+import com.venta.backend.vendedor.infraestructura.clientes.IRrhhServiceSubject;
 import com.venta.backend.vendedor.infraestructura.clientes.dto.EmpleadoRRHHDTO;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -13,7 +13,7 @@ import java.util.Optional;
  * (Proxy Remoto)
  */
 @Component
-public class ClienteRRHHImpl implements IClienteRRHH {
+public class RrhhServiceRemoteProxy implements IRrhhServiceSubject {
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final String rrhhBaseUrl = "https://unregenerable-nonaesthetically-lara.ngrok-free.dev/api";

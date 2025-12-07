@@ -1,6 +1,6 @@
 package com.venta.backend.vendedor.infraestructura.clientes;
 
-public interface IClienteCotizacion { // ¡Clase en Español!
+public interface IClienteCotizacion {
 
     /**
      * Verifica en el módulo de Cotizaciones si un vendedor

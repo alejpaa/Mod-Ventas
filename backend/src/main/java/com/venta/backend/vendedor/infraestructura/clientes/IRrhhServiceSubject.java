@@ -4,7 +4,7 @@ import com.venta.backend.vendedor.infraestructura.clientes.dto.EmpleadoRRHHDTO;
 
 import java.util.Optional;
 
-public interface IClienteRRHH {
+public interface IRrhhServiceSubject {
 
     /**
      * Busca un empleado activo en el sistema externo de RRHH por su DNI

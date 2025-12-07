@@ -18,7 +18,7 @@ import com.venta.backend.vendedor.enums.BranchType;
 import com.venta.backend.vendedor.enums.SellerStatus;
 import com.venta.backend.vendedor.enums.SellerType;
 import com.venta.backend.vendedor.infraestructura.clientes.IClienteCotizacion;
-import com.venta.backend.vendedor.infraestructura.clientes.IClienteRRHH;
+import com.venta.backend.vendedor.infraestructura.clientes.IRrhhServiceSubject;
 import com.venta.backend.vendedor.infraestructura.clientes.dto.EmpleadoRRHHDTO;
 import com.venta.backend.vendedor.infraestructura.repository.SedeRepositorio;
 import com.venta.backend.vendedor.infraestructura.repository.VendedorRepositorio;
@@ -41,7 +41,7 @@ public class VendedorServicioImpl implements IVendedorAdminService, IVendedorCon
     private final IStrategyFactory fabricaStrategia;
     private final IVendedorMapeador vendedorMapeador;
     private final IClienteCotizacion clienteCotizacion;
-    private final IClienteRRHH clienteRRHH;
+    private final IRrhhServiceSubject clienteRRHH;
 
     @Override
     @Transactional
