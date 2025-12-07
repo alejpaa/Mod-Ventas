@@ -12,6 +12,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.venta.backend.descuento.dominio.entidades.LogDescuentoAplicado;
+
 @Entity
 @Table(name = "Venta")
 @Getter
@@ -78,7 +80,7 @@ public class Venta {
     public boolean esBorrador() {
         return VentaEstado.BORRADOR.equals(estado);
     }
-
+    
     public void agregarOActualizarItem(Long idProducto, String nombreProducto, BigDecimal precioUnitario, int cantidad) {
         DetalleVenta existente = detalles.stream()
                 .filter(det -> det.getIdProducto().equals(idProducto))
@@ -104,10 +106,12 @@ public class Venta {
         this.descuentoTotal = BigDecimal.ZERO;
         this.total = nuevoSubtotal;
     }
-
+    
+    @OneToOne(mappedBy = "venta", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private LogDescuentoAplicado descuentoAplicado; 
+    
     public BigDecimal calcularTotal() {
         recalcularMontos();
         return this.total;
     }
 }
-

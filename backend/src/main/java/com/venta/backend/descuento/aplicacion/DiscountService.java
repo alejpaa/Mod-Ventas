@@ -16,6 +16,10 @@ import java.util.Optional;
 import java.math.BigDecimal;
 import java.util.List;
 
+// NUEVOS IMPORTS para el Log
+import com.venta.backend.descuento.dominio.entidades.LogDescuentoAplicado;
+import com.venta.backend.descuento.infraestructura.repository.LogDescuentoAplicadoRepositorio; 
+
 /**
  * Servicio de aplicación de descuentos.
  * Evalúa todas las reglas de descuento disponibles y aplica la mejor opción.
@@ -28,6 +32,7 @@ public class DiscountService {
     private final VentaRepositorio ventaRepositorio;
     private final ClienteRepositorio clienteRepositorio;
     private final CuponRepositorio cuponRepositorio;
+    private final LogDescuentoAplicadoRepositorio logDescuentoAplicadoRepositorio; // REPOSITORIO INYECTADO
 
     /**
      * Aplica el mejor descuento disponible para una venta.
@@ -68,9 +73,6 @@ public class DiscountService {
                 // **Motivo: Usos agotados**
                 throw new CuponNoValidoException("El cupón '" + codigoCupon + "' ya fue utilizado la cantidad máxima de veces.");
             }
-
-            // Nota: La validación de monto mínimo se podría manejar aquí o en la ReglaCupon.
-            // La dejaremos en la ReglaCupon por si se quiere que el error solo aparezca si se aplica.
         }
 
         // 3. Evaluar todas las reglas (incluyendo el cupón)
@@ -78,22 +80,52 @@ public class DiscountService {
             if (regla.esAplicable(venta, cliente, request.getCodigoCupon())) {
                 DescuentoAplicadoResponse descuentoActual = regla.aplicar(venta, cliente);
 
-                // Lógica de Priorización: Se elige el de mayor monto o mayor prioridad.
+                // Lógica de Priorización: Se elige el de mayor monto
                 if (mejorDescuento == null || descuentoActual.getMontoDescontado().compareTo(mejorDescuento.getMontoDescontado()) > 0) {
                     mejorDescuento = descuentoActual;
                 }
             }
         }
 
-        if (mejorDescuento != null) {
-            // Actualizar la Venta en la base de datos (persistencia del descuento)
-            venta.setDescuentoTotal(mejorDescuento.getMontoDescontado());
-            venta.setTotal(mejorDescuento.getNuevoTotalVenta());
-            ventaRepositorio.save(venta);
-            return mejorDescuento;
+        // 4. Lógica de Persistencia y Log
+        DescuentoAplicadoResponse descuentoFinal = mejorDescuento;
+
+        if (descuentoFinal == null) {
+            // Caso 4a: No se aplicó ningún descuento
+            descuentoFinal = new DescuentoAplicadoResponse("NINGUNO", BigDecimal.ZERO, venta.getTotal(), "No aplicó ningún descuento.");
+        }
+        
+        // Código de cupón para el log (si se proporcionó en la solicitud)
+        String codigoCuponParaLog = request.getCodigoCupon(); 
+
+        // 4.1. Actualizar la Venta (Montos)
+        venta.setDescuentoTotal(descuentoFinal.getMontoDescontado());
+        venta.setTotal(descuentoFinal.getNuevoTotalVenta());
+        
+        // 4.2. Crear el objeto Log
+        LogDescuentoAplicado logAplicado = LogDescuentoAplicado.fromResponse(
+                venta,
+                descuentoFinal.getTipoDescuento(),
+                descuentoFinal.getMontoDescontado(),
+                descuentoFinal.getDescripcion(),
+                codigoCuponParaLog
+        );
+        
+        // 4.3. Establecer y guardar la Venta (el Log se guarda en cascada)
+        venta.setDescuentoAplicado(logAplicado); // Establecer relación bidireccional
+
+        ventaRepositorio.save(venta); // Guarda Venta y Log (por CascadeType.ALL)
+        
+        // 4.4. Actualizar el contador de usos del cupón (solo si fue la regla ganadora)
+        // Se asume que la regla de cupón devuelve el TipoDescuento "CUPON"
+        if ("CUPON".equals(descuentoFinal.getTipoDescuento()) && codigoCuponParaLog != null) {
+             cuponRepositorio.findByCodigo(codigoCuponParaLog)
+                 .ifPresent(cupon -> {
+                     cupon.usar(); // Asumiendo que Cupon.java tiene el método usar()
+                     cuponRepositorio.save(cupon);
+                 });
         }
 
-        // No se aplicó ningún descuento
-        return new DescuentoAplicadoResponse("NINGUNO", BigDecimal.ZERO, venta.getTotal(), "No aplicó ningún descuento.");
+        return descuentoFinal; // Retornar el resultado final de la aplicación del descuento
     }
 }
