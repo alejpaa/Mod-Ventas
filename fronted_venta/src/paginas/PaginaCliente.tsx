@@ -50,7 +50,7 @@ export function PaginaCliente() {
   const handleDescargarExcel = async () => {
     try {
       // Ajusta la URL si tu backend corre en otro puerto
-      const response = await fetch('http://localhost:8080/api/reportes/descargar-excel', {
+      const response = await fetch('https://mod-ventas.onrender.com/swagger-ui/index.html#/Reportes/descargarExcel', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
