@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { PendingLeadSalesModal } from '../components/PendingLeadSalesModal';
 import { listarVentasPaginadas, cancelarVenta, type VentaListado } from '../../../services/venta.service';
 import { ModalVisualizarVenta } from '../components/ModalVisualizarVenta';
+import Toast from '../components/Toast';
+import { useToast } from '../hooks/useToast';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mod-ventas.onrender.com/api';
 
@@ -58,6 +60,7 @@ const SortIcon = ({ active, direction }: { active: boolean; direction: 'asc' | '
 // --- COMPONENTE PRINCIPAL ---
 export function PaginaVenta() {
   const navigate = useNavigate();
+  const { toasts, showToast, removeToast } = useToast();
   const [modalVisualizarOpen, setModalVisualizarOpen] = useState(false);
   const [selectedVentaId, setSelectedVentaId] = useState<number | undefined>(undefined);
   const [ventas, setVentas] = useState<Venta[]>([]);
@@ -149,7 +152,7 @@ export function PaginaVenta() {
       navigate(`/registrar-venta?ventaId=${data.ventaId}`);
     } catch (e) {
       console.error(e);
-      alert('Ocurrió un error al crear la orden de venta.');
+      showToast('Ocurrió un error al crear la orden de venta', 'error');
     } finally {
       setCreating(false);
     }
@@ -202,7 +205,7 @@ export function PaginaVenta() {
         fetchVentas();
       } catch (error) {
         console.error('Error al cancelar venta:', error);
-        alert('Error al cancelar la venta');
+        showToast('Error al cancelar la venta', 'error');
       }
     }
   };
@@ -449,6 +452,16 @@ export function PaginaVenta() {
         tipoVenta="DIRECTA"
         ventaId={selectedVentaId}
       />
+
+      {/* Toast Notifications */}
+      {toasts.map(toast => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </div>
   );
 }

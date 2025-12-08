@@ -6,6 +6,8 @@ import type { Product } from '../../../components/ProductCatalogModal';
 import SellerDisplayWidget from '../../vendedor/components/SellerDisplayWidget';
 import { aplicarMejorDescuento } from '../../../services/descuento.service';
 import { guardarProductosVenta, confirmarVenta, obtenerTotalesVenta } from '../../../services/venta-productos.service';
+import Toast from '../components/Toast';
+import { useToast } from '../hooks/useToast';
 
 // --- Tipos de datos Producto ---
 interface ProductoVenta {
@@ -57,6 +59,7 @@ export function PaginaVentaLead() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const ventaId = searchParams.get('ventaId');
+  const { toasts, showToast, removeToast } = useToast();
 
   // Estado para datos del lead
   const [leadData, setLeadData] = useState<VentaLeadDetalle | null>(null);
@@ -153,12 +156,12 @@ export function PaginaVentaLead() {
 
   const handleAplicarDescuento = async () => {
     if (!ventaId) {
-      alert('No hay venta activa');
+      showToast('No hay venta activa', 'warning');
       return;
     }
 
     if (!leadData) {
-      alert('No hay cliente asignado');
+      showToast('No hay cliente asignado', 'warning');
       return;
     }
 
@@ -173,7 +176,7 @@ export function PaginaVentaLead() {
       setTimeout(() => setMensajeDescuento(null), 5000);
     } catch (error) {
       console.error('Error al aplicar descuento:', error);
-      alert('Error al aplicar descuento');
+      showToast('Error al aplicar descuento', 'error');
     }
   };
 
@@ -190,7 +193,7 @@ export function PaginaVentaLead() {
       }));
 
       await guardarProductosVenta(Number(ventaId), productosParaGuardar);
-      alert('Productos guardados exitosamente');
+      showToast('Productos guardados exitosamente', 'success');
 
       // Recargar totales y productos desde el backend
       const totales = await obtenerTotalesVenta(Number(ventaId));
@@ -207,18 +210,18 @@ export function PaginaVentaLead() {
       setProductos(mappedProductos);
     } catch (error) {
       console.error('Error al guardar productos:', error);
-      alert('Error al guardar productos');
+      showToast('Error al guardar productos', 'error');
     }
   };
 
   const handleConfirmarVenta = async () => {
     if (!vendedorAsignado) {
-      alert('Debe asignar un vendedor antes de confirmar la venta');
+      showToast('Debe asignar un vendedor antes de confirmar la venta', 'warning');
       return;
     }
 
     if (productos.length === 0) {
-      alert('Debe agregar al menos un producto');
+      showToast('Debe agregar al menos un producto', 'warning');
       return;
     }
 
@@ -226,11 +229,11 @@ export function PaginaVentaLead() {
 
     try {
       await confirmarVenta(Number(ventaId));
-      alert('Venta confirmada exitosamente');
+      showToast('Venta confirmada exitosamente', 'success');
       navigate('/ventas');
     } catch (error) {
       console.error('Error al confirmar venta:', error);
-      alert('Error al confirmar la venta');
+      showToast('Error al confirmar la venta', 'error');
     }
   };
   // Mostrar loading
@@ -467,6 +470,16 @@ export function PaginaVentaLead() {
         onClose={() => setIsCatalogOpen(false)}
         onAddProduct={handleAddProductFromModal}
       />
+
+      {/* Toast Notifications */}
+      {toasts.map(toast => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </div>
   );
 }

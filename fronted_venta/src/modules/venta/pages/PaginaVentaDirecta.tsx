@@ -11,6 +11,8 @@ import type { Cliente } from '../../../services/cliente.service';
 import { asignarClienteAVenta, desasignarClienteDeVenta } from '../../../services/cliente.service';
 import { guardarProductosVenta, obtenerTotalesVenta, actualizarMetodoPago, confirmarVenta } from '../../../services/venta-productos.service';
 import { aplicarMejorDescuento } from '../../../services/descuento.service';
+import Toast from '../components/Toast';
+import { useToast } from '../hooks/useToast';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
@@ -81,6 +83,7 @@ export function PaginaVentaDirecta() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const ventaId = searchParams.get('ventaId');
+  const { toasts, showToast, removeToast } = useToast();
 
   // Estado para controlar los modales
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -238,20 +241,20 @@ export function PaginaVentaDirecta() {
       await desasignarClienteDeVenta(Number(ventaId));
       setClienteSeleccionado(null);
       setBusquedaCliente('');
-      alert('Cliente eliminado exitosamente');
+      showToast('Cliente eliminado exitosamente', 'success');
     } catch (error) {
       console.error('Error al eliminar cliente:', error);
-      alert('Error al eliminar cliente de la venta');
+      showToast('Error al eliminar cliente de la venta', 'error');
     }
   };
 
   const handleAplicarDescuento = async () => {
     if (!ventaId) {
-      alert('No hay venta activa');
+      showToast('No hay venta activa', 'warning');
       return;
     }
     if (!clienteSeleccionado) {
-      alert('Debe asignar un cliente antes de aplicar descuentos');
+      showToast('Debe asignar un cliente antes de aplicar descuentos', 'warning');
       return;
     }
     try {
@@ -265,7 +268,7 @@ export function PaginaVentaDirecta() {
       setTimeout(() => setMensajeDescuento(null), 5000);
     } catch (error) {
       console.error('Error al aplicar descuento:', error);
-      alert('Error al aplicar descuento');
+      showToast('Error al aplicar descuento', 'error');
     }
   };
   const handleClienteRegistrado = async (cliente: Cliente) => {
@@ -280,10 +283,10 @@ export function PaginaVentaDirecta() {
         telefono: cliente.phoneNumber || 'N/A',
         email: cliente.email
       });
-      alert('Cliente registrado y asignado exitosamente');
+      showToast('Cliente registrado y asignado exitosamente', 'success');
     } catch (error) {
       console.error('Error al asignar cliente:', error);
-      alert('Error al asignar cliente a la venta');
+      showToast('Error al asignar cliente a la venta', 'error');
     }
   };
 
@@ -306,10 +309,10 @@ export function PaginaVentaDirecta() {
         nombre: `${validatedSeller.firstName} ${validatedSeller.lastName}`
       });
 
-      alert('Vendedor asignado exitosamente');
+      showToast('Vendedor asignado exitosamente', 'success');
     } catch (e) {
       console.error(e);
-      alert('Ocurrió un error al asignar el vendedor.');
+      showToast('Ocurrió un error al asignar el vendedor', 'error');
     } finally {
       setAsignandoVendedor(false);
     }
@@ -328,7 +331,7 @@ export function PaginaVentaDirecta() {
       }));
 
       await guardarProductosVenta(Number(ventaId), productosParaGuardar);
-      alert('Productos guardados exitosamente');
+      showToast('Productos guardados exitosamente', 'success');
 
       // Recargar totales y productos desde el backend
       const totales = await obtenerTotalesVenta(Number(ventaId));
@@ -346,7 +349,7 @@ export function PaginaVentaDirecta() {
       setProductos(mappedProductos);
     } catch (error) {
       console.error('Error al guardar productos:', error);
-      alert('Error al guardar productos');
+      showToast('Error al guardar productos', 'error');
     }
   };
 
@@ -355,27 +358,27 @@ export function PaginaVentaDirecta() {
 
     // Validaciones en frontend
     if (!vendedorAsignado) {
-      alert('Debe asignar un vendedor antes de confirmar la venta');
+      showToast('Debe asignar un vendedor antes de confirmar la venta', 'warning');
       return;
     }
 
     if (!clienteSeleccionado) {
-      alert('Debe asignar un cliente antes de confirmar la venta');
+      showToast('Debe asignar un cliente antes de confirmar la venta', 'warning');
       return;
     }
 
     if (!resumen || !resumen.items || resumen.items.length === 0) {
-      alert('Debe agregar al menos un producto antes de confirmar la venta');
+      showToast('Debe agregar al menos un producto antes de confirmar la venta', 'warning');
       return;
     }
 
     try {
       await confirmarVenta(Number(ventaId));
-      alert('¡Venta confirmada exitosamente!');
+      showToast('¡Venta confirmada exitosamente!', 'success');
       navigate('/ventas');
     } catch (error: any) {
       console.error('Error al confirmar venta:', error);
-      alert(error.message || 'Error al confirmar venta');
+      showToast(error.message || 'Error al confirmar venta', 'error');
     }
   };
 
@@ -384,10 +387,10 @@ export function PaginaVentaDirecta() {
 
     try {
       await actualizarMetodoPago(Number(ventaId), metodo);
-      alert(`Método de pago actualizado a ${metodo}`);
+      showToast(`Método de pago actualizado a ${metodo}`, 'success');
     } catch (error) {
       console.error('Error al actualizar método de pago:', error);
-      alert('Error al actualizar método de pago');
+      showToast('Error al actualizar método de pago', 'error');
     }
   };
 
@@ -449,7 +452,7 @@ export function PaginaVentaDirecta() {
             <BuscadorCliente
               onClienteSeleccionado={async (cliente: Cliente) => {
                 if (!ventaId) {
-                  alert('Error: No hay venta activa');
+                  showToast('Error: No hay venta activa', 'error');
                   return;
                 }
 
@@ -466,10 +469,10 @@ export function PaginaVentaDirecta() {
                     email: cliente.email
                   });
 
-                  alert('Cliente asignado exitosamente');
+                  showToast('Cliente asignado exitosamente', 'success');
                 } catch (error) {
                   console.error('Error al asignar cliente:', error);
-                  alert('Error al asignar cliente a la venta');
+                  showToast('Error al asignar cliente a la venta', 'error');
                 }
               }}
               clienteInicial={null}
@@ -744,6 +747,16 @@ export function PaginaVentaDirecta() {
         onClose={() => setModalRegistroClienteOpen(false)}
         onClienteRegistrado={handleClienteRegistrado}
       />
+
+      {/* Toast Notifications */}
+      {toasts.map(toast => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </div>
   );
 }

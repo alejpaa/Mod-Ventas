@@ -1,0 +1,276 @@
+@startuml Diagrama de Clases - Módulo Venta
+
+' Configuración de estilo
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+' ============================================
+' CAPA DE ENUMERACIONES
+' ============================================
+
+package "Enums" <<Rectangle>> {
+    enum VentaEstado {
+        BORRADOR
+        CONFIRMADA
+        CANCELADA
+    }
+
+    enum OrigenVenta {
+        DIRECTA
+        LEAD
+        COTIZACION
+    }
+
+    enum EstadoPago {
+        PENDIENTE
+        PAGADO
+        PARCIAL
+        CANCELADO
+    }
+
+    enum MetodoPago {
+        EFECTIVO
+        TARJETA
+    }
+}
+
+' ============================================
+' CAPA DE ENTIDADES
+' ============================================
+
+package "Entities" <<Rectangle>> {
+    class Venta {
+        - id: Long
+        - numVenta: String
+        - origenVenta: OrigenVenta
+        - estado: VentaEstado
+        - fechaVentaCreada: LocalDate
+        - fechaVentaCompletada: LocalDate
+        - clienteId: Long
+        - idCotizacion: Long
+        - idVendedor: Long
+        - estadoPago: EstadoPago
+        - metodoPago: MetodoPago
+        - subtotal: BigDecimal
+        - descuentoTotal: BigDecimal
+        - total: BigDecimal
+        - detalles: List<DetalleVenta>
+        --
+        + esBorrador(): boolean
+        + agregarOActualizarItem(Long, String, BigDecimal, int): void
+        + recalcularMontos(): void
+        + calcularTotal(): BigDecimal
+    }
+
+    class DetalleVenta {
+        - id: Long
+        - venta: Venta
+        - idProducto: Long
+        - nombreProducto: String
+        - cantidad: Integer
+        - precioUnitario: BigDecimal
+        - descuentoMonto: BigDecimal
+        - subtotal: BigDecimal
+        --
+        + {static} nuevoDetalle(Venta, Long, String, BigDecimal, int): DetalleVenta
+        + incrementarCantidad(int): void
+        + actualizarCantidad(int): void
+        - recalcularSubtotal(): void
+    }
+
+    class VentaLead {
+        - id: Long
+        - idVenta: Long
+        - venta: Venta
+        - idLeadMarketing: Integer
+        - canalOrigen: String
+        - idCampaniaMarketing: Integer
+        - nombreCampania: String
+        - tematica: String
+        - descripcion: String
+        - notasLlamada: String
+        - fechaEnvio: LocalDateTime
+    }
+
+    class Boleta {
+        - idBoleta: Long
+        - idVendedor: Long
+        - venta: Venta
+        - fechaGeneracion: LocalDate
+        - montoVendido: BigDecimal
+    }
+
+    class Contrato {
+        - idContrato: Long
+        - numContrato: String
+        - venta: Venta
+        - clienteId: Long
+        - fechaInicio: LocalDate
+        - fechaFin: LocalDate
+        - duracionMeses: Integer
+        - diaFacturacion: Integer
+        - cicloFacturacion: String
+        - montoMensual: BigDecimal
+        - moneda: String
+        - estado: String
+    }
+}
+
+' ============================================
+' CAPA DE REPOSITORIOS
+' ============================================
+
+package "Repositories" <<Rectangle>> {
+    interface VentaRepositorio <<interface>> {
+        + findFirstByOrigenVentaOrderByIdDesc(OrigenVenta): Optional<Venta>
+        + findByOrigenVentaAndEstado(OrigenVenta, VentaEstado): List<Venta>
+        + findByEstado(VentaEstado): List<Venta>
+    }
+
+    interface DetalleVentaRepositorio <<interface>> {
+        + findByVentaId(Long): List<DetalleVenta>
+    }
+
+    interface VentaLeadRepositorio <<interface>> {
+        + findByIdVenta(Long): Optional<VentaLead>
+    }
+
+    interface BoletaRepositorio <<interface>> {
+        + findBoletasByEmployeeRrhhId(Long): List<Boleta>
+        + findBoletasByClienteId(Long): List<Boleta>
+    }
+}
+
+' ============================================
+' CAPA DE SERVICIOS
+' ============================================
+
+package "Services" <<Rectangle>> {
+    interface IVentaCarritoService <<interface>> {
+        + crearVentaDirectaBorrador(CrearVentaDirectaRequest): VentaResumenResponse
+        + agregarItemALaVenta(Long, AgregarItemVentaRequest): VentaResumenResponse
+        + obtenerResumen(Long): VentaResumenResponse
+        + asignarVendedor(Long, Long): void
+        + cancelarVenta(Long): void
+        + crearVentaDesdeCotizacion(Long): VentaResumenResponse
+        + asignarCliente(Long, Long): void
+        + desasignarCliente(Long): void
+        + guardarProductos(Long, List): void
+        + calcularTotales(Long): VentaResumenResponse
+        + actualizarMetodoPago(Long, String): void
+        + confirmarVenta(Long): void
+        + generarPdfVenta(Long): byte[]
+    }
+
+    interface IVentaConsultaService <<interface>> {
+        + listarVentas(): List<VentaListadoResponse>
+        + listarVentasPaginadas(int, int, String, String): VentaPaginadaResponse
+        + obtenerVentasPorCanal(): List<VentasPorCanalResponse>
+    }
+
+    class VentaLeadService {
+        - ventaRepositorio: VentaRepositorio
+        - ventaLeadRepositorio: VentaLeadRepositorio
+        - clienteAdminServicio: IClienteAdminServicio
+        --
+        + crearVentaDesdeLeadMarketing(CrearVentaLeadRequest): VentaLeadResponse
+        - registrarCliente(CrearVentaLeadRequest): Long
+        - generarNumeroVenta(OrigenVenta): String
+    }
+
+    class VentaCarritoServiceImpl {
+        --
+        <<implements IVentaCarritoService>>
+    }
+
+    class VentaConsultaServiceImpl {
+        --
+        <<implements IVentaConsultaService>>
+    }
+}
+
+' ============================================
+' CAPA DE FACTORIES
+' ============================================
+
+package "Factories" <<Rectangle>> {
+    interface VentaFactory <<interface>> {
+        + origenSoportado(): OrigenVenta
+        + crearVentaBorrador(): Venta
+    }
+
+    class VentaFactoryResolver {
+        - factories: Map<OrigenVenta, VentaFactory>
+        --
+        + getFactory(OrigenVenta): VentaFactory
+    }
+
+    class VentaDirectaFactory {
+        --
+        + origenSoportado(): OrigenVenta
+        + crearVentaBorrador(): Venta
+    }
+
+    class VentaDesdeLeadFactory {
+        --
+        + origenSoportado(): OrigenVenta
+        + crearVentaBorrador(): Venta
+    }
+
+    class VentaDesdeCotizacionFactory {
+        --
+        + origenSoportado(): OrigenVenta
+        + crearVentaBorrador(): Venta
+    }
+}
+
+' ============================================
+' RELACIONES ENTRE ENTIDADES
+' ============================================
+
+Venta --> VentaEstado : estado
+Venta --> OrigenVenta : origenVenta
+Venta --> EstadoPago : estadoPago
+Venta --> MetodoPago : metodoPago
+Venta "1" *-- "0..*" DetalleVenta : detalles
+Venta "1" -- "0..1" VentaLead : venta
+Venta "1" -- "0..*" Boleta : venta
+Venta "1" -- "0..*" Contrato : venta
+
+' ============================================
+' RELACIONES REPOSITORIES -> ENTITIES
+' ============================================
+
+VentaRepositorio ..> Venta : <<manages>>
+DetalleVentaRepositorio ..> DetalleVenta : <<manages>>
+VentaLeadRepositorio ..> VentaLead : <<manages>>
+BoletaRepositorio ..> Boleta : <<manages>>
+
+' ============================================
+' RELACIONES SERVICES -> REPOSITORIES
+' ============================================
+
+VentaLeadService --> VentaRepositorio : uses
+VentaLeadService --> VentaLeadRepositorio : uses
+VentaCarritoServiceImpl --> VentaRepositorio : uses
+VentaCarritoServiceImpl --> DetalleVentaRepositorio : uses
+VentaConsultaServiceImpl --> VentaRepositorio : uses
+
+' ============================================
+' RELACIONES FACTORIES
+' ============================================
+
+VentaFactory <|.. VentaDirectaFactory : implements
+VentaFactory <|.. VentaDesdeLeadFactory : implements
+VentaFactory <|.. VentaDesdeCotizacionFactory : implements
+VentaFactoryResolver o-- VentaFactory : manages
+VentaFactory ..> Venta : <<creates>>
+VentaFactory --> OrigenVenta : uses
+
+' ============================================
+' RELACIONES SERVICES -> FACTORIES
+' ============================================
+
+VentaCarritoServiceImpl --> VentaFactoryResolver : uses
+
+@enduml

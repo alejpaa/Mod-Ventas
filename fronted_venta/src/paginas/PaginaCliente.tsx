@@ -5,15 +5,17 @@ import { ModalCrearCliente } from '../modules/clientes/components/ModalCrearClie
 import { ModalHistorialCompras } from '../modules/clientes/components/ModalHistorialCompras';
 import type { ClienteResponse } from '../modules/clientes/types/cliente.types';
 import { filtrarClientes, actualizarCliente } from '../modules/clientes/services/cliente.service';
+import Toast from '../modules/venta/components/Toast';
+import { useToast } from '../modules/venta/hooks/useToast';
 
 type EstadoFiltro = 'TODOS' | 'ACTIVO' | 'INACTIVO';
 
 export function PaginaCliente() {
+  const { toasts, showToast, removeToast } = useToast();
   const [clientes, setClientes] = useState<ClienteResponse[]>([]);
   const [search, setSearch] = useState('');
   const [estado, setEstado] = useState<EstadoFiltro>('TODOS');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isHistorialOpen, setIsHistorialOpen] = useState(false);
@@ -24,12 +26,11 @@ export function PaginaCliente() {
 
   const cargarClientes = async () => {
     setLoading(true);
-    setError(null);
     try {
       const data = await filtrarClientes(search.trim() || undefined, filtroEstado);
       setClientes(data.clientes || []);
     } catch (err: any) {
-      setError(err?.message || 'No se pudo cargar la lista de clientes');
+      showToast(err?.message || 'No se pudo cargar la lista de clientes', 'error');
       setClientes([]);
     } finally {
       setLoading(false);
@@ -112,10 +113,15 @@ export function PaginaCliente() {
       setClientes((prev) =>
         prev.map((c) => (c.clienteId === cliente.clienteId ? { ...c, estado: nuevoEstado } : c))
       );
+      showToast(
+        `Cliente ${nuevoEstado === 'ACTIVO' ? 'activado' : 'desactivado'} exitosamente`,
+        'success'
+      );
     } catch (err: any) {
-      setError(
+      showToast(
         err?.message ||
-        `No se pudo ${nuevoEstado === 'ACTIVO' ? 'activar' : 'desactivar'} el cliente`
+        `No se pudo ${nuevoEstado === 'ACTIVO' ? 'activar' : 'desactivar'} el cliente`,
+        'error'
       );
     }
   };
@@ -185,19 +191,6 @@ export function PaginaCliente() {
         </div>
 
         <hr className="border-gray-200 mb-6" />
-
-        {/* Error Display */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-800">{error}</p>
-            <button
-              onClick={() => setError(null)}
-              className="text-red-600 hover:text-red-800 text-sm mt-2 underline"
-            >
-              Cerrar
-            </button>
-          </div>
-        )}
 
         {/* Tabla */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
@@ -339,6 +332,16 @@ export function PaginaCliente() {
           onClose={() => setIsHistorialOpen(false)}
         />
       )}
+
+      {/* Toast Notifications */}
+      {toasts.map(toast => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </div>
   );
 }
