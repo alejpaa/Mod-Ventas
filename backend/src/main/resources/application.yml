@@ -49,4 +49,3 @@ logging:
     root: WARN
 
     com.venta.backend: INFO
-// ventas
